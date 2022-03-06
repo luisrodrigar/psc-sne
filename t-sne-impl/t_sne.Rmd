@@ -37,8 +37,9 @@ The following method apply the formula above:
 
 ```{r iris}
 x_diff <- function(X) {
+  n <- nrow(X)
   sum_x <- apply(X^2, MARGIN=1, FUN=sum)
-  sum_x_m <- t(matrix(replicate(150, sum_x), byrow=T, nrow=150))
+  sum_x_m <- t(matrix(replicate(n, sum_x), byrow=T, nrow=n))
   cross_times_minus_2 <- -2 * (X %*% t(X))
   D <- t(cross_times_minus_2 + sum_x_m) + sum_x_m
   D <- round(D, digits=4) 
@@ -170,4 +171,20 @@ high_dimension_probs <- function(X=matrix(), tolerance=1e-5, perplexity=30) {
   return(P)
 }
 ```
+
+The version of the t-SNE is the symmetric one, that has the property that $p_{ij} = p_{ji}$ and $q_{ij}=q_{ji} \quad \forall i,j$. Therefore, we define $p_{ij}=\frac{p_{i|j}+p_{j|i}}{2n}$.
+
+```{r}
+symmetric_probs <- function(P) {
+  P = (P + t(P)) / (2*nrow(P))
+  return(P)
+}
+```
+
+In order to initialize the lower dimension probability matrix, we are going to use the method `mvtnorm::rmvnorm` as it is described in the paper: $\mathbf{\mathcal{Y}}^{0} = \{\mathcal{y}_1,...,\mathcal{y}_n\} \sim \mathcal{N}(0, 10^{-4}\mathbf{I}_n)$.
+
+```{r}
+Y_0 <- mvtnorm::rmvnorm(n = n, mean = rep(0, n), sigma = (1e-4* diag(1, n)))
+```
+
 

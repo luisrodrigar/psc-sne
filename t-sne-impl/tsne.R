@@ -1,9 +1,9 @@
 library(stats4)
+library(mvtnorm)
 source("utils.R")
 
-.high_dimension_pij <- function(X, perplexity) {
+.high_dimension_pij <- function(X, tolerance=1e-5, perplexity=30) {
   n <- nrow(X)
-  p <- ncol(X)
   D <- x_diff(X)
   P <- matrix(0, nrow = 150, ncol = 150)
   beta <- rep(1, n)
@@ -29,13 +29,71 @@ source("utils.R")
   return(P)
 }
 
-.low_dimension_qij <- function(x) {
-  return(0)
+.initialize_low_dimension <- function(n, q) {
+  return(mvtnorm::rmvnorm(n = n, mean = rep(0, q), sigma = (1e-4* diag(1, q))))
 }
 
-.execute_reg_data <- function(x) {
-  p_matrix <- .high_dimension_pij(x, perplexity)
-  q_matrix <- .low_dimension_qij(x)
+.low_dimension_qij <- function(X, P, q, num_iteration=1500, initial_momentum=0.5,
+                               final_momentum=0.8, eta=500) {
+  dY = replicate(q, rep(0, n))
+  iY = replicate(q, rep(0, n))
+  total_iterations <- num_iteration + 2
+  Y <- array(NA, c(n,q,total_iterations))
+  Y[,,1] <- Y[,,2] <- .initialize_low_dimension(n, q)
+  
+  range_iterations <- seq_len(num_iteration) + 2
+  for(i in range_iterations) {
+    sum_Q <- apply(Y[,,i-1]^2, MARGIN = 1, FUN = sum)
+    sum_Q <- replicate(n, sum_Q)
+    num <- -2 * (Y[,,i-1] %*% t(Y[,,i-1]))
+    num <- 1 / (1 + (t(num + sum_Q) + sum_Q))
+    diag(num) <- 0
+    Q <- num / sum(num)
+    Q <- replace(Q, Q < 1e-12, 1e-12)
+    
+    PQ = P-Q
+    
+    for(j in seq_len(n)) {
+      gradient = replicate(q, PQ[, j] * num[, j]) * 
+        (t(replicate(150, Y[j, ,2])) - Y[,,2])
+      dY[j, ] = apply(gradient, FUN=sum, MARGIN=2)
+    }
+    
+    momentum <- initial_momentum
+    if(i < 250) {
+      momentum = final_momentum
+    } 
+    
+    iY = momentum * iY - (eta * dY)
+    Y[,,i] = Y[,,i-1] + iY
+    Y[,,i] = Y[,,i] - t(replicate(n, colMeans(Y[,,i-1])))
+    
+    if(i %% 10 == 0) {
+      C = sum(P * log(P/Q))
+      print(sprintf("Iteration %d: error is %f", i, C))
+    }
+    
+    if(i == 100) {
+      P = P / 4
+    }
+  }
+  return(Y[,,total_iterations])
+}
+
+.symmetric_probs <- function(P) {
+  n <- nrow(X)
+  P = (P + t(P)) / (2*n)
+  return(P)
+}
+
+.execute_reg_data <- function(X) {
+  high_dim_probs <- .high_dimension_pij(x, perplexity)
+  high_dim_probs = .symmetric_probs(high_dim_probs)
+  high_dim_probs = high_dim_probs * 4
+  high_dim_probs = replace(high_dim_probs, high_dim_probs < 1e-12, 1e-12)
+  
+  q_matrix <- .low_dimension_qij(x, q, num_iteration, initial_momentum, 
+                                 final_momentum, learning_rate)
 }
 
 execute.default <- .execute_reg_data
@@ -47,7 +105,8 @@ execute <- function(x) {
 tsne <- setRefClass("tsne_gen",
   fields = list(
     perplexity = "numeric", num_iteration = "numeric",
-    learning_rate = "numeric", momentum = "numeric"
+    learning_rate = "numeric", initial_momentum = "numeric",
+    final_momentum = "numeric", exageration = "logical", q = "integer"
   ),
   methods = list(execute = execute)
 )
