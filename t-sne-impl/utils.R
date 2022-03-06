@@ -29,10 +29,11 @@ index_except_i <- function(i, n) {
 
 x_diff <- function(X) {
   sum_x <- apply(X^2, MARGIN = 1, FUN = sum)
-  sum_x_m <- t(matrix(replicate(150, sum_x), byrow = T, nrow = 150))
+  sum_x_m <- replicate(150, sum_x)
   cross_times_minus_2 <- -2 * (X %*% t(X))
   D <- t(cross_times_minus_2 + sum_x_m) + sum_x_m
-  D <- round(D, digits = 4)
+  diag(D) <- 0
+  return(D)
 }
 
 entropy_beta <- function(D_i, beta = 1) {
