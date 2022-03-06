@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-```{r}
+```{r, include=FALSE}
 library(dplyr)
 ```
 
@@ -32,6 +32,8 @@ $$
 $$
 \mathbf{x}_k^2 = \mathbf{x}_k'\mathbf{x}_k = x_{k1}^2 + ... + x_{kp}^2
 $$
+
+The following method apply the formula above:
 
 ```{r iris}
 x_diff <- function(X) {
@@ -78,9 +80,19 @@ entropy_beta <- function(D_i, beta=1) {
 }
 ```
 
-The goal is to adjust the variability so that the perplexity at each point is the same. We are going to perform a binary search to get the probabilities in such a way that the conditional Gaussian has the same perplexity.
+The goal is to adjust the variability so that the perplexity at each point is the same. The perplexity is a way to measure the effective number of neighbors of a point. We are going to perform a binary search to get the probabilities in such a way that the conditional Gaussian has the same perplexity.
 
 ```{r}
+index_except_i <- function(i, n) {
+  index <- c(seq(1,i-1),seq(i+1,n))
+  if (i == 1) {
+    index <- 2:n
+  } else if (i == n) {
+    index <- 1:(n-1)
+  }
+  return(index)
+}
+
 binary_search <- function(h_diff, beta, i, beta_min, beta_max) {
   if(h_diff > 0) {
     beta_min = beta[i]
@@ -120,15 +132,11 @@ binary_search_optimization <- function(D_i, i, beta, h_star, prob_star, log_perp
   return(list(probs=prob_star, beta=beta))
 }
 
-index_except_i <- function(i, n) {
-  index <- c(seq(1,i-1),seq(i+1,n))
-  if (i == 1) {
-    index <- 2:n
-  } else if (i == n) {
-    index <- 1:(n-1)
-  }
-  return(index)
-}
+```
+
+Once we have defined these two methods, we are able to obtain the high dimensional properties:
+
+```{r}
 
 high_dimension_probs <- function(X=matrix(), tolerance=1e-5, perplexity=30) {
   n <- nrow(X)
