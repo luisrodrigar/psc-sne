@@ -27,6 +27,12 @@ index_except_i <- function(i, n) {
   return(index)
 }
 
+.symmetric_probs <- function(P) {
+  n <- nrow(X)
+  P = (P + t(P)) / (2*n)
+  return(P)
+}
+
 x_diff <- function(X) {
   sum_x <- apply(X^2, MARGIN = 1, FUN = sum)
   sum_x_m <- replicate(150, sum_x)

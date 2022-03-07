@@ -29,17 +29,15 @@ source("utils.R")
   return(P)
 }
 
-.initialize_low_dimension <- function(n, q) {
-  return(mvtnorm::rmvnorm(n = n, mean = rep(0, q), sigma = (1e-4* diag(1, q))))
-}
-
 .low_dimension_qij <- function(X, P, q, num_iteration=1500, initial_momentum=0.5,
                                final_momentum=0.8, eta=500) {
   dY = replicate(q, rep(0, n))
   iY = replicate(q, rep(0, n))
   total_iterations <- num_iteration + 2
   Y <- array(NA, c(n,q,total_iterations))
-  Y[,,1] <- Y[,,2] <- .initialize_low_dimension(n, q)
+  Y[,,1] <- Y[,,2] <- mvtnorm::rmvnorm(n = n, 
+                                       mean = rep(0, q), 
+                                       sigma = (1e-4* diag(1, q)))
   
   range_iterations <- seq_len(num_iteration) + 2
   for(i in range_iterations) {
@@ -55,7 +53,7 @@ source("utils.R")
     
     for(j in seq_len(n)) {
       gradient = replicate(q, PQ[, j] * num[, j]) * 
-        (t(replicate(150, Y[j, ,2])) - Y[,,2])
+        (t(replicate(n, Y[j, ,q])) - Y[,,q])
       dY[j, ] = apply(gradient, FUN=sum, MARGIN=2)
     }
     
@@ -64,9 +62,8 @@ source("utils.R")
       momentum = final_momentum
     } 
     
-    iY = momentum * iY - (eta * dY)
+    iY = (eta * dY) + (momentum * (Y[,,i-1]-Y[,,i-2]))
     Y[,,i] = Y[,,i-1] + iY
-    Y[,,i] = Y[,,i] - t(replicate(n, colMeans(Y[,,i-1])))
     
     if(i %% 10 == 0) {
       C = sum(P * log(P/Q))
@@ -78,12 +75,6 @@ source("utils.R")
     }
   }
   return(Y[,,total_iterations])
-}
-
-.symmetric_probs <- function(P) {
-  n <- nrow(X)
-  P = (P + t(P)) / (2*n)
-  return(P)
 }
 
 .execute_reg_data <- function(X) {
