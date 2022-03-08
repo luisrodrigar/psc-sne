@@ -19,6 +19,8 @@ We are going to play with the Iris dataset:
 
 ```{r}
 X <- iris %>% dplyr::select(-Species) %>% as.matrix()
+n <- nrow(X)
+p <- ncol(X)
 ```
 
 ## Euclidean distance
@@ -26,12 +28,10 @@ X <- iris %>% dplyr::select(-Species) %>% as.matrix()
 The way to calculate the Euclidean distance:
 
 $$
-||\mathbf{x}_i-\mathbf{x}_j||^2 = \mathbf{x}_i^2 + \mathbf{x}_j^2 - 2\mathbf{x}_i\mathbf{x}_j
+\|\mathbf{x}_i-\mathbf{x}_j\|^2 = \|\mathbf{x}_i\|^2 + \|\mathbf{x}_j\|^2 - 2\|\mathbf{x}_i\|\|\mathbf{x}_j\|
 $$
 
-$$
-\mathbf{x}_k^2 = \mathbf{x}_k'\mathbf{x}_k = x_{k1}^2 + ... + x_{kp}^2
-$$
+where $\|\mathbf{x}_i\| = \sqrt{x_{i,1}^2 + \dots + x_{i,p}^2}$ and  $\mathbf{x}_k^2 = \mathbf{x}_k'\mathbf{x}_k = x_{k1}^2 + ... + x_{kp}^2$.
 
 The following method apply the formula above:
 
@@ -181,7 +181,7 @@ symmetric_probs <- function(P) {
 }
 ```
 
-In order to initialize the lower dimension probability matrix, we are going to use the method `mvtnorm::rmvnorm` as it is described in the paper: $\mathbf{\mathcal{Y}}^{0} = \{\mathcal{y}_1,...,\mathcal{y}_n\} \sim \mathcal{N}(0, 10^{-4}\mathbf{I}_n)$.
+In order to initialize the lower dimension probability matrix, we are going to use the method `mvtnorm::rmvnorm` as it is described in the paper: $\mathbf{\mathcal{Y}}^{0} = \{y_1,...,y_n\} \sim \mathcal{N}(0, 10^{-4}\mathbf{I}_n)$ which is assigned to $\mathbf{\mathcal{Y}}^{1}$ and $\mathbf{\mathcal{Y}}^{2}$ (the first two initial states).
 
 ```{r}
 Y_0 <- mvtnorm::rmvnorm(n = n, mean = rep(0, n), sigma = (1e-4* diag(1, n)))
