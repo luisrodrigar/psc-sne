@@ -30,7 +30,7 @@ source("utils.R")
 }
 
 .low_dimension_qij <- function(X, P, q=2, num_iteration=500, initial_momentum=0.5,
-                               final_momentum=0.8, eta=300) {
+                               final_momentum=0.8, eta=100) {
   dY = replicate(q, rep(0, n))
   iY = replicate(q, rep(0, n))
   total_iterations <- num_iteration + 2
