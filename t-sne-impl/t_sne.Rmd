@@ -184,7 +184,9 @@ symmetric_probs <- function(P) {
 In order to initialize the lower dimension probability matrix, we are going to use the method `mvtnorm::rmvnorm` as it is described in the paper: $\mathbf{\mathcal{Y}}^{0} = \{y_1,...,y_n\} \sim \mathcal{N}(0, 10^{-4}\mathbf{I}_n)$ which is assigned to $\mathbf{\mathcal{Y}}^{1}$ and $\mathbf{\mathcal{Y}}^{2}$ (the first two initial states).
 
 ```{r}
+Y <- array(NA, c(n,q,total_iterations))
 Y_0 <- mvtnorm::rmvnorm(n = n, mean = rep(0, n), sigma = (1e-4* diag(1, n)))
+Y[,,1] <- Y[,,2] <- Y_0
 ```
 
 

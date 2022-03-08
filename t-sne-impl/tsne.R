@@ -29,20 +29,19 @@ source("utils.R")
   return(P)
 }
 
-.low_dimension_qij <- function(X, P, q, num_iteration=1500, initial_momentum=0.5,
-                               final_momentum=0.8, eta=500) {
+.low_dimension_qij <- function(X, P, q=2, num_iteration=500, initial_momentum=0.5,
+                               final_momentum=0.8, eta=300) {
   dY = replicate(q, rep(0, n))
   iY = replicate(q, rep(0, n))
   total_iterations <- num_iteration + 2
-  Y <- array(NA, c(n,q,total_iterations))
+  Y <- array(NA, c(n, q, total_iterations))
   Y[,,1] <- Y[,,2] <- mvtnorm::rmvnorm(n = n, 
                                        mean = rep(0, q), 
-                                       sigma = (1e-4* diag(1, q)))
+                                       sigma = (1e-4 * diag(1, q)))
   
   range_iterations <- seq_len(num_iteration) + 2
   for(i in range_iterations) {
-    sum_Q <- apply(Y[,,i-1]^2, MARGIN = 1, FUN = sum)
-    sum_Q <- replicate(n, sum_Q)
+    sum_Q <- replicate(n, rowSums(Y[,,i-1]^2))
     num <- -2 * (Y[,,i-1] %*% t(Y[,,i-1]))
     num <- 1 / (1 + (t(num + sum_Q) + sum_Q))
     diag(num) <- 0
@@ -53,7 +52,7 @@ source("utils.R")
     
     for(j in seq_len(n)) {
       gradient = replicate(q, PQ[, j] * num[, j]) * 
-        (t(replicate(n, Y[j, ,q])) - Y[,,q])
+        (t(replicate(n, Y[j,,i-1])) - Y[,,i-1])
       dY[j, ] = apply(gradient, FUN=sum, MARGIN=2)
     }
     
@@ -62,7 +61,7 @@ source("utils.R")
       momentum = final_momentum
     } 
     
-    iY = (eta * dY) + (momentum * (Y[,,i-1]-Y[,,i-2]))
+    iY = -(eta * dY) + (momentum * (Y[,,i-1]-Y[,,i-2]))
     Y[,,i] = Y[,,i-1] + iY
     
     if(i %% 10 == 0) {
