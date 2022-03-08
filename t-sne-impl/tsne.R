@@ -1,5 +1,7 @@
-library(stats4)
+library(dplyr)
+library(rgl)
 library(mvtnorm)
+library(viridis)
 source("utils.R")
 
 .high_dimension_pij <- function(X, tolerance=1e-5, perplexity=30) {
@@ -29,8 +31,9 @@ source("utils.R")
   return(P)
 }
 
-.low_dimension_qij <- function(X, P, q=2, num_iteration=500, initial_momentum=0.5,
-                               final_momentum=0.8, eta=100) {
+.low_dimension_qij <- function(X, P, q, num_iteration=500, initial_momentum=0.5,
+                               final_momentum=0.8, eta=100, exageration=TRUE) {
+  n <- nrow(X)
   dY = replicate(q, rep(0, n))
   iY = replicate(q, rep(0, n))
   total_iterations <- num_iteration + 2
@@ -69,41 +72,51 @@ source("utils.R")
       print(sprintf("Iteration %d: error is %f", i, C))
     }
     
-    if(i == 100) {
+    if(i == 100 && exageration) {
       P = P / 4
     }
   }
   return(Y[,,total_iterations])
 }
 
-.execute_reg_data <- function(X) {
-  high_dim_probs <- .high_dimension_pij(x, perplexity)
-  high_dim_probs = .symmetric_probs(high_dim_probs)
-  high_dim_probs = high_dim_probs * 4
-  high_dim_probs = replace(high_dim_probs, high_dim_probs < 1e-12, 1e-12)
+execute_tsne <- function(obj, X, q) {
+  P <- .high_dimension_pij(X, obj@perplexity)
+  P = .symmetric_probs(P)
+  if(obj@exageration) {
+    P = P * 4
+  }
+  P = replace(P, P < 1e-12, 1e-12)
   
-  q_matrix <- .low_dimension_qij(x, q, num_iteration, initial_momentum, 
-                                 final_momentum, learning_rate)
+  Y <- .low_dimension_qij(X, P, q, obj@num_iteration, 
+                          obj@initial_momentum, obj@final_momentum, 
+                          obj@learning_rate, obj@exageration)
+  return(Y)
 }
 
-execute.default <- .execute_reg_data
-
-execute <- function(x) {
-  UseMethod("execute", x)
-}
-
-tsne <- setRefClass("tsne_gen",
-  fields = list(
-    perplexity = "numeric", num_iteration = "numeric",
-    learning_rate = "numeric", initial_momentum = "numeric",
-    final_momentum = "numeric", exageration = "logical", q = "integer"
-  ),
-  methods = list(execute = execute)
-)
+setClass("tsne_gen",
+         slots = list(perplexity = "numeric", num_iteration = "numeric",
+                      learning_rate = "numeric", initial_momentum = "numeric",
+                      final_momentum = "numeric", exageration = "logical"))
 
 print.tsne_gen <- function(obj) {
-  cat(obj$perplexity, "\n")
-  cat(obj$num_iteration, "\n")
-  cat(obj$learning_rate, "\n")
-  cat(obj$momentum, "\n")
+  cat("The perplexity:", obj@perplexity, "\n")
+  cat("The number of iterations:", obj@num_iteration, "\n")
+  cat("The learning rate:", obj@learning_rate, "\n")
+  cat("The initial momentum:", obj@initial_momentum, "\n")
+  cat("The final momentum:", obj@final_momentum, "\n")
+  cat("Is exageration enabled?", obj@exageration, "\n")
 }
+
+X <- iris %>% dplyr::select(-Species) %>% as.matrix()
+obj <- new("tsne_gen", perplexity=30, num_iteration=750, learning_rate=100, 
+           initial_momentum=0.5, final_momentum=0.8, exageration=TRUE)
+
+res <- execute_tsne(obj, X, 2)
+plot(x=res[,1], y=res[,2], col=iris$Species)
+
+res <- execute_tsne(obj, X, 3)
+colors_3 <- viridis(3)
+species_colors <- ifelse(iris$Species == "setosa", colors_3[1], 
+                 ifelse(iris$Species == "versicolor", colors_3[2], colors_3[3]))
+plot3d(res[,1], res[,2], res[,3], pch = 30, col=species_colors)
+legend3d("topright", legend = c("Setosa", "Versicolor", "Virginica"), col = colors_3, pch=19)
