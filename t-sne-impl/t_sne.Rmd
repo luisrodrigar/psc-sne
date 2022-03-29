@@ -278,7 +278,7 @@ Recall that $d_{ij}=\|\mathbf{y}_i-\mathbf{y}_j\|$ and  $Z=\sum_{k\neq l}\left(1
 \frac{\partial C}{\partial y_i} & = \sum_{j \neq i}\left[\frac{\partial C}{\partial d_{ij}}\frac{\partial d_{ij}}{\partial y_i} +  \frac{\partial C}{\partial d_{ji}}\frac{\partial d_{ji}}{\partial y_i}\right] \\ 
                                 & = \sum_{j \neq i}\left[\frac{\partial d_{ij}}{\partial y_i}\left(\frac{\partial C}{\partial d_{ij}} +  \frac{\partial C}{\partial d_{ij}}\right)\right] \\ 
                                 & = 2\sum_{j \neq i}\left[\frac{\partial C}{\partial d_{ij}}\right] \frac{\mathbf{y}_i-\mathbf{y}_j}{d_{ij}} \\
-                                & = 2\sum_{j \neq i}\left[2(p_{ij}-q_{ij})(1+d_{ij}^2)^{-1}d_{ij}^2\right] \frac{\mathbf{y}_i-\mathbf{y}_j}{d_{ij}} \\
+                                & = 2\sum_{j \neq i}\left[2(p_{ij}-q_{ij})(1+d_{ij}^2)^{-1}d_{ij}\right] \frac{\mathbf{y}_i-\mathbf{y}_j}{d_{ij}} \\
                                 & = 4\sum_{j \neq i}(p_{ij}-q_{ij})(1+d_{ij}^2)^{-1}\cancel{d_{ij}} \frac{\mathbf{y}_i-\mathbf{y}_j}{\cancel{d_{ij}}} \\
                                 & = 4\sum_{j \neq i}(p_{ij}-q_{ij})(1+\|\mathbf{y}_i-\mathbf{y}_j\|^2)^{-1} (\mathbf{y}_i-\mathbf{y}_j)
 \end{split}
