@@ -2,6 +2,9 @@
 title: "t_sne"
 author: "Luis Angel Rodriguez Garcia"
 date: "3/5/2022"
+header-includes:
+  - \usepackage{amsmath}
+  - \usepackage[makeroom]{cancel}
 output: pdf_document
 ---
 
@@ -13,6 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r, include=FALSE}
 library(dplyr)
+library(numDeriv)
 ```
 
 We are going to play with the Iris dataset:
@@ -28,10 +32,10 @@ p <- ncol(X)
 The way to calculate the Euclidean distance:
 
 $$
-\|\mathbf{x}_i-\mathbf{x}_j\|^2 = \|\mathbf{x}_i\|^2 + \|\mathbf{x}_j\|^2 - 2\|\mathbf{x}_i\|\|\mathbf{x}_j\|
+\|\mathbf{x}_i-\mathbf{x}_j\|^2 = \|\mathbf{x}_i\|^2 + \|\mathbf{x}_j\|^2 - 2\mathbf{x}_i'\mathbf{x}_j
 $$
 
-where $\|\mathbf{x}_i\| = \sqrt{x_{i,1}^2 + \dots + x_{i,p}^2}$ and  $\mathbf{x}_k^2 = \mathbf{x}_k'\mathbf{x}_k = x_{k1}^2 + ... + x_{kp}^2$.
+where $\|\mathbf{x}_i\| = \sqrt{x_{i,1}^2 + \dots + x_{i,p}^2}$ and $\mathbf{x}_k^2 = \mathbf{x}_k'\mathbf{x}_k = x_{k1}^2 + ... + x_{kp}^2$.
 
 The following method apply the formula above:
 
@@ -54,6 +58,7 @@ $$
 
 Where $H_i$ is the Shannon entropy in the point $x_i$ of the conditional probability:
 
+```{=tex}
 \begin{equation}
 \begin{split}
 H_i  & = - \sum_{j\neq i}p_{j|i}\log(p_{j|i}) \\
@@ -66,7 +71,7 @@ H_i  & = - \sum_{j\neq i}p_{j|i}\log(p_{j|i}) \\
      & = \log(S_i)+\frac{1}{2\sigma^2}\sum_{j\neq i}p_{j|i}||x_i-x_j||^2
 \end{split}
 \end{equation}
-
+```
 Where $S_i=\sum_{k\neq i}e^{-||x_i-x_j||^2/2\sigma^2}$ and $\sum_{j\neq i}p_{j|i}=1$
 
 In order to proceed with the optimization of the variance, we are going to define this term $\frac{1}{2\sigma^2}$ as the parameter $\beta$.
@@ -183,41 +188,47 @@ symmetric_probs <- function(P) {
 
 In order to initialize the lower dimension probability matrix, we are going to use the method `mvtnorm::rmvnorm` as it is described in the paper: $\mathbf{\mathcal{Y}}^{0} = \{y_1,...,y_n\} \sim \mathcal{N}(0, 10^{-4}\mathbf{I}_n)$ which is assigned to $\mathbf{\mathcal{Y}}^{1}$ and $\mathbf{\mathcal{Y}}^{2}$ (the first two initial states).
 
-
 ### Gradient Descent
 
-$$
-C = KL(P||Q) = \sum_{i}\sum_{j}p_{ij}\log{\frac{p_{ij}}{q_{ij}}}=\sum_i\sum_j p_{ij}\left(\log p_{ij}-\log{q_{ij}}\right)=\sum_i\sum_j p_{ij}\log{p_{ij}}-p_{ij}\log{q_{ij}}
-$$
+```{=tex}
+\begin{equation}
+\begin{split}
+C & = KL(\mathbf{P}\|\mathbf{Q})  \\
+  & = \sum_{i}\sum_{j}p_{ij}\log{\frac{p_{ij}}{q_{ij}}} \\
+  & = \sum_i\sum_j p_{ij}\left(\log p_{ij}-\log{q_{ij}}\right) \\
+  & = \sum_i\sum_j p_{ij}\log{p_{ij}}-p_{ij}\log{q_{ij}}
+\end{split}
+\end{equation}
+```
 
-We define these two auxiliary variables $d_{ij}=\|y_i-y_j\|$ and $Z=\sum_{k\neq j}\left(1+d^2_{kl})^{-1}\right)$ 
+We define these two auxiliary variables $d_{ij}=\|\mathbf{y}_i-\mathbf{y}_j\|$ and $Z=\sum_{k\neq l}\left(1+d^2_{kl})^{-1}\right)$
 
-$$
-\frac{\partial C}{\partial y_i} = \sum_{j \neq i}\left[\frac{\partial C}{\partial d_{ij}}\frac{\partial d_{ij}}{\partial y_i} +  \frac{\partial C}{\partial d_{ji}}\frac{\partial d_{ji}}{\partial y_i}\right]
-$$
+```{=tex}
+\begin{equation}
+\begin{split}
+\frac{\partial C}{\partial \mathbf{y}_i} & = \sum_{j \neq i}\left[\frac{\partial C}{\partial d_{ij}}\frac{\partial d_{ij}}{\partial \mathbf{y}_i} +  \frac{\partial C}{\partial d_{ji}}\frac{\partial d_{ji}}{\partial \mathbf{y}_i}\right] \\
+  & = \sum_{j \neq i}\left[\frac{\partial d_{ij}}{\partial \mathbf{y}_i} \left(\frac{\partial C}{\partial d_{ij}} +  \frac{\partial C}{\partial d_{ji}}\right)\right] \\
+\end{split}
+\end{equation}
+```
 
-$$
-\frac{\partial}{\partial \mathbf{y}} \|\mathbf{y}\|^2 = \frac{\partial}{\partial \mathbf{y}} \sum_{j=1}^p y_j^2 = \left(\frac{\partial}{\partial y_1} \sum_{j=1}^p y_j^2,\ldots,\frac{\partial}{\partial y_p} \sum_{j=1}^p y_j^2\right) = \left(2 y_1,\ldots, 2y_p\right) = 2 \mathbf{y}
-$$
+Recall that $\frac{\partial}{\partial x}\sqrt{g(x)}=\frac{1}{2\sqrt{g(x)}}g'(x)$, $\frac{\partial}{\partial \mathbf{y}} \|\mathbf{y}\|^2 = 2 \mathbf{y}$ and $d_{ij}=d_{ji}$
 
-$$
-\frac{\partial d_{ij}}{\partial y_i} = \frac{\partial}{\partial y_i} \|y_i-y_j\| = 
-\frac{\partial}{\partial y_i} (\|y_i\|^2+\|y_j\|^2-2y_i'y_j)^{\frac{1}{2}} \underset{\frac{\partial}{\partial x}\sqrt{g(x)}=\frac{1}{2\sqrt{g(x)}}g'(x)}{=} 
-\frac{1}{2}\frac{1}{d_{ij}} \frac{\partial}{\partial y_i} (\|y_i\|^2+\|y_j\|^2-2y_i'y_j) = 
-\frac{1}{2}\frac{1}{d_{ij}} (2y_i-2y_j) = \frac{(y_i-y_j)}{d_{ij}}
-$$
+```{=tex}
+\begin{equation}
+\begin{split}
+\frac{\partial d_{ij}}{\partial \mathbf{y}_i}  & = \frac{\partial}{\partial y_i} \|\mathbf{y}_i-\mathbf{y}_j\| \\
+                                      & = \frac{\partial}{\partial \mathbf{y}_i} (\|\mathbf{y}_i\|^2+\|\mathbf{y}_j\|^2-2\mathbf{y}_i'\mathbf{y}_j)^{\frac{1}{2}} \\
+                                      & = \frac{1}{2}\frac{1}{d_{ij}} \frac{\partial}{\partial \mathbf{y}_i} (\|\mathbf{y}_i\|^2+\cancel{\|\mathbf{y}_j\|^2}-2\mathbf{y}_i'\mathbf{y}_j) \\
+                                      & = \frac{1}{2}\frac{1}{d_{ij}} (2\mathbf{y}_i-2\mathbf{y}_j) \\
+                                      & = \frac{(\mathbf{y}_i-\mathbf{y}_j)}{d_{ij}} \\
+                                      & = \frac{\partial d_{ji}}{\partial \mathbf{y}_i}
+\end{split}
+\end{equation}
+```
 
-$$
-\frac{\partial d_{ji}}{\partial y_i} = \frac{\partial}{\partial y_i} \|y_j-y_i\| = 
-\frac{\partial}{\partial y_i} (\|y_j\|^2+\|y_i\|^2-2y_j'y_i)^{\frac{1}{2}} = 
-\frac{1}{2}\frac{1}{d_{ji}} \frac{\partial}{\partial y_i} (\|y_j\|^2+\|y_i\|^2-2y_j'y_i) =
-\frac{1}{2}\frac{1}{d_{ji}} (2y_i-2y_j) = 
-\frac{y_j - y_i}{d_{ji}} \underset{d_{ij}=d_{ji}}{=} \frac{y_j - y_j}{d_{ij}} = 
-\frac{\partial d_{ij}}{\partial y_i}
-$$
 
 ```{r}
-library(numDeriv)
 
 dij.1 <- function(i, j) {
   sqrt(norm(i, type="2")^2 + norm(j, type="2")^2 - 2 * (t(i) %*% j))
@@ -240,29 +251,38 @@ all.equal(result4, result3) # checked
 # Checked that both d(d_ij)/dy_i = d(d_ji)/dy_i
 ```
 
+Recall that $d_{ij}=\|\mathbf{y}_i-\mathbf{y}_j\|$ and  $Z=\sum_{k\neq l}\left(1+d^2_{kl})^{-1}\right)$:
 
-$$
-\frac{\partial C}{\partial y_i} = 
-\sum_{j \neq i}\left[\frac{\partial C}{\partial d_{ij}}\frac{\partial d_{ij}}{\partial y_i} +  \frac{\partial C}{\partial d_{ji}}\frac{\partial d_{ji}}{\partial y_i}\right] \underset{d_{ij}=d_{ji}}{=} 
-\sum_{j \neq i}\left[\frac{\partial d_{ij}}{\partial y_i}\left(\frac{\partial C}{\partial d_{ij}} +  \frac{\partial C}{\partial d_{ij}}\right)\right] =
-2\sum_{j \neq i}\left[\frac{\partial C}{\partial d_{ij}}\right] \frac{y_i-y_j}{d_{ij}}
-$$
+```{=tex}
+\begin{equation}
+\begin{split}
+\frac{\partial C}{\partial d_{ij}}  & = \frac{\partial}{\partial d_{ij}} \sum_{k \neq l} \cancel{p_{kl}\log{p_{kl}}}-p_{kl}\log{q_{kl}} \\
+                                    & = \frac{\partial}{\partial d_{ij}} \sum_{k \neq l} -p_{kl}\log{q_{kl}} = 
+-\sum_{k \neq l} p_{kl}\frac{\partial{(\log{q_{kl}})}}{\partial d_{ij}} \\
+                                    & = -\sum_{k \neq l} p_{kl} \frac{\partial{(\log{\frac{q_{kl}Z}{Z}})}}{\partial d_{ij}} \\ 
+                                    & = -\sum_{k \neq l} p_{kl} \left[\frac{\partial{(\log{q_{kl}Z}-\log{Z}})}{\partial d_{ij}} \right] \\
+                                    & = -\sum_{k \neq l} p_{kl} \left[\frac{\partial{(\log{q_{kl}Z})}}{\partial d_{ij}}-\frac{\partial{\log{Z}}}{\partial d_{ij}} \right] \\ 
+                                    & = -\sum_{k \neq l} p_{kl} \left[ \frac{1}{q_{kl}Z}\frac{\partial{(q_{kl}Z)}}{\partial d_{ij}}-\frac{1}{Z}\frac{\partial{Z}}{\partial d_{ij}} \right] \\
+                                    & = -\sum_{k \neq l} p_{kl} \left[ \frac{1}{q_{kl}Z}\frac{\partial{(\frac{(1+d^2_{ij})^{-1}}{\cancel{\sum_{k \neq l}(1+d_{kl}^2)^{-1}}}\cancel{\sum_{k\neq l}(1+d^2_{kl})^{-1})}}}{\partial d_{ij}}-\frac{1}{Z}\frac{\partial{(\sum_{k\neq l}(1+d^2_{kl})^{-1})}}{\partial d_{ij}} \right] \\ 
+                                    & = 2\frac{p_{ij}}{q_{ij}Z}(1+d^2_{ij})^{-2}d_{ij}-2\sum_{k \neq l} p_{kl}\frac{(1+d^2_{ij})^{-1}}{Z}(1+d^2_{ij})^{-1}d_{ij} \\ 
+                                    & = 2\frac{p_{ij}}{\frac{\cancel{(1+d^2_{ij})^{-1}}}{\cancel{Z}}\cancel{Z}}(1+d^2_{ij})^{-\cancel{2}1}d_{ij}-2\cancel{\sum_{k \neq l} p_{kl}}q_{ij}(1+d^2_{ij})^{-1}d_{ij} \\ 
+                                    & =  2p_{ij}(1+d^2_{ij})^{-1}d_{ij}-2q_{ij}(1+d^2_{ij})^{-1}d_{ij} \\ 
+                                    & = 2(p_{ij}-q_{ij})(1+d_{ij}^2)^{-1}d_{ij}
+\end{split}
+\end{equation}
+```
 
-```{r}
-
-C <- function(P, Q) {
-  n <- nrow(P)
-  for(i in n)
-    sum(P[i,]*log(P[i,]) - P[i,j]*log(Q[i,]))
-}
-
-data_p <- high_dimension_probs(y)
-data_d <- data.matrix(dist(y))
-
-data_q <- data_p * 3
-
-n
-
+```{=tex}
+\begin{equation}
+\begin{split}
+\frac{\partial C}{\partial y_i} & = \sum_{j \neq i}\left[\frac{\partial C}{\partial d_{ij}}\frac{\partial d_{ij}}{\partial y_i} +  \frac{\partial C}{\partial d_{ji}}\frac{\partial d_{ji}}{\partial y_i}\right] \\ 
+                                & = \sum_{j \neq i}\left[\frac{\partial d_{ij}}{\partial y_i}\left(\frac{\partial C}{\partial d_{ij}} +  \frac{\partial C}{\partial d_{ij}}\right)\right] \\ 
+                                & = 2\sum_{j \neq i}\left[\frac{\partial C}{\partial d_{ij}}\right] \frac{\mathbf{y}_i-\mathbf{y}_j}{d_{ij}} \\
+                                & = 2\sum_{j \neq i}\left[2(p_{ij}-q_{ij})(1+d_{ij}^2)^{-1}d_{ij}^2\right] \frac{\mathbf{y}_i-\mathbf{y}_j}{d_{ij}} \\
+                                & = 4\sum_{j \neq i}(p_{ij}-q_{ij})(1+d_{ij}^2)^{-1}\cancel{d_{ij}} \frac{\mathbf{y}_i-\mathbf{y}_j}{\cancel{d_{ij}}} \\
+                                & = 4\sum_{j \neq i}(p_{ij}-q_{ij})(1+\|\mathbf{y}_i-\mathbf{y}_j\|^2)^{-1} (\mathbf{y}_i-\mathbf{y}_j)
+\end{split}
+\end{equation}
 ```
 
 
