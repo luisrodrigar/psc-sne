@@ -2,14 +2,15 @@ library(dplyr)
 library(rgl)
 library(mvtnorm)
 library(viridis)
+library(purrr)
 source("utils.R")
 
 .high_dimension_pij <- function(X, tolerance=1e-5, perplexity=30) {
   n <- nrow(X)
-  D <- x_diff(X)
+  D <- data.matrix(dist(X))
   P <- matrix(0, nrow = 150, ncol = 150)
   beta <- rep(1, n)
-  log_perp <- log(perplexity)
+  entropy <- log(perplexity)
   for (i in seq_len(n)) {
     column_index <- index_except_i(i, n)
     D_i <- D[i, column_index]

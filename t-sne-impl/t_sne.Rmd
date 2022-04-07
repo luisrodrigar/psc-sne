@@ -62,7 +62,7 @@ Where $H_i$ is the Shannon entropy in the point $x_i$ of the conditional probabi
 \begin{equation}
 \begin{split}
 H_i  & = - \sum_{j\neq i}p_{j|i}\log(p_{j|i}) \\
-     & = - \sum_{j\neq i}p_{j|i}\log(p_{j,i}/p_{i}) \\
+     & = - \sum_{j\neq i}p_{j|i}\log(\frac{p_{j,i}}{p_{i}}) \\
      & = - \sum_{j\neq i}p_{j|i}(\log(p_{j,i})-\log(p_{i})) \\
      & = - \sum_{j\neq i}p_{j|i}(\log(e^{-||x_i-x_j||^2/2\sigma^2})-\log(\sum_{k\neq i}e^{-||x_i-x_j||^2/2\sigma^2})) \\
      & = - \sum_{j\neq i}p_{j|i}((-||x_i-x_j||^2/2\sigma^2)-\log(\sum_{k\neq i}e^{-||x_i-x_j||^2/2\sigma^2})) \\
@@ -188,7 +188,7 @@ symmetric_probs <- function(P) {
 
 In order to initialize the lower dimension probability matrix, we are going to use the method `mvtnorm::rmvnorm` as it is described in the paper: $\mathbf{\mathcal{Y}}^{0} = \{y_1,...,y_n\} \sim \mathcal{N}(0, 10^{-4}\mathbf{I}_n)$ which is assigned to $\mathbf{\mathcal{Y}}^{1}$ and $\mathbf{\mathcal{Y}}^{2}$ (the first two initial states).
 
-### Gradient Descent
+## Gradient Descent
 
 ```{=tex}
 \begin{equation}
@@ -284,5 +284,76 @@ Recall that $d_{ij}=\|\mathbf{y}_i-\mathbf{y}_j\|$ and  $Z=\sum_{k\neq l}\left(1
 \end{split}
 \end{equation}
 ```
+
+## Cauchy distribution on the sphere
+
+The following formula corresponds with the probability density function of the Cauchy family on the unit sphere:
+
+$$
+f(\mathbf{y}; \boldsymbol{\mu}, \rho) = \frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}} \left(\frac{1-\rho^2}{1+\rho^2-2\rho\boldsymbol{\mu}'\mathbf{y}}\right)^d
+$$
+where $\mathbf{y} \in S^d$, the location parameter $\boldsymbol{\mu} \in S^d$, the concentration parameter $\rho \in [0, 1)$ and the unit sphere in $\mathbb{R}^{d+1}$ denoted by $S^d = \{\mathbf{y} \in \mathbb{R}^{d+1}; \|\mathbf{y}\|=1\}$. When $d=1$ the case is the well-known Wrapped Cauchy or circular Cauchy family.
+
+```{r}
+dsphcauchy <- function(y, mu, rho, d=2) {
+  (gamma(((d+1)/2))/(2*pi^((d+1)/2))*((1-rho^2)/(1+rho^2-2*rho*(t(mu) %*% y)))^d)
+}
+
+library(Directional)
+library(Rcpp)
+library(rotasym)
+
+sunspots_births$X <-
+  cbind(cos(sunspots_births$phi) * cos(sunspots_births$theta),
+        cos(sunspots_births$phi) * sin(sunspots_births$theta),
+        sin(sunspots_births$phi))
+
+theta_params <- spcauchy.mle(sunspots_births$X)
+dsphcauchy(sunspots_births$X[1,], theta_params$mu, theta_params$rho)
+
+library(DirStats)
+library(ivdoctr)
+n <- nrow(sunspots_births$X)
+q <- 2
+x <- rbind(diag(1, nrow = q + 1), diag(-1, nrow = q + 1))
+bw_rot <- bw_dir_rot(sunspots_births$X)
+
+
+th <- sample(seq(0, pi, l=2000), size=1000)
+ph <- sample(seq(0, 2*pi, l=2000), size=1000)
+x <- to_sph(th, ph)
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+             lit = FALSE)
+# dens <- apply(x, MARGIN=1, FUN=dsphcauchy, mu=theta_params$mu, rho=theta_params$rho)
+dens <- apply(x, MARGIN=1, FUN=kde_dir, data = sunspots_births$X, h = bw_rot, L = NULL)
+map2color <- function(x, pal, limits = range(x)){
+  pal[findInterval(x, seq(limits[1], limits[2], length.out = length(pal) + 1), 
+                   all.inside=TRUE)]
+}
+rgl::points3d(x, col = map2color(dens, pal=heat.colors(10, alpha=0.8)))
+```
+
+### Cauchy-SNE
+
+#### High Dimension
+
+For a poly-sphere $d>2$:
+
+```{=tex}
+\begin{equation}
+\begin{split}
+p_{j|i} = \frac{p_{ji}}{p_i} = \frac{\cancel{\frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}}}}{ \cancel{\frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}}}}\frac{\left(\frac{1-\rho^2}{1+\rho^2-2\rho\boldsymbol{\mu}'S_c(\mathbf{x}_i,\mathbf{x}_j)}\right)^d}{\sum_{k \neq l}\left(\frac{1-\rho^2}{1+\rho^2-2\rho\boldsymbol{\mu}'S_c(\mathbf{x}_l,\mathbf{x}_k)}\right)^d}
+\end{split}
+\end{equation}
+```
+
+where the cosine similarity is denoted by $S_c(\mathbf{x}_i, \mathbf{x}_j) = \cos(\theta) = \frac{\mathbf{x}_i\mathbf{x}_j}{\|\mathbf{x}_i\|\|\mathbf{x}_j\|}$.
+
+We must adapt the configuration of each parameter to have the same perplexity fixed at the beginning, in the same way we had done with the Gaussian case. 
+
+$$
+H_i = - \sum_{j\neq i} p_{j|i}\log(\frac{p_{ji}}{p_i})
+$$
 
 
