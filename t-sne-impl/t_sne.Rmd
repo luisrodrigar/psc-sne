@@ -318,10 +318,13 @@ q <- 2
 x <- rbind(diag(1, nrow = q + 1), diag(-1, nrow = q + 1))
 bw_rot <- bw_dir_rot(sunspots_births$X)
 
+polysphere <- array(NA, dim=c(100,3, 120))
+for(i in seq_len(120)) {
+  th <- sample(seq(0, pi/2, l=200), size=100)
+  ph <- sample(seq(0, 2*pi, l=200), size=100)
+  polysphere[,,i] <- to_sph(th, ph)
+}
 
-th <- sample(seq(0, pi, l=2000), size=1000)
-ph <- sample(seq(0, 2*pi, l=2000), size=1000)
-x <- to_sph(th, ph)
 rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
              radius = 1, type = "s", col = "lightblue", alpha = 0.25,
              lit = FALSE)
@@ -343,7 +346,11 @@ For a poly-sphere $d>2$:
 ```{=tex}
 \begin{equation}
 \begin{split}
-p_{j|i} = \frac{p_{ji}}{p_i} = \frac{\cancel{\frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}}}}{ \cancel{\frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}}}}\frac{\left(\frac{1-\rho^2}{1+\rho^2-2\rho\boldsymbol{\mu}'S_c(\mathbf{x}_i,\mathbf{x}_j)}\right)^d}{\sum_{k \neq l}\left(\frac{1-\rho^2}{1+\rho^2-2\rho\boldsymbol{\mu}'S_c(\mathbf{x}_l,\mathbf{x}_k)}\right)^d}
+p_{j|i} & = \prod_{k=1}^r\frac{p_{ji_{(k)}}}{p_{i_{(k)}}} \\
+        & = \prod_{k=1}^r\frac{\frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}}}{ \frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}}}\frac{\left(\frac{1-\rho_{k}^2}{1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{j_{(k)}}'\mathbf{x}_{i_{(k)}}}\right)^d}{\sum_{l \neq i}\left(\frac{1-\rho_{k}^2}{1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{l_{(k)}}'\mathbf{x}_{i_{(k)}}}\right)^d} \\
+        & = \prod_{k=1}^r\frac{\frac{(1-\rho^2)^d}{(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{j_{(k)}}'\mathbf{x}_{i_{(k)}})^d}}{\sum_{l \neq i}\frac{(1-\rho_{k}^2)^d}{(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{l_{(k)}}'\mathbf{x}_{i_{(k)}})^d}} \\
+        & = \prod_{k=1}^r\frac{\frac{(1-\rho_{k}^2)^d}{(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{j_{(k)}}'\mathbf{x}_{i_{(k)}})^d}}{(1-\rho_{k}^2)^d\sum_{l \neq i}\frac{1}{(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{l_{(k)}}'\mathbf{x}_{i_{(k)}})^d}} \\
+        & = \prod_{k=1}^r\frac{(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{j_{(k)}}'\mathbf{x}_{i_{(k)}})^{-d}}{\sum_{l \neq i}(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{l_{(k)}}'\mathbf{x}_{i_{(k)}})^{-d}}
 \end{split}
 \end{equation}
 ```
@@ -356,4 +363,5 @@ $$
 H_i = - \sum_{j\neq i} p_{j|i}\log(\frac{p_{ji}}{p_i})
 $$
 
+$\ell$
 
