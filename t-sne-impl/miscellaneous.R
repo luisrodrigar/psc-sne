@@ -1,57 +1,77 @@
+###############################
+###############################
+##                           ##
+## Perplexity Generalization ##
+##                           ##
+###############################
+###############################
 
-## proposal
+#######################################
+###      Gaussian Distribution      ###
+#######################################
 
-entropy_func <- function(X, i, var) {
-  beta = 1/(2*var)
-  P_i <- rowSums(exp(-(t(t(X) - X[i, ])^2) * beta))
-  return (log(sum(P_i)) + (beta * sum((t(t(X) - X[i, ])^2) * P_i) / sum(P_i)))
+# TODO: for the gaussian distribution which is implemented for the regular t-SNE
+
+#####################################
+### Spherical Cauchy Distribution ###
+#####################################
+
+simple_dspcauchy <- function(x, l, i, rho, k, d) {
+  ((1 + rho^2 - 2 * rho * t(x[l,,k]) %*% x[i,,k])^(-d))
 }
 
-calc_perplexity <- function(X, i, var) {
-  exp(entropy_func(X, i, var))
+prob_i_spcauchy <- function(x, i, rho, d){
+  r <<- dim(x)[3]
+  n <<- nrow(x)
+  probi_k_spcauchy <- function(j) {
+    prod(sapply(X=seq_len(r), FUN=simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d))
+  }
+  sum(sapply(seq_len(n)[-i], probi_k_spcauchy))
 }
 
-diff_perpl_optim <- function(X, i, perplex, var) {
-  res <- (calc_perplexity(X, i, var) - perplex)^2
-  if(is.finite(res))
-    return(res)
-  else
-    return(1e6)
+jcondi_spcauchy <- function(x, i, j, rho, d) {
+  r <- dim(x)[3]
+  (prod(sapply(1:r, simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d)) / 
+      prob_i_spcauchy(x, i, rho, d))
 }
 
-perpl_to_var <- function(X, perplexity) {
-  sapply(1:n, function(i) {
-    optim_func <- partial(diff_perpl_optim, X=X, i=i, perplex = perplexity)
-    optim(par = 0.75, fn = optim_func, method = "L-BFGS-B", lower = 0.1)$par
-  })
+to_perplexity <- function(X, i, rho, d=2) {
+  entropy <- function(j) {
+    jcondi_value <- jcondi_spcauchy(X, i, j, rho, d)
+    (jcondi_value * log2(jcondi_value))
+  }
+  return(2^(-1*sum(sapply(seq_len(nrow(X))[-i], entropy))))
 }
 
-## tfg
+# Polyspherical data generation
 
-calc_perplexity <-function(X, i, sigma2) {
-  
-  # Dimensions
-  n <- nrow(X)
-  p <- ncol(X)
-  
-  P_i_cond_j= softmax(- rowSums( t(t(X) - X[i, ])^2) / (2 * sigma2))
-  H_i <- -sum(P_i_cond_j * log2(P_i_cond_j))
-  
-  #returns the perplexity
-  return(2^H_i)
-  
+library(DirStats)
+library(Directional)
+
+k <- 2
+n <- 100
+polysphere <- array(NA, dim=c(n,3, k))
+for(i in seq_len(k)) {
+  th <- sample(seq(0, pi/2, l=200), size=n)
+  ph <- sample(seq(0, 2*pi, l=200), size=n)
+  polysphere[,,i] <- to_sph(th, ph)
 }
 
-perplex = 30
-X<- data
+library(parallel)
+library(doParallel)
 
-sapply(1:n, function(i) {
-  
-  optim(par = 0.75, 
-        fn = function(s2) {
-          res <- (calc_perplexity(X = X, i = i, sigma2 = s2) - perplex)^2
+perplex <- 25
+num_cores <- detectCores()-1
+cl <- makeForkCluster(num_cores)
+
+rho_opt <- parLapply(cl, 1:n, function(i){
+  print(paste("The ", i, "-th observation", sep = ""))
+  optim(par = 0.5, 
+        fn = function(rho) {
+          res <- (to_perplexity(X = polysphere, i = i, rho=rho) - perplex)^2
           ifelse(is.finite(res), res, 1e6)
         },
-        method = "L-BFGS-B", lower = 0.1)$par
-  
+        method="L-BFGS-B", lower=0, upper=.9999)$par
 })
+rho_opt <- simplify2array(rho_opt)
+stopCluster(cl) # 3min-ish in parallel
