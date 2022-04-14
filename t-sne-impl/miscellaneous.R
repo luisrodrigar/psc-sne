@@ -29,15 +29,19 @@ prob_i_spcauchy <- function(x, i, rho, d){
   sum(sapply(seq_len(n)[-i], probi_k_spcauchy))
 }
 
-jcondi_spcauchy <- function(x, i, j, rho, d) {
+jcondi_spcauchy <- function(x, i, j, rho, d, prob_is=NULL) {
   r <- dim(x)[3]
-  (prod(sapply(1:r, simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d)) / 
-      prob_i_spcauchy(x, i, rho, d))
+  if(!is.null(prob_is) && !is.null(prob_is[i])) {
+    prob_i <<- prob_is[i]
+  } else {
+    prob_i <<- prob_i_spcauchy(x, i, rho, d)
+  }
+  (prod(sapply(1:r, simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d)) / prob_i)
 }
 
-to_perplexity <- function(X, i, rho, d=2) {
+to_perplexity <- function(X, i, rho, d=2, prob_is=NULL) {
   entropy <- function(j) {
-    jcondi_value <- jcondi_spcauchy(X, i, j, rho, d)
+    jcondi_value <- jcondi_spcauchy(X, i, j, rho, d, prob_is)
     (jcondi_value * log2(jcondi_value))
   }
   return(2^(-1*sum(sapply(seq_len(nrow(X))[-i], entropy))))
@@ -63,15 +67,17 @@ library(doParallel)
 perplex <- 25
 num_cores <- detectCores()-1
 cl <- makeForkCluster(num_cores)
-
+start_time <- Sys.time()
 rho_opt <- parLapply(cl, 1:n, function(i){
-  print(paste("The ", i, "-th observation", sep = ""))
   optim(par = 0.5, 
         fn = function(rho) {
-          res <- (to_perplexity(X = polysphere, i = i, rho=rho) - perplex)^2
+          prob_is <- sapply(seq_len(n), prob_i_spcauchy, x=polysphere, rho=rho, d=2)
+          res <- (to_perplexity(X = polysphere, i = i, rho=rho, prob_is=prob_is) - perplex)^2
           ifelse(is.finite(res), res, 1e6)
         },
         method="L-BFGS-B", lower=0, upper=.9999)$par
 })
+end_time <- Sys.time()
+print(end_time-start_time)
 rho_opt <- simplify2array(rho_opt)
-stopCluster(cl) # 3min-ish in parallel
+stopCluster(cl) # Time difference of 3.92566 mins
