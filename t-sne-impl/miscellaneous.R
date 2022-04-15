@@ -81,3 +81,19 @@ end_time <- Sys.time()
 print(end_time-start_time)
 rho_opt <- simplify2array(rho_opt)
 stopCluster(cl) # Time difference of 3.92566 mins
+
+## P
+
+high_dimension_P <- function(X, d, rho) {
+  n <- nrow(X)
+  jcondi <- function(i) {
+    prob_is <- sapply(seq_len(n), prob_i_spcauchy, x=polysphere, rho=rho[i], d=d)
+    sapply(1:n, function(j) {
+      jcondi_spcauchy(X, i, j, rho[i], d, prob_is)
+    })
+  }
+  P <- sapply(1:n, jcondi)
+  diag(P) <- 0
+  return(t(P))
+}
+P <- high_dimension_P(polysphere, 2, rho_opt)
