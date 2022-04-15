@@ -256,7 +256,7 @@ Recall that $d_{ij}=\|\mathbf{y}_i-\mathbf{y}_j\|$ and  $Z=\sum_{k\neq l}\left(1
 ```{=tex}
 \begin{equation}
 \begin{split}
-\frac{\partial C}{\partial d_{ij}}  & = \frac{\partial}{\partial d_{ij}} \sum_{k \neq l} \cancel{p_{kl}\log{p_{kl}}}-p_{kl}\log{q_{kl}} \\
+\frac{\partial C}{\partial d_{ij}}  & = \frac{\partial}{\partial d_{ij}} \sum_{k \neq l} p_{kl}\log{p_{kl}}-p_{kl}\log{q_{kl}} \\
                                     & = \frac{\partial}{\partial d_{ij}} \sum_{k \neq l} -p_{kl}\log{q_{kl}} = 
 -\sum_{k \neq l} p_{kl}\frac{\partial{(\log{q_{kl}})}}{\partial d_{ij}} \\
                                     & = -\sum_{k \neq l} p_{kl} \frac{\partial{(\log{\frac{q_{kl}Z}{Z}})}}{\partial d_{ij}} \\ 
@@ -341,27 +341,99 @@ rgl::points3d(x, col = map2color(dens, pal=heat.colors(10, alpha=0.8)))
 
 #### High Dimension
 
-For a poly-sphere $d>2$:
+For a poly-sphere $\mathbb{S}^{d,r}$ where $r\geq1$ and $d \geq 1$:
 
 ```{=tex}
 \begin{equation}
 \begin{split}
-p_{j|i} & = \prod_{k=1}^r\frac{p_{ji_{(k)}}}{p_{i_{(k)}}} \\
-        & = \prod_{k=1}^r\frac{\frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}}}{ \frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}}}\frac{\left(\frac{1-\rho_{k}^2}{1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{j_{(k)}}'\mathbf{x}_{i_{(k)}}}\right)^d}{\sum_{l \neq i}\left(\frac{1-\rho_{k}^2}{1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{l_{(k)}}'\mathbf{x}_{i_{(k)}}}\right)^d} \\
-        & = \prod_{k=1}^r\frac{\frac{(1-\rho^2)^d}{(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{j_{(k)}}'\mathbf{x}_{i_{(k)}})^d}}{\sum_{l \neq i}\frac{(1-\rho_{k}^2)^d}{(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{l_{(k)}}'\mathbf{x}_{i_{(k)}})^d}} \\
-        & = \prod_{k=1}^r\frac{\frac{(1-\rho_{k}^2)^d}{(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{j_{(k)}}'\mathbf{x}_{i_{(k)}})^d}}{(1-\rho_{k}^2)^d\sum_{l \neq i}\frac{1}{(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{l_{(k)}}'\mathbf{x}_{i_{(k)}})^d}} \\
-        & = \prod_{k=1}^r\frac{(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{j_{(k)}}'\mathbf{x}_{i_{(k)}})^{-d}}{\sum_{l \neq i}(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{l_{(k)}}'\mathbf{x}_{i_{(k)}})^{-d}}
+p_{j|i} & = \frac{p_{ji}}{p_{i}} \\
+        & = \frac{\prod_{k=1}^r \frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}}\left(\frac{1-\rho_{k}^2}{1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{j_{(k)}}'\mathbf{x}_{i_{(k)}}}\right)^d}{\sum_{\ell \neq i} \left[ \prod_{s=1}^r\frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}} \left(\frac{1-\rho_{s}^2}{1+\rho_{s}^2-2\rho_{s}\mathbf{x}_{\ell_{(s)}}'\mathbf{x}_{i_{(s)}}}\right)^d \right]} \\
+        & = \frac{\left(\frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}}\right)^r\prod_{k=1}^r \left(\frac{1-\rho_{k}^2}{1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{j_{(k)}}'\mathbf{x}_{i_{(k)}}}\right)^d}{\left(\frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}}\right)^r\sum_{\ell \neq i} \left[ \prod_{s=1}^r \left(\frac{1-\rho_{s}^2}{1+\rho_{s}^2-2\rho_{s}\mathbf{x}_{\ell_{(s)}}'\mathbf{x}_{i_{(s)}}}\right)^d \right]} \\
+        & = \frac{\prod_{k=1}^r\left(\frac{1-\rho_{k}^2}{1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{j_{(k)}}'\mathbf{x}_{i_{(k)}}}\right)^d}{\sum_{\ell \neq i}  \left[ \prod_{s=1}^r \left( \frac{1-\rho_{s}^2}{1+\rho_{s}^2-2\rho_{s}\mathbf{x}_{\ell_{(s)}}'\mathbf{x}_{i_{(s)}}}\right)^d \right]} \\
+        & = \frac{\left(\prod_{k=1}^r(1-\rho_{k}^2)^d\right)\prod_{k=1}^r(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{j_{(k)}}'\mathbf{x}_{i_{(k)}})^{-d}}{\sum_{\ell \neq i}  \left[ \left(\prod_{s=1}^r(1-\rho_{s}^2)^d\right)\prod_{s=1}^r(1+\rho_{s}^2-2\rho_{s}\mathbf{x}_{\ell_{(s)}}'\mathbf{x}_{i_{(s)}})^{-d} \right]} \\
+        & = \frac{\prod_{k=1}^r(1+\rho_{k}^2-2\rho_{k}\mathbf{x}_{j_{(k)}}'\mathbf{x}_{i_{(k)}})^{-d}}{\sum_{\ell \neq i}  \left[ \prod_{s=1}^r(1+\rho_{s}^2-2\rho_{s}\mathbf{x}_{\ell_{(s)}}'\mathbf{x}_{i_{(s)}})^{-d} \right]}
 \end{split}
 \end{equation}
 ```
 
-where the cosine similarity is denoted by $S_c(\mathbf{x}_i, \mathbf{x}_j) = \cos(\theta) = \frac{\mathbf{x}_i\mathbf{x}_j}{\|\mathbf{x}_i\|\|\mathbf{x}_j\|}$.
+where the cosine similarity is denoted by $S_c(\mathbf{x}_i, \mathbf{x}_j) = \cos(\theta) = \frac{\mathbf{x}_i\mathbf{x}_j}{\|\mathbf{x}_i\|\|\mathbf{x}_j\|}$. In this case $\|\mathbf{x}_i\|=\|\mathbf{x}_j\|=1$.
 
 We must adapt the configuration of each parameter to have the same perplexity fixed at the beginning, in the same way we had done with the Gaussian case. 
 
 $$
-H_i = - \sum_{j\neq i} p_{j|i}\log(\frac{p_{ji}}{p_i})
+\mathrm{Perp}_i = 2^{H_i}
 $$
 
-$\ell$
+$$
+H_i = - \sum_{j\neq i} p_{j|i}\log p_{j|i}
+$$
 
+```{r}
+simple_dspcauchy <- function(x, l, i, rho, k, d) {
+  ((1 + rho^2 - 2 * rho * t(x[l,,k]) %*% x[i,,k])^(-d))
+}
+
+prob_i_spcauchy <- function(x, i, rho, d){
+  r <<- dim(x)[3]
+  n <<- nrow(x)
+  probi_k_spcauchy <- function(j) {
+    prod(sapply(X=seq_len(r), FUN=simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d))
+  }
+  sum(sapply(seq_len(n)[-i], probi_k_spcauchy))
+}
+
+jcondi_spcauchy <- function(x, i, j, rho, d, prob_is=NULL) {
+  r <- dim(x)[3]
+  if(!is.null(prob_is) && !is.null(prob_is[i])) {
+    prob_i <<- prob_is[i]
+  } else {
+    prob_i <<- prob_i_spcauchy(x, i, rho, d)
+  }
+  (prod(sapply(1:r, simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d)) / prob_i)
+}
+
+to_perplexity <- function(X, i, rho, d=2, prob_is=NULL) {
+  entropy <- function(j) {
+    jcondi_value <- jcondi_spcauchy(X, i, j, rho, d, prob_is)
+    (jcondi_value * log2(jcondi_value))
+  }
+  return(2^(-1*sum(sapply(seq_len(nrow(X))[-i], entropy))))
+}
+```
+
+$$
+\frac{\partial s_{ji}}{\partial \mathbf{y}_i} = \frac{\partial}{\partial y_i} \mathbf{y}_j\mathbf{y}_i \\
+                                      = \mathbf{y}_j \\
+                                      = \frac{\partial s_{ij}}{\partial \mathbf{y}_i}
+$$
+
+
+```{r}
+library(numDeriv)
+s.ji <- function(i, j) {
+  j %*% i
+}
+
+jacobian(func=s.ji, x=polysphere[2,,1], j=polysphere[3,,1])
+
+```
+
+
+$$
+\frac{\partial C}{\partial s_{ji}} 
+            = \frac{\partial}{\partial s_{ji}} \sum_{k \neq \ell} p_{k\ell}\log{p_{k\ell}}-p_{kl}\log{q_{k\ell}} \\ 
+            = \frac{\partial}{\partial s_{ji}} \sum_{k \neq \ell} -p_{k\ell}\log{q_{k\ell}} \\
+            = - \sum_{k \neq l} p_{k\ell} \frac{\partial \log{q_{k\ell}}}{\partial s_{ji}} \\
+            = -2d\rho p_{ji}(1-\rho^2-2\rho s_{ji})^{-1}+2d\rho q_{ji} (1+\rho^2-2\rho s_{ji})^{-1} \\
+            = \frac{2d\rho}{1-\rho^2-2\rho s_{ji}} \left(q_{ji} - p_{ji}\right)
+$$
+
+```{r}
+library(numDeriv)
+s.ji <- function(i, j) {
+  j %*% i
+}
+
+jacobian(func=s.ji, x=polysphere[2,,1], j=polysphere[3,,1])
+
+```
