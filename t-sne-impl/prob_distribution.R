@@ -34,21 +34,23 @@ simple_dspcauchy <- function(x, l, i, rho, k, d) {
   ((1 + rho^2 - 2 * rho * t(x[l,,k]) %*% x[i,,k])^(-d))
 }
 
-prob_i_spcauchy <- function(x, i, rho, d){
+prob_i_spcauchy <- function(x, i, rho){
   r <<- dim(x)[3]
   n <<- nrow(x)
+  d <<- (ncol(x)-1)
   probi_k_spcauchy <- function(j) {
     prod(sapply(X=seq_len(r), FUN=simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d))
   }
   sum(sapply(seq_len(n)[-i], probi_k_spcauchy))
 }
 
-jcondi_spcauchy <- function(x, i, j, rho, d, prob_is=NULL) {
+jcondi_spcauchy <- function(x, i, j, rho, prob_is=NULL) {
   r <- dim(x)[3]
+  d <- (ncol(x)-1)
   if(!is.null(prob_is) && !is.null(prob_is[i])) {
     prob_i <<- prob_is[i]
   } else {
-    prob_i <<- prob_i_spcauchy(x, i, rho, d)
+    prob_i <<- prob_i_spcauchy(x, i, rho)
   }
   (prod(sapply(1:r, simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d)) / prob_i)
 }
