@@ -430,8 +430,64 @@ $$
 
 ```{r}
 library(numDeriv)
+
 s.ji <- function(i, j) {
-  j %*% i
+  t(j) %*% i
+}
+
+simple_dspcauchy <- function(s.ji, rho, d) {
+  ((1 + rho^2 - 2 * rho * s.ji)^(-d))
+}
+
+jcondi_spcauchy_ld <- function(s_ji, Y, i, rho, d) {
+  prob_i <- function(Y, i, l, rho, d) {
+    s_ji <- s.ji(Y[i,], Y[l,])
+    simple_dspcauchy(s_ji, rho, d)
+  }
+  prob_ij <- simple_dspcauchy(s_ji, rho, d)
+  (prob_ij / sum(sapply(1:n, prob_i, Y=Y, i=i, rho=rho, d=d)))
+}
+
+call_simple_dspcauchy <- function(x, i, l, rho, d, k) {
+    s_ji <- s.ji(x[i,,k], x[l,,k])
+    simple_dspcauchy(s_ji, rho, d)
+}
+
+prob_i_spcauchy <- function(x, i, rho, d){
+  r <<- dim(x)[3]
+  n <<- nrow(x)
+  probi_k_spcauchy <- function(j) {
+    prod(sapply(X=seq_len(r), FUN=call_simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d))
+  }
+  sum(sapply(seq_len(n)[-i], probi_k_spcauchy))
+}
+
+jcondi_spcauchy <- function(x, i, j, rho, d, prob_is=NULL) {
+  r <- dim(x)[3]
+  if(!is.null(prob_is) && !is.null(prob_is[i])) {
+    prob_i <<- prob_is[i]
+  } else {
+    prob_i <<- prob_i_spcauchy(x, i, rho, d)
+  }
+  (prod(sapply(1:r, call_simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d)) / prob_i)
+}
+
+join_prob_spcauchy <- function(s_ji, Y, i, j, rho, d) {
+  ((jcondi_spcauchy_ld(s_ji, Y, i, rho, d) + jcondi_spcauchy_ld(s_ji, Y, j, rho, d))/(2*n))
+}
+
+kl_cost <- function(X, Y, P, rho, s_ji) {
+  n <- nrow(X)
+  d <- ncol(X)
+  total <- 0
+  for(i in seq_len(n)) {
+    for(j in seq_len(n)){
+      total <- total + (P[i,j] * jacobian(func=function(s_ji, Y, i, j, rho, d){
+        join_prob_spcauchy(s_ji, Y, i, j, rho, d)
+      }, x=s_ji, Y=Y, i=i, j=j, rho=rho, d=d))
+    }
+  }
+  return(total)
 }
 
 jacobian(func=s.ji, x=polysphere[2,,1], j=polysphere[3,,1])

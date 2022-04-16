@@ -28,7 +28,7 @@ index_except_i <- function(i, n) {
 }
 
 .symmetric_probs <- function(P) {
-  n <- nrow(X)
+  n <- nrow(P)
   P = (P + t(P)) / (2*n)
   return(P)
 }
