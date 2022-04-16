@@ -54,7 +54,7 @@ high_dimension_P <- function(X, d, rho) {
   jcondi <- function(i) {
     prob_is <- sapply(seq_len(n), prob_i_spcauchy, x=X, rho=rho[i], d=d)
     sapply(1:n, function(j) {
-      jcondi_spcauchy(X, i, j, rho[i], d, prob_is)
+      jcondi_spcauchy(X, i, j, rho[i], prob_is)
     })
   }
   P <- sapply(1:n, jcondi)
