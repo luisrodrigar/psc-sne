@@ -41,7 +41,7 @@ source("utils.R")
   Y <- array(NA, c(n, q, total_iterations))
   Y[,,1] <- Y[,,2] <- mvtnorm::rmvnorm(n = n, 
                                        mean = rep(0, q), 
-                                       sigma = (1e-4 * diag(1, q)))
+                                       sigma = (1e-4 * diag(1, q, q)))
   
   range_iterations <- seq_len(num_iteration) + 2
   for(i in range_iterations) {
