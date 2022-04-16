@@ -3,10 +3,10 @@
 ## Low-dimension neighborhood probabilities ##
 ##############################################
 
-Y <- array(NA, c(n, q, total_iterations))
-Y[,,1] <- Y[,,2] <- mvtnorm::rmvnorm(n = n, 
-                                     mean = rep(0, q), 
-                                     sigma = (1e-4 * diag(1, n, q)))
+p <- d+1
+total_iterations <- 250
+Y <- array(NA, c(n, p, total_iterations))
+Y[,,1] <- Y[,,2] <- r_unif_sphere(n, p)
 
 low_dimension_Q <- function(Y, d, rho, total_iterations) {
   cos_simil <- cosine(t(Y))
