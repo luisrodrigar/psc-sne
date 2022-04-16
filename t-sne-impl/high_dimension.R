@@ -11,19 +11,19 @@ symmetric_probs <- function(P) {
   return(P)
 }
 
-diag_3d <- function(array3d, k, value) {
-  diag(array3d[,,k]) <- value
-  array3d[,,k]
+diag_3d <- function(x, k, val) {
+  diag(x[,,k]) <- val
+  return(x[,,k])
 }
 
 ## cosine similarity
 
 library(lsa)
 
-cosine_polysph <- function(polysphere) {
-  r <- dim(polysphere)[3]
+cosine_polysph <- function(X) {
+  r <- dim(X)[3]
   cosine_sphere_ith <- function(k){
-    cos_sim <- cosine(t(polysphere[,,k]))
+    cos_sim <- cosine(t(X[,,k]))
   }
   sapply(1:r, cosine_sphere_ith, simplify = 'array')
 }
@@ -36,11 +36,12 @@ high_dimension <- function(x, rho) {
   r <- dim(x)[3]
   cos_sim_pol <- cosine_polysph(x)
   
-  P <- sweep(cos_sim, MARGIN=1, STATS=(-2*rho), FUN="*")
+  P <- sweep(cos_sim_pol, MARGIN=1, STATS=(-2*rho), FUN="*")
   P <- sweep(P, MARGIN=1, STATS=(rho^2), FUN="+")
   P <- 1/(1+P)^d
   
-  P <- sapply(1:r, FUN=diag_3d, array3d=P, value=0, simplify = 'array')
+  Paux <- P
+  P <- sapply(1:r, FUN=diag_3d, x=Paux, val=0, simplify = 'array')
   P_i_r <- apply(P, MARGIN=c(1,2), prod)
   Pi <- rowSums(P_i_r)
   P_ij = sweep(x=P_i_r, MARGIN=c(1,2), STATS=Pi, FUN="/")
