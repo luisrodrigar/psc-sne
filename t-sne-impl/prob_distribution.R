@@ -1,8 +1,6 @@
 library(DirStats)
 library(Directional)
 library(rotasym)
-library(parallel)
-library(doParallel)
 
 ## Polyspherical data generation
 
