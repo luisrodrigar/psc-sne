@@ -493,3 +493,4 @@ kl_cost <- function(X, Y, P, rho, s_ji) {
 jacobian(func=s.ji, x=polysphere[2,,1], j=polysphere[3,,1])
 
 ```
+

@@ -18,9 +18,9 @@ diag_3d <- function(x, k, val) {
 
 ## cosine similarity
 
-library(lsa)
-
 cosine_polysph <- function(X) {
+  library(lsa)
+  
   r <- dim(X)[3]
   cosine_sphere_ith <- function(k){
     cos_sim <- cosine(t(X[,,k]))
@@ -50,10 +50,11 @@ high_dimension <- function(x, rho) {
 
 ## inefficient version
 
-high_dimension_P <- function(X, d, rho) {
+high_dimension_P <- function(X, rho) {
   n <- nrow(X)
+  d <- (ncol(X)-1)
   jcondi <- function(i) {
-    prob_is <- sapply(seq_len(n), prob_i_spcauchy, x=X, rho=rho[i], d=d)
+    prob_is <- sapply(seq_len(n), prob_i_spcauchy, x=X, rho=rho[i])
     sapply(1:n, function(j) {
       jcondi_spcauchy(X, i, j, rho[i], prob_is)
     })
@@ -62,6 +63,7 @@ high_dimension_P <- function(X, d, rho) {
   diag(P) <- 0
   return(t(P))
 }
-P <- high_dimension_P(polysphere, 2, rho_opt)
+
+P <- high_dimension_P(polysphere, rho_opt)
 
 Pij <- symmetric_probs(P)
