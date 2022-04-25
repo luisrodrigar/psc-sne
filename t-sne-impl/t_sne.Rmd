@@ -563,7 +563,7 @@ second_term_analytically <- round((2/(Z(Y, s_ij, i, j, rho, d))*(1+rho^2-2*rho*s
 print(round(second_term, 8) == second_term_analytically)
 
 # some random value for p_kl
-rho_list <- rho_optimize(polysphere, 20)
+rho_list <- rho_optimize(polysphere, 15)
 P <- high_dimension(polysphere, rho_list)
 P <- symmetric_probs(P)
 
@@ -572,9 +572,15 @@ result_should_be <- -P[i,j] * (first_term - second_term)
 
 ## calculated value of the analytical expression
 
-(2*d*rho*(q_ij(Y, s_ij, i, j, rho, d)-P[i,j]))/(1+rho^2-2*rho*s_ij)
+Q <- low_dimension_Q(Y, d, rho)
 
-((2*rho*d/(1+rho^2-2*rho*s_ij))*(q_ij(Y, s_ij, i, j, rho, d)-P[i,j]))
+numerator <- 2*d*rho
+denominator <- (1+rho^2-2*rho*s_ij)
+difference <- (Q[i,j]-P[i,j])
 
+result <- (numerator/denominator)*(difference)
+
+round(result_should_be, 3)
+round(result, 3)
 ```
 
