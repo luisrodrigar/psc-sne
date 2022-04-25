@@ -4,8 +4,8 @@ library(rotasym)
 
 ## Polyspherical data generation
 
-k <- 2
-n <- 100
+r <- 3
+n <- 20
 d <- 2
 gen_polysphere <- function(n, d, r) {
   p <- (d+1)
@@ -15,6 +15,7 @@ gen_polysphere <- function(n, d, r) {
   }
   polysphere
 }
+polysphere <- gen_polysphere(n, d, r)
 
 #######################################
 ###      Gaussian Distribution      ###
@@ -28,45 +29,54 @@ gen_polysphere <- function(n, d, r) {
 
 ## High-dimension 
 
-simple_dspcauchy <- function(x, l, i, rho, k, d) {
-  ((1 + rho^2 - 2 * rho * t(x[l,,k]) %*% x[i,,k])^(-d))
+simple_dspcauchy <- function(x, i, j, rho, k, d) {
+  ((1 + rho^2 - 2 * rho * t(x[i,,k]) %*% x[j,,k])^(-d))
 }
 
-prob_i_spcauchy <- function(x, i, rho){
-  r <<- dim(x)[3]
-  n <<- nrow(x)
-  d <<- (ncol(x)-1)
-  probi_k_spcauchy <- function(j) {
-    prod(sapply(X=seq_len(r), FUN=simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d))
-  }
-  sum(sapply(seq_len(n)[-i], probi_k_spcauchy))
-}
-
-jcondi_spcauchy <- function(x, i, j, rho, prob_is=NULL) {
+p_ij_sc <- function(x, i, j, rho, d) {
+  if(i == j)
+    return(0)
+  n <- nrow(x)
   r <- dim(x)[3]
-  d <- (ncol(x)-1)
-  if(!is.null(prob_is) && !is.null(prob_is[i])) {
-    prob_i <<- prob_is[i]
-  } else {
-    prob_i <<- prob_i_spcauchy(x, i, rho)
-  }
-  (prod(sapply(1:r, simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d)) / prob_i)
+  return(prod(sapply(1:r, FUN=simple_dspcauchy, x=x, i=i, j=j, rho=rho, d=d)))
 }
+
+p_i_sc <- function(x, rho, d) {
+  n <- nrow(x)
+  r <- dim(x)[3]
+  prob_is <- sapply(1:n, FUN=function(i){
+    sapply(1:n, FUN=function(x, i, j){
+      if(j!=i) {
+        return(p_ij_sc(x, i, j, rho[i], d))
+      } else {
+        return(0)
+      }
+    }, x=x, i=i)
+  }, simplify = 'array')
+  return(rowSums(prob_is))
+}
+
+jcondi_sc <- function(x, i, j, rho, d, total_p=NULL) {
+  if(is.null(total_p)) {
+    total_p <- p_i_sc(x, rho, d)
+  }
+  return(p_ij_sc(x, i, j, rho[i], d)/total_p[i])
+}
+
 
 ## Low-dimension
 
-simple_dspcauchy_ld <- function(x, l, i, rho, d) {
-  ((1 + rho^2 - 2 * rho * t(x[l,]) %*% x[i,])^(-d))
+simple_dspcauchy_ld <- function(x, i, j, rho, d) {
+  ((1 + rho^2 - 2 * rho * t(x[i,]) %*% x[j,])^(-d))
 }
 
 jcondi_spcauchy_ld <- function(Y, i, rho, d) {
   prob_i <- function(Y, i, l, rho, d) {
-    simple_dspcauchy_ld(x=Y, l=l, i=i, rho, d)
+    simple_dspcauchy_ld(x=Y, i=i, j=l, rho, d)
   }
   prob_ij <- sapply(1:n, simple_dspcauchy_ld, x=Y, i=i, rho, d)
   (prob_ij / sum(sapply(1:n, prob_i, Y=Y, i=i, rho=rho, d=d)))
 }
-
 
 
 
