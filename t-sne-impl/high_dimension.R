@@ -5,6 +5,15 @@
 
 # utils
 
+logsumexp <- function (x) {
+  y = max(x)
+  y + log(sum(exp(x - y)))
+}
+
+softmax <- function (x) {
+  x - logsumexp(x)
+}
+
 symmetric_probs <- function(P) {
   n <- nrow(P)
   P = (P + t(P)) / (2*n)
@@ -30,40 +39,45 @@ cosine_polysph <- function(X) {
 
 ## optimal version
 
-high_dimension <- function(x, rho) {
+high_dimension <- function(x, rho, cosine_polysphere=NULL) {
   n <- nrow(x)
   d <- ncol(x)-1
   r <- dim(x)[3]
   cos_sim_pol <- cosine_polysph(x)
   
-  P <- sweep(cos_sim_pol, MARGIN=1, STATS=(-2*rho), FUN="*")
-  P <- sweep(P, MARGIN=1, STATS=(rho^2), FUN="+")
+  P <- sweep(cos_sim_pol, MARGIN=1, STATS=(-2*rho), FUN="*", 
+             check.margin=FALSE)
+  P <- sweep(P, MARGIN=1, STATS=(rho^2), FUN="+", 
+             check.margin=FALSE)
   P <- 1/(1+P)^d
   
   Paux <- P
   P <- sapply(1:r, FUN=diag_3d, x=Paux, val=0, simplify = 'array')
   P_i_r <- apply(P, MARGIN=c(1,2), prod)
   Pi <- rowSums(P_i_r)
-  P_ij = sweep(x=P_i_r, MARGIN=c(1,2), STATS=Pi, FUN="/")
+  P_ij = sweep(x=P_i_r, MARGIN=c(1,2), STATS=Pi, FUN="/", 
+               check.margin=FALSE)
   return(P_ij)
 }
 
+P_optim <- high_dimension(polysphere, rho)
+
 ## inefficient version
 
-high_dimension_P <- function(X, rho) {
+high_dimension_p <- function(X, rho_list, d) {
   n <- nrow(X)
-  d <- (ncol(X)-1)
+  total_p <- p_i_sc(X, rho_list, d)
   jcondi <- function(i) {
-    prob_is <- sapply(seq_len(n), prob_i_spcauchy, x=X, rho=rho[i])
     sapply(1:n, function(j) {
-      jcondi_spcauchy(X, i, j, rho[i], prob_is)
+      jcondi_sc(X, i, j, rho_list, d, total_p)
     })
   }
   P <- sapply(1:n, jcondi)
-  diag(P) <- 0
   return(t(P))
 }
 
-P <- high_dimension_P(polysphere, rho_opt)
+P_ineff <- high_dimension_p(polysphere, rho, 2)
+
+all.equal(P_optim, P_ineff)
 
 Pij <- symmetric_probs(P)
