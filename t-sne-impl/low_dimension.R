@@ -3,6 +3,8 @@
 ## Low-dimension neighborhood probabilities ##
 ##############################################
 
+library(lsa)
+
 p <- d+1
 total_iterations <- 250
 Y <- array(NA, c(n, p, total_iterations))

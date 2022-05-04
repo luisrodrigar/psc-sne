@@ -5,15 +5,6 @@
 
 # utils
 
-logsumexp <- function (x) {
-  y = max(x)
-  y + log(sum(exp(x - y)))
-}
-
-softmax <- function (x) {
-  x - logsumexp(x)
-}
-
 symmetric_probs <- function(P) {
   n <- nrow(P)
   P = (P + t(P)) / (2*n)

@@ -430,10 +430,7 @@ $$
 
 ```{r}
 library(numDeriv)
-
-s.ji <- function(i, j) {
-  t(j) %*% i
-}
+library(rotasym)
 
 jcondi_spcauchy_ld <- function(s_ji, Y, i, rho, d) {
   prob_i <- function(Y, i, l, rho, d) {
@@ -488,6 +485,10 @@ kl_cost <- function(X, Y, P, rho, s_ji) {
 
 jacobian(func=s.ji, x=polysphere[2,,1], j=polysphere[3,,1])
 
+s.ij <- function(i, j) {
+  (t(i) %*% j)[1]
+}
+
 simple_dspcauchy_sim <- function(s_ij, rho, d) {
   ((1 + rho^2 - 2 * rho * s_ij)^(-d))
 }
@@ -497,39 +498,37 @@ simple_dspcauchy_ld <- function(Y, i, j, rho, d) {
 }
 
 q_i_not_j <- function(Y, i, j, rho, d) {
-  loop <- function(l) {
-    nested_loop <- function(k) {
-      if((l!=i || k!=j) && k!=l){
-        return(simple_dspcauchy_ld(Y, l, k, rho, d))
-      } else{
-        return(0)
-      }
-    }
-    sapply(1:n, nested_loop)
-  }
-  sum(t(sapply(1:n, loop)))
+  n <- nrow(Y)
+  qijs <- sapply(1:n, function(k){
+    sapply(1:n, function(l) {
+      return(simple_dspcauchy_ld(Y, l, k, rho, d))
+    })
+  }, simplify = 'array')
+  diag(qijs) <- 0
+  qijs[i, j] <- 0
+  sum(qijs)
 }
 
-q_ij <- function(Y, s_ij, i, j, rho, d) {
+q_ij <- function(Y, s_ij, i, j, rho, d, has_deriv_num) {
   n <- nrow(Y)
-  q_ij <- simple_dspcauchy_sim(s_ij, rho, d)
-  q_inotj <- q_i_not_j(Y, i, j, rho, d)
-  return(q_ij / (q_ij + q_inotj))
+  qij <- simple_dspcauchy_ld(Y, i, j, rho, d)
+  if(has_deriv_num)
+    qij <- simple_dspcauchy_sim(s_ij, rho, d)
+  return(qij / Z(Y, s_ij, i, j, rho, d))
 }
 
 Z <- function(Y, s_ij, i, j, rho, d) {
-  n <- nrow(Y)
-  q_ij <- simple_dspcauchy_sim(s_ij, rho, d)
+  qij <- simple_dspcauchy_sim(s_ij, rho, d)
   q_inotj <- q_i_not_j(Y, i, j, rho, d)
-  return(q_ij+q_inotj)
+  return(qij+q_inotj)
 }
 
-log_q_ij <- function(Y, s_ij, i, j, rho, d){
-  log(q_ij(Y, s_ij, i, j, rho, d))
+log_q_ij <- function(Y, s_ij, i, j, rho, d, has_deriv_num){
+  log(q_ij(Y, s_ij, i, j, rho, d, has_deriv_num))
 }
 
-log_q_ij_prod_Z <- function(Y, s_ij, i, j, rho, d){
-  log(q_ij(Y, s_ij, i, j, rho, d)*Z(Y, s_ij, i, j, rho, d))
+log_q_ij_prod_Z <- function(Y, s_ij, i, j, rho, d, has_deriv_num){
+  log(q_ij(Y, s_ij, i, j, rho, d, has_deriv_num)*Z(Y, s_ij, i, j, rho, d))
 }
 
 log_Z <- function(Y, s_ij, i, j, rho, d){
@@ -537,37 +536,74 @@ log_Z <- function(Y, s_ij, i, j, rho, d){
 }
 
 sum(sapply(c(1:n)[-c(i,j)], function(Y, i, j, rho, d){((1 + rho^2 - 2 * rho * t(Y[i,]) %*% Y[j,])^(-d))}, Y=Y, i=i, rho=rho, d=d))
+
 cos_sim_ij <- function(i, j) {
-  t(i) %*% j
+  (t(i) %*% j)[1]
 }
 
 ## check diff/diff(s_ij) * log(q_kl * Z)
 
+n <- 25
 p <- 3
-Y <- r_unif_sphere(n, p)
-i <- 4
-j <- 12
 d <- 2
+Y <- r_unif_sphere(n, p)
+i <- 2
+j <- 1
 rho <- .5
-s_ij <- cos_sim_ij(Y[i, ], Y[j, ])
-log_q_ij_prod_Z(Y, s_ij, i, j, rho, d)
+log_q_ij_prod_Z(Y, s_ij, i, j, rho, d, TRUE)
 
-first_term <- grad(func=log_q_ij_prod_Z, x=s_ij, Y=Y, i=i, j=j, rho=rho, d=d) 
-first_term_analytically <- round((2/(q_ij(Y, s_ij, i, j, rho, d)*Z(Y, s_ij, i, j, rho, d))*(1+rho^2-2*rho*s_ij)^(-d-1))[1], 8)
-print(round(first_term,8) == first_term_analytically)
+s_ij <- 0
+eval(D(expression((1 + rho^2 - 2 * rho * s_ij)^(-d)), 's_ij'))
+grad(simple_dspcauchy_sim, x=0, rho=.5, d=2)
+
+s_ij <- cos_sim_ij(Y[i, ], Y[j, ])
+q_2_1 <- q_ij(Y, s_ij, i, j, rho, d, TRUE)*Z(Y, s_ij, i, j, rho, d)
+sim_dspcauchy_2_1 <- simple_dspcauchy_sim(s_ij, rho, -(-d-1))
+num_d_2_rho <- -d*-2*rho 
+Z_2_1 <- Z(Y, s_ij, i, j, rho, d)
+
+
+first_term <- grad(func=log_q_ij_prod_Z, x=s_ij, Y=Y, i=i, j=j, rho=rho, d=d, has_deriv_num=TRUE) 
+first_term_analytically <- (num_d_2_rho/q_2_1*sim_dspcauchy_2_1)
+print(round(first_term,8) == round(first_term_analytically, 8))
 
 ## check diff/diff(s_ij) * log(Z)
 
 second_term <- grad(func=log_Z, x=s_ij, Y=Y, i=i, j=j, rho=rho, d=d) 
-second_term_analytically <- round((2/(Z(Y, s_ij, i, j, rho, d))*(1+rho^2-2*rho*s_ij)^(-d-1))[1], 8)
-print(round(second_term, 8) == second_term_analytically)
+second_term_analytically <- (num_d_2_rho/Z_2_1*sim_dspcauchy_2_1)
+print(round(second_term, 8) == round(second_term_analytically, 8))
+
+## check diff/diff(s_ij)
+diff_Z <- grad(func=Z, x=s_ij, Y=Y, i=i, j=j, rho=rho, d=d)
+diff_Z_analytically <- 2*d*rho*sim_dspcauchy_2_1
+print(round(diff_Z, 6) == round(diff_Z_analytically, 6))
+
 
 # some random value for p_kl
-rho_list <- rho_optimize(polysphere, 15)
+r <- 4
+polysphere <- gen_polysphere(n, d, r)
+perp_value <- 15
+rho_list <- rho_optimize(polysphere, perp_value)
 P <- high_dimension(polysphere, rho_list)
 P <- symmetric_probs(P)
 
-result_should_be <- -P[i,j] * (first_term - second_term)
+s_ij <- cos_sim_ij(Y[i, ], Y[j, ])
+result_should_be <- -sum(
+  sapply(1:n, function(k) {
+    sapply(1:n, function(l) {
+      if(k!=l) {
+        has_deriv_numerator <- FALSE
+        if(k == i && l == j) {
+          has_deriv_numerator <- TRUE
+        }
+        return(P[k,l] * 
+               (grad(func=log_q_ij_prod_Z, x=s_ij, Y=Y, i=k, j=l, rho=rho, d=d, has_deriv_num=has_deriv_numerator) 
+                - grad(func=log_Z, x=s_ij, Y=Y, i=k, j=l, rho=rho, d=d)))
+      } else {
+        return(0)
+      }
+    }, simplify = 'array')
+  }, simplify = 'array'))
 
 
 ## calculated value of the analytical expression
@@ -578,9 +614,9 @@ numerator <- 2*d*rho
 denominator <- (1+rho^2-2*rho*s_ij)
 difference <- (Q[i,j]-P[i,j])
 
-result <- (numerator/denominator)*(difference)
+result <- (numerator/denominator) * (difference)
 
-round(result_should_be, 3)
-round(result, 3)
+## with 5 digits of significance, with 6 it fails
+print(round(result_should_be, 5)==round(result, 5))
 ```
 
