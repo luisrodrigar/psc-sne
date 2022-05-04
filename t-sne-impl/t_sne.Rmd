@@ -542,6 +542,7 @@ cos_sim_ij <- function(i, j) {
 }
 
 ## check diff/diff(s_ij) * log(q_kl * Z)
+library(rotasym)
 
 n <- 25
 p <- 3
@@ -587,8 +588,10 @@ rho_list <- rho_optimize(polysphere, perp_value)
 P <- high_dimension(polysphere, rho_list)
 P <- symmetric_probs(P)
 
-s_ij <- cos_sim_ij(Y[i, ], Y[j, ])
-result_should_be <- -sum(
+diff_C_wr_sij <- function(Y, i, j, rho, d, P) {
+  s_ij <- cos_sim_ij(Y[i, ], Y[j, ])
+  n <- nrow(Y)
+  result <- -sum(
   sapply(1:n, function(k) {
     sapply(1:n, function(l) {
       if(k!=l) {
@@ -604,7 +607,10 @@ result_should_be <- -sum(
       }
     }, simplify = 'array')
   }, simplify = 'array'))
+  return(result)
+}
 
+result_should_be <- diff_C_wr_sij(Y, i, j, rho, d, P)
 
 ## calculated value of the analytical expression
 
