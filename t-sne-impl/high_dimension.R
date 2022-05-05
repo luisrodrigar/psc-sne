@@ -51,8 +51,6 @@ high_dimension <- function(x, rho, cosine_polysphere=NULL) {
   return(P_ij)
 }
 
-P_optim <- high_dimension(polysphere, rho)
-
 ## inefficient version
 
 high_dimension_p <- function(X, rho_list, d) {
@@ -66,9 +64,3 @@ high_dimension_p <- function(X, rho_list, d) {
   P <- sapply(1:n, jcondi)
   return(t(P))
 }
-
-P_ineff <- high_dimension_p(polysphere, rho, 2)
-
-all.equal(P_optim, P_ineff)
-
-Pij <- symmetric_probs(P)

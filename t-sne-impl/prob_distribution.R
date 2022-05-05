@@ -4,9 +4,9 @@ library(rotasym)
 
 ## Polyspherical data generation
 
-r <- 3
-n <- 20
-d <- 2
+# r <- 3
+# n <- 20
+# d <- 2
 gen_polysphere <- function(n, d, r) {
   p <- (d+1)
   polysphere <- array(NA, dim=c(n, p, r))
@@ -15,7 +15,8 @@ gen_polysphere <- function(n, d, r) {
   }
   polysphere
 }
-polysphere <- gen_polysphere(n, d, r)
+
+# polysphere <- gen_polysphere(n, d, r)
 
 #######################################
 ###      Gaussian Distribution      ###
