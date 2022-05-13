@@ -1,6 +1,6 @@
-# t-sne-polysphere
+# Poly-spherical-Cauchy-SNE
 
-Master Thesis about the procedure t-Stochastic Neighbor Embedding and its application on the Polysphere
+Master Thesis about the procedure t-Stochastic Neighbor Embedding and its application on the polysphere.
 
 ## Introduction
 
