@@ -408,6 +408,7 @@ $$
 
 ```{r, cache=TRUE}
 library(numDeriv)
+library(rotasym)
 
 n <- 25
 p <- 3
@@ -653,4 +654,20 @@ cost_result <- kl_cost_analytic(Y, ii, rho, d, P, Q)
 
 print(all.equal(cost_result_expected[1,], cost_result))
 
+```
+
+
+```{r}
+
+radial_projection <- function(x) {
+  x/norm(x, type="2")
+}
+z <- runif(n = (d+1), min = 1, max = 10)
+z=Y[1, ]
+result.radial = jacobian(radial_projection, z)
+
+
+result_excpected.radial = (as.numeric((t(z) %*% z)^(-1/2)) * (diag(length(z))-(radial_projection(z)%*%t(radial_projection(z)))))
+
+all.equal(result.radial, result_excpected.radial)
 ```
