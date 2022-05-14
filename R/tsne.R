@@ -3,7 +3,6 @@ library(rgl)
 library(mvtnorm)
 library(viridis)
 library(purrr)
-source("utils.R")
 
 .high_dimension_pij <- function(X, tolerance=1e-5, perplexity=30) {
   n <- nrow(X)
@@ -11,6 +10,7 @@ source("utils.R")
   P <- matrix(0, nrow = 150, ncol = 150)
   beta <- rep(1, n)
   entropy <- log(perplexity)
+  log_perp <- log(perplexity)
   for (i in seq_len(n)) {
     column_index <- index_except_i(i, n)
     D_i <- D[i, column_index]
@@ -82,7 +82,7 @@ source("utils.R")
 
 execute_tsne <- function(obj, X, q) {
   P <- .high_dimension_pij(X, obj@perplexity)
-  P = .symmetric_probs(P)
+  P = symmetric_probs(P)
   if(obj@exageration) {
     P = P * 4
   }
@@ -108,16 +108,16 @@ print.tsne_gen <- function(obj) {
   cat("Is exageration enabled?", obj@exageration, "\n")
 }
 
-X <- iris %>% dplyr::select(-Species) %>% as.matrix()
-obj <- new("tsne_gen", perplexity=30, num_iteration=750, learning_rate=100, 
-           initial_momentum=0.5, final_momentum=0.8, exageration=TRUE)
+# X <- iris %>% dplyr::select(-Species) %>% as.matrix()
+# obj <- new("tsne_gen", perplexity=30, num_iteration=750, learning_rate=100, 
+#           initial_momentum=0.5, final_momentum=0.8, exageration=TRUE)
 
-res <- execute_tsne(obj, X, 2)
-plot(x=res[,1], y=res[,2], col=iris$Species)
+# res <- execute_tsne(obj, X, 2)
+# plot(x=res[,1], y=res[,2], col=iris$Species)
 
-res <- execute_tsne(obj, X, 3)
-colors_3 <- viridis(3)
-species_colors <- ifelse(iris$Species == "setosa", colors_3[1], 
-                 ifelse(iris$Species == "versicolor", colors_3[2], colors_3[3]))
-plot3d(res[,1], res[,2], res[,3], pch = 30, col=species_colors)
-legend3d("topright", legend = c("Setosa", "Versicolor", "Virginica"), col = colors_3, pch=19)
+# res <- execute_tsne(obj, X, 3)
+# colors_3 <- viridis(3)
+# species_colors <- ifelse(iris$Species == "setosa", colors_3[1], 
+#                 ifelse(iris$Species == "versicolor", colors_3[2], colors_3[3]))
+# plot3d(res[,1], res[,2], res[,3], pch = 30, col=species_colors)
+# legend3d("topright", legend = c("Setosa", "Versicolor", "Virginica"), col = colors_3, pch=19)

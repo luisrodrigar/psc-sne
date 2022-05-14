@@ -1,4 +1,5 @@
 library(rotasym)
+library(numDeriv)
 
 simple_dspcauchy_sim <- function(s_ij, rho, d) {
   ((1 + rho^2 - 2 * rho * s_ij)^(-d))
@@ -98,15 +99,6 @@ kl_cost_i <- function(Y, P, rho, d, yi, ii) {
   return(total)
 }
 
-gen_polysphere <- function(n, d, r) {
-  p <- (d+1)
-  polysphere <- array(NA, dim=c(n, p, r))
-  for(k in seq_len(r)) {
-    polysphere[,,k] <- r_unif_sphere(n, p)
-  }
-  polysphere
-}
-
 n <- 25
 d <- 2
 r <- 5
@@ -125,5 +117,7 @@ ii <- 1
 yi <- Y[ii,]
 
 test_that("Gradient Descent checking", {
-  expect_equal(jacobian(kl_cost_i, Y=Y, P=P, rho=rho, d=d, x=yi, i=ii), kl_cost_i(Y, P, rho, d, yi, ii), tolerance=1e-4)
+  expect_equal(jacobian(kl_cost_i, Y=Y, P=P, rho=rho, d=d, x=yi, i=ii), 
+               kl_cost_analytic(Y, ii, rho, d, P, Q), 
+               tolerance=1e-2, ignore_attr = TRUE)
 })
