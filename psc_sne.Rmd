@@ -436,10 +436,7 @@ $$
 ```{r, cache=TRUE}
 library(numDeriv)
 library(rotasym)
-source("perplexity.R")
-source("prob_distribution.R")
-source("high_dimension.R")
-source("low_dimension.R")
+library(pscsne)
 
 cos_sim_ij <- function(i, j) {
   (t(i) %*% j)[1]
