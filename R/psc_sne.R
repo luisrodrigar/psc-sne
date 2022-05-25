@@ -1,4 +1,6 @@
 library(lsa)
+library(parallel)
+library(doParallel)
 
 cos_sim_ij <- function(i, j) {
   (t(i) %*% j)[1]
@@ -14,8 +16,6 @@ diag_3d <- function(x, k, val) {
 ### cosine similarity
 
 cosine_polysph <- function(X) {
-  library(lsa)
-  
   r <- dim(X)[3]
   cosine_sphere_ith <- function(k){
     cos_sim <- cosine(t(X[,,k]))
@@ -39,9 +39,6 @@ radial_projection_ps <- function(X) {
 ### Perplexity
 
 rho_optimize <- function(x, perplexity) {
-  library(parallel)
-  library(doParallel)
-  library(lsa)
   n <- nrow(x)
   num_cores <- detectCores()-1
   cl <- makeForkCluster(num_cores)
@@ -116,7 +113,6 @@ symmetric_probs <- function(P) {
   return(P)
 }
 
-
 low_dimension_Q <- function(Y, d, rho) {
   Z <- radial_projection(Y)
   cos_simil <- cosine(t(Z))
@@ -127,8 +123,22 @@ low_dimension_Q <- function(Y, d, rho) {
   return(Q_ij)
 }
 
-kl_cost_analytic <- function(Y, i,  rho, d, P, Q) {
+kl_divergence_grad <- function(Y, i,  rho, d, P) {
+  if(i < 1 || i > nrow(Y))
+    stop(paste("Error, i value not allowed. Positive values greater tha 0 and",
+         "smaller or equal than the total number of observations."))
+  if(d<1)
+    stop("Error, d value not allowed. Positive values greater or equal than 1.")
+  if(rho < 0 || rho >= 1)
+    stop(paste("Error, rho value not allowed, values in between 0 and 1,", 
+               "the last one not included."))
+  if(nrow(Y)!=nrow(P))
+    stop("Error, the num of observations does not match with the matrix P")
+  if(d+1!=ncol(Y))
+    stop("Error, the columns of Y does not match with the value of d")
+  
   Z <- radial_projection(Y)
+  Q <- low_dimension_Q(Z, d, rho)
   n_minus_i <- (1:nrow(Y))[-i]
   (4*d*rho*colSums(t(
     sapply(n_minus_i, function(j) {
