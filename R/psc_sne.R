@@ -43,10 +43,11 @@ rho_optimize <- function(x, perplexity) {
   num_cores <- detectCores()-1
   cl <- makeForkCluster(num_cores)
   start_time <- Sys.time()
+  cosine_polysph <- cosine_polysph(x)
   rho_opt <- parLapply(cl, 1:n, function(i){
     optim(par = 0.5, 
           fn = function(rho) {
-            res <- (to_perplexity(X = x, i = i, rho=rho) - perplexity)^2
+            res <- (to_perplexity(X = x, i = i, rho=rho, cosine_polysph = cosine_polysph) - perplexity)^2
             ifelse(is.finite(res), res, 1e6)
           },
           method="L-BFGS-B", lower=0, upper=.9999)$par
@@ -54,29 +55,29 @@ rho_optimize <- function(x, perplexity) {
   end_time <- Sys.time()
   print(end_time-start_time)
   rho_opt <- simplify2array(rho_opt)
-  stopCluster(cl) # Time difference of 5.836471 mins
+  stopCluster(cl)
   return(rho_opt)
 }
 
-simple_dspcauchy_hd <- function(x, i, j, rho, k, d) {
-  ((1 + rho^2 - 2 * rho * t(x[i,,k]) %*% x[j,,k])^(-d))
+simple_dspcauchy_hd <- function(x, i, j, rho, k, p) {
+  ((1 + rho^2 - 2 * rho * t(x[i,,k]) %*% x[j,,k])^(-p))
 }
 
-p_ij_sc <- function(x, i, j, rho, d) {
+P_ij_psc <- function(x, i, j, rho, p) {
   if(i == j)
     return(0)
   n <- nrow(x)
   r <- dim(x)[3]
-  return(prod(sapply(1:r, FUN=simple_dspcauchy_hd, x=x, i=i, j=j, rho=rho, d=d)))
+  return(prod(sapply(1:r, FUN=simple_dspcauchy_hd, x=x, i=i, j=j, rho=rho, p=p)))
 }
 
-p_i_sc <- function(x, rho, d) {
+P_i_psc <- function(x, rho, p) {
   n <- nrow(x)
   r <- dim(x)[3]
   prob_is <- sapply(1:n, FUN=function(i){
     sapply(1:n, FUN=function(x, i, j){
       if(j!=i) {
-        return(p_ij_sc(x, i, j, rho[i], d))
+        return(P_ij_psc(x, i, j, rho[i], p))
       } else {
         return(0)
       }
@@ -86,21 +87,21 @@ p_i_sc <- function(x, rho, d) {
 }
 
 
-jcondi_sc <- function(x, i, j, rho, d, total_p=NULL) {
-  if(is.null(total_p)) {
-    total_p <- p_i_sc(x, rho, d)
+jcondi_psc <- function(x, i, j, rho, p, total_P=NULL) {
+  if(is.null(total_P)) {
+    total_P <- P_i_psc(x, rho, p)
   }
-  return(p_ij_sc(x, i, j, rho[i], d)/total_p[i])
+  return(P_ij_psc(x, i, j, rho[i], p)/total_P[i])
 }
 
 
-high_dimension_p <- function(X, rho_list, d) {
+high_dimension_p <- function(X, rho_list, p) {
   X <- radial_projection_ps(X)
   n <- nrow(X)
-  total_p <- p_i_sc(X, rho_list, d)
+  total_P <- P_i_psc(X, rho_list, p)
   jcondi <- function(i) {
     sapply(1:n, function(j) {
-      jcondi_sc(X, i, j, rho_list, d, total_p)
+      jcondi_psc(X, i, j, rho_list, p, total_P)
     })
   }
   P <- sapply(1:n, jcondi)
@@ -123,7 +124,7 @@ low_dimension_Q <- function(Y, d, rho) {
   return(Q_ij)
 }
 
-kl_divergence_grad <- function(Y, i,  rho, d, P) {
+kl_divergence_grad <- function(Y, i, rho, d, P) {
   if(i < 1 || i > nrow(Y))
     stop(paste("Error, i value not allowed. Positive values greater tha 0 and",
          "smaller or equal than the total number of observations."))
@@ -148,3 +149,45 @@ kl_divergence_grad <- function(Y, i,  rho, d, P) {
       return(Z[j,]/div*Q_minus_P)
     }))))
 }
+
+
+psc_sne <- function(X, p, d, rho_psc_list=NULL ,rho=0.5, perplexity=15, num_iteration=500, 
+                    initial_momentum=0.5, final_momentum=0.8, eta=100, 
+                    exageration=TRUE) {
+  if(p+1!=ncol(X))
+    stop("Error, the dimension of Y does not match with the value of p")
+  if(d<1)
+    stop("Error, d value must be greater or equal than 1")
+
+  n <- nrow(X)
+  if(is.null(rho_psc_list))
+    rho_psc_list <- rho_optimize(X, perplexity)
+  P_cond <- high_dimension_p(X, rho_list, p)
+  P <- symmetric_probs(P_cond)
+  
+  total_iterations <- num_iteration + 2
+  Y <- array(NA, c(n, d+1, total_iterations))
+  Y[,,1] <- Y[,,2] <- r_unif_sphere(n, d+1)
+  
+  momentum = initial_momentum
+  
+  range_iterations <- seq_len(num_iteration) + 2
+  for(i in range_iterations) {
+    if(i>=0.75*num_iteration)
+      momentum = final_momentum
+    
+    grad = t(sapply(1:n, kl_divergence_grad, Y=Y[,,i-1], rho=rho, d=d, P=P))
+    ddir = - eta*grad
+    
+    Y_i <- Y[,,i-1] + ddir + momentum*(Y[,,i-1]-Y[,,i-2])
+    Y[,,i] = radial_projection(Y_i)
+    
+    if(i %% 10 == 0) {
+      Q <- low_dimension_Q(Y[,,i], d, rho)
+      C = sum(P * log(P/Q), na.rm=TRUE)
+      print(sprintf("Iteration %d: objective function value is %f", i, C))
+    }
+  }
+  Y[,,total_iterations]
+}
+
