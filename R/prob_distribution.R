@@ -30,19 +30,31 @@ gen_polysphere <- function(n, d, r) {
 
 ## High-dimension 
 
-simple_dspcauchy <- function(x, i, j, rho, k, d) {
-  ((1 + rho^2 - 2 * rho * t(x[i,,k]) %*% x[j,,k])^(-d))
+simple_dspcauchy <- function(x, i, j, rho, k, p) {
+  ((1 + rho^2 - 2 * rho * t(x[i,,k]) %*% x[j,,k])^(-p))
 }
 
-p_ij_sc <- function(x, i, j, rho, d) {
+P_ij_psc <- function(x, i, j, rho, p) {
   if(i == j)
     return(0)
   n <- nrow(x)
   r <- dim(x)[3]
-  return(prod(sapply(1:r, FUN=simple_dspcauchy, x=x, i=i, j=j, rho=rho, d=d)))
+  return(prod(sapply(1:r, FUN=simple_dspcauchy, x=x, i=i, j=j, rho=rho, p=p)))
 }
 
-p_i_sc <- function(x, rho, d) {
+simple_dspcauchy_pov <- function(x, i, j, rho, p) {
+  ((1 + rho^2 - 2 * rho * t(x[i,]) %*% x[j,])^(-p))
+}
+
+P_ij_psc_pov <- function(x, i, j, rho, p, r) {
+  if(i == j)
+    return(0)
+  n <- nrow(x)
+  r <- dim(x)[3]
+  return(prod(sapply(1:r, FUN=simple_dspcauchy, x=x, i=i, j=j, rho=rho, p=p)))
+}
+
+P_i_psc <- function(x, rho, d) {
   n <- nrow(x)
   r <- dim(x)[3]
   prob_is <- sapply(1:n, FUN=function(i){

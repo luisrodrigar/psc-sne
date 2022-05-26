@@ -55,7 +55,7 @@ high_dimension <- function(x, rho, cosine_polysphere=NULL) {
 
 high_dimension_p <- function(X, rho_list, d) {
   n <- nrow(X)
-  total_p <- p_i_sc(X, rho_list, d)
+  total_p <- P_i_psc(X, rho_list, d)
   jcondi <- function(i) {
     sapply(1:n, function(j) {
       jcondi_sc(X, i, j, rho_list, d, total_p)

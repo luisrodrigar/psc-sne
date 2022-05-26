@@ -16,8 +16,7 @@ sdetorus::torusAxis()
 # Sample spherical Cauchy with mean e_p = (0, 0, …, 1) (well, one that is
 # very similar) on S^d
 r_sc <- function(n, d = 1, rho = 0.5) {
-  sphunif::r_alt(n = n, p = d + 1, M = 1, alt = "C",
-                 kappa = rho / (1 - rho^2))[, , 1]
+  r_alt(n=1e3,  p=3, alt='MvMF', kappa=50)
 }
 
 # Sample polyspherical Cauchy on S^{d,r}
