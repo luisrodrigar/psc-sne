@@ -17,7 +17,10 @@ Depends:
     Rcpp
 Imports:
     doFuture,
+    parallel,
+    doParallel,
     foreach,
+    lsa,
     future,
     Directional,
     rotasym,

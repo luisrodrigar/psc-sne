@@ -42,25 +42,13 @@ P_ij_psc <- function(x, i, j, rho, p) {
   return(prod(sapply(1:r, FUN=simple_dspcauchy, x=x, i=i, j=j, rho=rho, p=p)))
 }
 
-simple_dspcauchy_pov <- function(x, i, j, rho, p) {
-  ((1 + rho^2 - 2 * rho * t(x[i,]) %*% x[j,])^(-p))
-}
-
-P_ij_psc_pov <- function(x, i, j, rho, p, r) {
-  if(i == j)
-    return(0)
-  n <- nrow(x)
-  r <- dim(x)[3]
-  return(prod(sapply(1:r, FUN=simple_dspcauchy, x=x, i=i, j=j, rho=rho, p=p)))
-}
-
-P_i_psc <- function(x, rho, d) {
+P_i_psc <- function(x, rho, p) {
   n <- nrow(x)
   r <- dim(x)[3]
   prob_is <- sapply(1:n, FUN=function(i){
     sapply(1:n, FUN=function(x, i, j){
       if(j!=i) {
-        return(p_ij_sc(x, i, j, rho[i], d))
+        return(P_ij_psc(x, i, j, rho[i], p))
       } else {
         return(0)
       }
@@ -69,11 +57,11 @@ P_i_psc <- function(x, rho, d) {
   return(rowSums(prob_is))
 }
 
-jcondi_sc <- function(x, i, j, rho, d, total_p=NULL) {
-  if(is.null(total_p)) {
-    total_p <- p_i_sc(x, rho, d)
+jcondi_psc <- function(x, i, j, rho, p, total_P=NULL) {
+  if(is.null(total_P)) {
+    total_P <- P_i_psc(x, rho, p)
   }
-  return(p_ij_sc(x, i, j, rho[i], d)/total_p[i])
+  return(P_ij_psc(x, i, j, rho[i], p)/total_P[i])
 }
 
 

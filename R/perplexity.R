@@ -2,13 +2,16 @@
 ##      spherical Cauchy Perplexity      ##
 ###########################################
 library(parallel)
+library(doParallel)
+library(lsa)
+library(stats)
 
 to_perplexity_P <- function(X, i, rho) {
   n <- nrow(X)
   d <- (ncol(X)-1)
   rho_list <- rep(rho, n)
   total_p <- P_i_psc(X, rho_list, d)
-  Picondj <- sapply(seq_len(n), jcondi_sc, x=X, i=i, rho=rho_list, d=d, 
+  Picondj <- sapply(seq_len(n), jcondi_psc, x=X, i=i, rho=rho_list, d=d, 
                     total_p=total_p)
   entropy <- function(j) {
     return(Picondj[j] * log2(Picondj[j]))
@@ -28,12 +31,12 @@ to_perplexity <- function(X, i, rho, cosine_polysph=NULL) {
   return(2^(-sum(sapply(seq_len(n)[-i], entropy))))
 }
 
-check <- function(l) max(sapply(l, function(y) max(abs(l[[1]] - y)))) < 1e-7
-microbenchmark::microbenchmark(
-  to_perplexity_P(x, 1, 0.5),
-  to_perplexity(x, 1, 0.5),
-  check = check
-)
+#check <- function(l) max(sapply(l, function(y) max(abs(l[[1]] - y)))) < 1e-7
+#microbenchmark::microbenchmark(
+#  to_perplexity_P(x, 1, 0.5),
+#  to_perplexity(x, 1, 0.5),
+#  check = check
+#)
 
 to_perp <- function(X, rho, cosine_polysph=NULL) {
   if(is.null(cosine_polysph))
@@ -57,7 +60,7 @@ rho_optim_inefficient <- function(x, perplexity) {
   start_time <- Sys.time()
   rho_opt <- parLapply(cl, 1:n, function(i){
     print(i)
-    optim(par = 0.5, 
+    stats::optim(par = 0.5, 
           fn = function(rho) {
             total_p <- P_i_psc(x, rep(rho, n), d)
             res <- (to_perplexity_P(x, i, rho) - perplexity)^2
@@ -85,7 +88,7 @@ rho_optim_ineff <- function(x, perplexity) {
   cosine_polysph <- cosine_polysph(x)
   rho_opt <- parLapply(cl, 1:n, function(i){
     print(paste("Observation :", i))
-    optim(par = 0.5, 
+    stats::optim(par = 0.5, 
           fn = function(rho) {
             print(rho)
             res <- (to_perp(x, rep(rho,n), cosine_polysph)[i] - perplexity)^2
@@ -107,17 +110,14 @@ rho_optim_ineff <- function(x, perplexity) {
 ## Time difference of 14.56007 mins
 ## 50 rows 25 spheres
 
-rho_optimize <- function(x, perplexity) {
-  library(parallel)
-  library(doParallel)
-  library(lsa)
+rho_optimize_1 <- function(x, perplexity) {
   n <- nrow(x)
   num_cores <- detectCores()-1
   cl <- makeForkCluster(num_cores, outfile="log.txt")
   start_time <- Sys.time()
   cosine_polysph <- cosine_polysph(x)
   rho_opt <- parLapply(cl, 1:n, function(i){
-    optim(par = 0.5, 
+    stats::optim(par = 0.5, 
           fn = function(rho) {
             print(rho)
             res <- (to_perplexity(X = x, i = i, rho=rho, cosine_polysph) - perplexity)^2
@@ -137,16 +137,13 @@ rho_optimize <- function(x, perplexity) {
 
 
 rho_optimize_2 <- function(x, perplexity) {
-  library(parallel)
-  library(doParallel)
-  library(lsa)
   n <- nrow(x)
   num_cores <- detectCores()-1
   cl <- makeForkCluster(num_cores)
   start_time <- Sys.time()
   cosine_polysph <- cosine_polysph(x)
   rho_opt <- parLapply(cl, 1:n, function(i){
-    optim(par = 0.5, 
+    stats::optim(par = 0.5, 
           fn = function(rho) {
             res <- (to_perplexity(X = x, i = i, rho=rho) - perplexity)^2
             ifelse(is.finite(res), res, 1e6)

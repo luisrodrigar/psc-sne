@@ -58,7 +58,7 @@ high_dimension_p <- function(X, rho_list, d) {
   total_p <- P_i_psc(X, rho_list, d)
   jcondi <- function(i) {
     sapply(1:n, function(j) {
-      jcondi_sc(X, i, j, rho_list, d, total_p)
+      jcondi_psc(X, i, j, rho_list, d, total_p)
     })
   }
   P <- sapply(1:n, jcondi)

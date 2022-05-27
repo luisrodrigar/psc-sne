@@ -1,0 +1,121 @@
+---
+title: "Applications PSC-SNE"
+author: "Luis Ángel Rodríguez García"
+date: "27-05-2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pscsne)
+```
+
+## Cases
+
+### Case 1
+
+Sample on the $(\mathbb{S}^1)^2$ where $p=1$ and $r=2$.
+
+Data:
+
+```{r}
+# Sample on the (S^1)^2
+n <- 200
+vmf11 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 10)
+vmf12 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi)), kappa = 10)
+x1 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf11),
+                              DirStats::to_rad(vmf12)))
+
+vmf21 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi / 2)), kappa = 5)
+vmf22 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 5)
+x2 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf21),DirStats::to_rad(vmf22)))
+
+```
+
+Let's take a look to the data we have generated for the first circumference:
+
+```{r fig.height=2, fig.width=2, fig.align='center'}
+r <- 1
+plot(rbind(vmf11, vmf12),
+     xlim = c(-r, r), ylim = c(-r, r),
+     col = rep(1:2, each = n),
+     xlab = "x", ylab="y")
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now, it is time to see the second circumference we have generated randomly before:
+
+```{r fig.height=2, fig.width=2, fig.align='center'}
+r <- 1
+plot(rbind(vmf21, vmf22),
+     xlim = c(-r, r), ylim = c(-r, r),
+     col = rep(1:2, each = n),
+     xlab = "x", ylab="y")
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now, let's do the same visualization with the data on the torus:
+
+```{r}
+x <- rbind(x1, x2)
+plot(x, xlim = c(-pi, pi), ylim = c(-pi, pi), axes = FALSE,
+     col = rep(c(1, 2), each = n), pch = 16, 
+     xlab = "x", ylab = "y")
+sdetorus::torusAxis()
+
+# Cartesian coordinates
+x <- DirStats::to_cir(x)
+x_array <- array(dim = c(2 * n, 2, 2))
+x_array[, , 1] <- x[, 1:2]
+x_array[, , 2] <- x[, 3:4]
+```
+
+```{r}
+Y <- psc_sne(X=x_array, d=1, rho_psc_list = rep(0.5, n), num_iteration=60,
+             colors=rep(c(1,2), each=n))
+```
+
+```{r}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <- Y_rad
+
+plot(r*sin(theta),
+     r*cos(theta),
+     col=rep(c(1,2), each=n),
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+
+### Case 2
+
+
+```{r pressure, echo=FALSE}
+n=200
+d=2
+r=3
+samp1 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 0, ph = 0.5)),
+                        kappa = 50)
+samp2 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 2, ph = -1.5)),
+                        kappa = 50)
+samp3 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = -1, ph = 0)),
+                        kappa = 50)
+
+x <- rbind(samp1, samp2, samp3)
+x <- array(x, c(n, 3, 3))
+```
+
+```{r}
+Y <- psc_sne(X=x, d=2, rho_psc_list = rep(0.5, n), num_iteration=60,
+             colors=rep(c(1,2,3), each=n))
+```
+
+```{r}
+scatterplot3d::scatterplot3d(Y,
+                             xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1))
+```
