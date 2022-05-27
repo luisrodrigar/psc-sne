@@ -1,13 +1,11 @@
 
-#' @rdname utils
-#' @export
+
 subtract_rows <- function(X, i) {
   n <- nrow(X)
   return(t(replicate(n - i, unlist(c(X[i, ])))) - X[-(1:i), ])
 }
 
-#' @rdname utils
-#' @export
+
 euclidean_distance <- function(X) {
   dist_val <- c()
   n <- nrow(X)
@@ -21,8 +19,6 @@ euclidean_distance <- function(X) {
   return(t(upper_triang) + upper_triang)
 }
 
-#' @rdname utils
-#' @export
 index_except_i <- function(i, n) {
   index <- c(seq(1, i - 1), seq(i + 1, n))
   if (i == 1) {
@@ -33,16 +29,13 @@ index_except_i <- function(i, n) {
   return(index)
 }
 
-#' @rdname utils
-#' @export
 .symmetric_probs <- function(P) {
   n <- nrow(P)
   P = (P + t(P)) / (2*n)
   return(P)
 }
 
-#' @rdname utils
-#' @export
+
 x_diff <- function(X) {
   sum_x <- apply(X^2, MARGIN = 1, FUN = sum)
   sum_x_m <- replicate(150, sum_x)
@@ -52,8 +45,7 @@ x_diff <- function(X) {
   return(D)
 }
 
-#' @rdname utils
-#' @export
+
 entropy_beta <- function(D_i, beta = 1) {
   P_i <- exp(-D_i * beta)
   sum_p_i <- sum(P_i)
@@ -62,8 +54,7 @@ entropy_beta <- function(D_i, beta = 1) {
   return(list(entropy = H_i, probs = P_i))
 }
 
-#' @rdname utils
-#' @export
+
 binary_search <- function(h_diff, beta, i, beta_min, beta_max) {
   if (h_diff > 0) {
     beta_min <- beta[i]
@@ -83,8 +74,7 @@ binary_search <- function(h_diff, beta, i, beta_min, beta_max) {
   return(list(beta = beta, min = beta_min, max = beta_max))
 }
 
-#' @rdname utils
-#' @export
+
 binary_search_optimization <- function(D_i, i, beta, h_star, prob_star, log_perp,
                                        tolerance = 1e-5) {
   beta_min <- -Inf

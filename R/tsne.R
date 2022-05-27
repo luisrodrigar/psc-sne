@@ -3,10 +3,11 @@ library(rgl)
 library(mvtnorm)
 library(viridis)
 library(purrr)
+library(stats)
 
 .high_dimension_pij <- function(X, tolerance=1e-5, perplexity=30) {
   n <- nrow(X)
-  D <- data.matrix(dist(X))
+  D <- data.matrix(stats::dist(X))
   P <- matrix(0, nrow = 150, ncol = 150)
   beta <- rep(1, n)
   entropy <- log(perplexity)

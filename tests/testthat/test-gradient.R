@@ -1,5 +1,6 @@
 library(rotasym)
 library(numDeriv)
+library(mvtnorm)
 
 simple_dspcauchy_sim <- function(s_ij, rho, d) {
   ((1 + rho^2 - 2 * rho * s_ij)^(-d))
