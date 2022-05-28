@@ -105,13 +105,39 @@ samp2 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 2, ph = -1.5)),
                         kappa = 50)
 samp3 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = -1, ph = 0)),
                         kappa = 50)
+x1 <- rbind(samp1, samp2, samp3)
 
-x <- rbind(samp1, samp2, samp3)
-x <- array(x, c(n, 3, 3))
+scatterplot3d::scatterplot3d(x1,
+                             xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+                             color = rep(1:3, each = n))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+             lit = FALSE)
+rgl::points3d(x1, col = rep(c(1,2,3), each=n))
+
+samp4 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 0, ph = 0.55)),
+                        kappa = 60)
+samp5 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 2, ph = -1.41)),
+                        kappa = 60)
+samp6 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = -1.1, ph = 0.05)),
+                        kappa = 60)
+x2 <- rbind(samp4, samp5, samp6)
+
+scatterplot3d::scatterplot3d(x2,
+                             xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+                             color = rep(1:3, each = n))
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+             lit = FALSE)
+rgl::points3d(x2, col = rep(c(1,2,3), each=n))
+
+x <- rbind(x1, x2)
+x <- array(x, c(n*3, d+1, r))
 ```
 
 ```{r}
-Y <- psc_sne(X=x, d=2, rho_psc_list = rep(0.5, n), num_iteration=60,
+Y <- psc_sne(X=x, d=2, rho_psc_list = rep(0.5, n), num_iteration=250,
              colors=rep(c(1,2,3), each=n))
 ```
 

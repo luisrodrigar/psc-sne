@@ -6,17 +6,18 @@ library(doParallel)
 library(lsa)
 library(stats)
 
-to_perplexity_P <- function(X, i, rho) {
-  n <- nrow(X)
-  d <- (ncol(X)-1)
-  rho_list <- rep(rho, n)
-  total_p <- P_i_psc(X, rho_list, d)
-  Picondj <- sapply(seq_len(n), jcondi_psc, x=X, i=i, rho=rho_list, d=d, 
-                    total_p=total_p)
+to_perplexity_P <- function(x, i, rho) {
+  if(i < 1 || i > nrow(x))
+    stop("The indexes i not valid, must be >= 1 and <= nrow(x)")
+  if(!rlang::is_scalar_atomic(rho))
+    stop("Parameter rho must be an scalar")
+  total_p_i <- sum(P_i_psc(x, i, rep(rho, nrow(x))))
+  Picondj <- sapply(seq_len(nrow(x)), jcondi_psc, x=x, i=i, rho=rep(rho, nrow(x)), 
+                    total_P_i=total_p_i)
   entropy <- function(j) {
     return(Picondj[j] * log2(Picondj[j]))
   }
-  return(2^(-sum(sapply(seq_len(n)[-i], entropy))))
+  return(2^(-sum(sapply(seq_len(nrow(x))[-i], entropy))))
 }
 
 to_perplexity <- function(X, i, rho, cosine_polysph=NULL) {
