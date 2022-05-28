@@ -49,8 +49,8 @@ P_ij_psc <- function(x, i, j, rho) {
     stop("Parameter rho must be an scalar")
   if(i == j)
     return(0)
-  return(prod(
-    sapply(1:dim(x)[3], simple_dspcauchy_hd, x=x, i=i, j=j, rho=rho, p=ncol(x)-1)))
+  return(prod(sapply(1:(dim(x)[3]), 
+                     simple_dspcauchy_hd, x=x, i=i, j=j, rho=rho, p=(ncol(x)-1))))
 }
 
 P_i_psc <- function(x, i, rho_list) {
@@ -58,13 +58,7 @@ P_i_psc <- function(x, i, rho_list) {
     stop("The indexes i not valid, must be >= 1 and <= nrow(x)")
   if(rlang::is_scalar_atomic(rho_list))
     stop("Parameter rho must be a vector of dimension n")
-  sapply(1:nrow(x), FUN=function(x, i, l, rho){
-    if(l!=i) {
-      return(P_ij_psc(x, i, l, rho))
-    } else {
-      return(0)
-    }
-  }, x=x, i=i, rho=rho_list[i])
+  return(sapply(1:nrow(x), FUN=P_ij_psc, x=x, i=i, rho=rho_list[i]))
 }
 
 P_total_psc <- function(x, rho_list) {
