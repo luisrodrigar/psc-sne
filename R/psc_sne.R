@@ -56,41 +56,6 @@ rho_optimize <- function(x, perplexity, cosine_polysph=NULL, num_cores = 2) {
   return(rho_opt)
 }
 
-simple_dspcauchy_hd <- function(x, i, j, rho, k, p) {
-  ((1 + rho^2 - 2 * rho * t(x[i,,k]) %*% x[j,,k])^(-p))
-}
-
-P_ij_psc <- function(x, i, j, rho, p) {
-  if(i == j)
-    return(0)
-  n <- nrow(x)
-  r <- dim(x)[3]
-  return(prod(sapply(1:r, FUN=simple_dspcauchy_hd, x=x, i=i, j=j, rho=rho, p=p)))
-}
-
-P_i_psc <- function(x, rho, p) {
-  n <- nrow(x)
-  r <- dim(x)[3]
-  prob_is <- sapply(1:n, FUN=function(i){
-    sapply(1:n, FUN=function(x, i, j){
-      if(j!=i) {
-        return(P_ij_psc(x, i, j, rho[i], p))
-      } else {
-        return(0)
-      }
-    }, x=x, i=i)
-  }, simplify = 'array')
-  return(rowSums(prob_is))
-}
-
-
-jcondi_psc <- function(x, i, j, rho, p, total_P=NULL) {
-  if(is.null(total_P))
-    total_P <- P_i_psc(x, rho, p)
-  return(P_ij_psc(x, i, j, rho[i], p)/total_P[i])
-}
-
-
 high_dimension <- function(x, rho, cosine_polysphere=NULL) {
   n <- nrow(x)
   d <- ncol(x)-1
@@ -129,7 +94,7 @@ low_dimension_Q <- function(Y, d, rho) {
   return(Q_ij)
 }
 
-kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim=NULL) {
+kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim=NULL, Q=NULL) {
   if(i < 1 || i > nrow(Y))
     stop(paste("Error, i value not allowed. Positive values greater tha 0 and",
          "smaller or equal than the total number of observations."))
@@ -144,8 +109,9 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim=NULL) {
     stop("Error, the columns of Y does not match with the value of d")
   Z <- radial_projection(Y)
   if(is.null(cos_sim))
-    cos_sim = cosine(t(Z))
-  Q <- low_dimension_Q(Z, d, rho)
+    cos_sim <- cosine(t(Z))
+  if(is.null(Q))
+    Q <- low_dimension_Q(Z, d, rho)
   n_minus_i <- (1:nrow(Y))[-i]
   (4*d*rho*colSums(t(
     sapply(n_minus_i, function(j) {
@@ -156,7 +122,7 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim=NULL) {
 
 psc_sne <- function(X, d, rho_psc_list=NULL ,rho=0.5, perplexity=15, num_iteration=200, 
                     initial_momentum=0.5, final_momentum=0.8, eta=100, 
-                    exageration=TRUE, colors=NULL) {
+                    exageration=TRUE, colors=NULL, visualize_prog=FALSE) {
   if(d<1)
     stop("Error, d value must be greater or equal than 1")
 
@@ -183,38 +149,43 @@ psc_sne <- function(X, d, rho_psc_list=NULL ,rho=0.5, perplexity=15, num_iterati
     if(i>=0.75*num_iteration)
       momentum = final_momentum
     
-    cos_sim <- cosine(t(Y[,,i-1]))
     grad = t(simplify2array(mclapply(mc.cores = detectCores()-1, 1:n, 
                       kl_divergence_grad, Y=Y[,,i-1], rho=rho, d=d, P=P, 
-                      cos_sim = cos_sim)))
+                      cos_sim = cosine(t(Y[,,i-1])), 
+                      Q=low_dimension_Q(Y[,,i-1], d, rho))))
     ddir = - eta*grad
     
     Y_i <- Y[,,i-1] + ddir + momentum*(Y[,,i-1]-Y[,,i-2])
     Y[,,i] = radial_projection(Y_i)
     
-    if(i == 3 || (i-2) %% 5 == 0) {
+    if(visualize_prog && (i == 3 || (i-2) %% 5 == 0)) {
       Q <- low_dimension_Q(Y[,,i], d, rho)
       C = sum(P * log(P/Q), na.rm=TRUE)
       print(sprintf("Iteration %d: objective function value is %f", i, C))
-      if(d==1) {
-        Y_rad <- DirStats::to_rad(Y[,,i])
-        r <- 1
-        theta <<- Y_rad
-        if(is.null(colors))
-          colors <- rep(1, n)
-        plot(r*sin(theta),
-             r*cos(theta),
-             col=colors,
-             xlim=c(-max(r),max(r)),
-             ylim=c(-max(r),max(r)))
-        
-        polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
-      }
+      visualize_iter_sol(Y, i, d, colors)
     }
-    tol <- norm(Y[,,i]-Y[,,i-1], "2")
-    if(tol < max_tol)
-      break
   }
   Y[,,total_iterations]
+}
+
+visualize_iter_sol <- function(Y, i, d, colors) {
+  if(is.null(colors))
+    colors <- rep(1, n)
+  if(d==1) {
+    Y_rad <- DirStats::to_rad(Y[,,i])
+    r <- 1
+    theta <<- Y_rad
+    plot(r*sin(theta),
+         r*cos(theta),
+         col=colors,
+         xlim=c(-max(r),max(r)),
+         ylim=c(-max(r),max(r)))
+    
+    polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+  } else if(d==2) {
+    scatterplot3d::scatterplot3d(Y[,,i],
+                                 xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+                                 color = colors)
+  }
 }
 

@@ -102,17 +102,17 @@ kl_div_obj_func <- function(Y, P, rho, d, yi, ii) {
 }
 
 n <- 25
-p <- 3
+p <- 2
 d <- 2
 r <- 5
 rho <- 0.5
 perplexity <- 15
 
-X <- gen_polysphere(n, d, r)
+X <- gen_polysphere(n, p, r)
 rho_hat <- rho_optimize(X, perplexity)
 P <- high_dimension(X, rho_hat)
 P <- symmetric_probs(P)
-Y <- r_unif_sphere(n, p)
+Y <- r_unif_sphere(n, (d+1))
 
 ii <- 1
 yi <- Y[ii,]
