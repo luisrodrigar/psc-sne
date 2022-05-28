@@ -3,6 +3,8 @@
 ## High-dimension neighborhood probabilities ##
 ###############################################
 
+library(lsa)
+
 # utils
 
 symmetric_probs <- function(P) {
@@ -20,12 +22,10 @@ diag_3d <- function(x, k, val) {
 
 ## cosine similarity
 
-cosine_polysph <- function(X) {
-  library(lsa)
-  
-  r <- dim(X)[3]
+cosine_polysph <- function(x) {
+  r <- dim(x)[3]
   cosine_sphere_ith <- function(k){
-    cos_sim <- cosine(t(X[,,k]))
+    cos_sim <- cosine(t(x[,,k]))
   }
   sapply(1:r, cosine_sphere_ith, simplify = 'array')
 }
@@ -37,6 +37,8 @@ high_dimension <- function(x, rho_list, cos_sim_pol=NULL) {
     stop("Parameter rho_list must be a vector")
   if(length(rho_list)!=nrow(x))
     stop("Parameter rho_list not valid, size must be equal to nrow(x)")
+  if(!is.null(cos_sim_pol) && length(dim(cos_sim_pol))!=3)
+    stop("Parameter cos_sim_ps must be a 3d-array")
   n <- nrow(x)
   d <- ncol(x)-1
   r <- dim(x)[3]
@@ -60,17 +62,16 @@ high_dimension <- function(x, rho_list, cos_sim_pol=NULL) {
 
 ## inefficient version
 
-high_dimension_p <- function(X, rho_list) {
+high_dimension_p <- function(x, rho_list) {
   if(!rlang::is_vector(rho_list))
     stop("Parameter rho_list must be a vector")
   if(length(rho_list)!=nrow(x))
     stop("Parameter rho_list not valid, size must be equal to nrow(x)")
-  n <- nrow(X)
-  total_p <- P_total_psc(X, rho_list)
+  total_p <- P_total_psc(x, rho_list)
   jcondi <- function(i) {
-    sapply(1:n, function(j) {
-      jcondi_psc(X, i, j, rho_list, total_p[i])
+    sapply(1:nrow(x), function(j) {
+      jcondi_psc(x, i, j, rho_list, total_p[i])
     })
   }
-  return(t(sapply(1:n, jcondi)))
+  return(t(sapply(1:nrow(x), jcondi)))
 }

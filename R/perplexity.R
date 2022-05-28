@@ -11,64 +11,117 @@ to_perplexity_P <- function(x, i, rho) {
     stop("The indexes i not valid, must be >= 1 and <= nrow(x)")
   if(!rlang::is_scalar_atomic(rho))
     stop("Parameter rho must be an scalar")
-  total_p_i <- sum(P_i_psc(x, i, rep(rho, nrow(x))))
-  Picondj <- sapply(seq_len(nrow(x)), jcondi_psc, x=x, i=i, rho=rep(rho, nrow(x)), 
-                    total_P_i=total_p_i)
+  total_P_i <- sum(P_i_psc(x=x, i=i, rho_list=rep(rho, nrow(x))))
+  Picondj <- psc_cond_given_i(x=x, i=i, rho_list=rep(rho, nrow(x)), 
+                              total_P_i = total_P_i)
   entropy <- function(j) {
     return(Picondj[j] * log2(Picondj[j]))
   }
   return(2^(-sum(sapply(seq_len(nrow(x))[-i], entropy))))
 }
 
-to_perplexity <- function(X, i, rho, cosine_polysph=NULL) {
-  n <- nrow(X)
-  d <- (ncol(X)-1)
-  if(is.null(cosine_polysph))
-    cosine_polysph <- cosine_polysph(X)
-  Picondj <- high_dimension(X, rep(rho, n), cosine_polysph)
+to_perplexity <- function(x, i, rho, cos_sim_ps=NULL) {
+  if(i < 1 || i > nrow(x))
+    stop("The indexes i not valid, must be >= 1 and <= nrow(x)")
+  if(!rlang::is_scalar_atomic(rho))
+    stop("Parameter rho must be an scalar")
+  if(!is.null(cos_sim_ps) && length(dim(cosine_polysph(x)))!=3)
+    stop("Parameter cos_sim_ps must be a 3d-array")
+  if(is.null(cos_sim_ps))
+    cos_sim_ps <- cosine_polysph(x)
+  Picondj <- high_dimension(x, rep(rho, nrow(x)), cos_sim_ps)
   entropy <- function(j) {
     (Picondj[i,j] * log2(Picondj[i,j]))
   }
-  return(2^(-sum(sapply(seq_len(n)[-i], entropy))))
+  return(2^(-sum(sapply(seq_len(nrow(x))[-i], entropy))))
 }
 
-#check <- function(l) max(sapply(l, function(y) max(abs(l[[1]] - y)))) < 1e-7
-#microbenchmark::microbenchmark(
-#  to_perplexity_P(x, 1, 0.5),
-#  to_perplexity(x, 1, 0.5),
-#  check = check
-#)
+# check <- function(l) max(sapply(l, function(y) max(abs(l[[1]] - y)))) < 1e-7
+# microbenchmark::microbenchmark(
+#   to_perplexity_P(x, 1, 0.5),
+#   to_perplexity(x, 1, 0.5),
+#   check = check
+# )
+# 
+# Unit: milliseconds
+# expr       min        lq      mean    median        uq       max neval
+# to_perplexity_P(x, 1, 0.5)  16.69372  17.88449  24.63309  18.65393  27.29528  234.1621   100
+# to_perplexity(x, 1, 0.5) 517.03870 583.15446 625.63860 613.75799 638.68714 1649.2364   100
 
-to_perp <- function(X, rho, cosine_polysph=NULL) {
-  if(is.null(cosine_polysph))
-    cosine_polysph <- cosine_polysph(X)
-  P <- high_dimension(X, rho, cosine_polysph)
+### matrix way
+
+to_perp_scalar <- function(x, rho) {
+  if(length(dim(x))!=3)
+    stop("Dataset 'x' must be a 3d-array")
+  if(rlang::is_scalar_atomic(rho))
+    stop("Parameter rho must be a vector")
+  return(sapply(1:nrow(x), function(i, x, rho) to_perplexity_P(x, i, rho[i]), x=x, rho))
+}
+
+to_perp <- function(x, rho_list, cos_sim_ps=NULL) {
+  if(length(dim(x))!=3)
+    stop("Dataset 'x' must be a 3d-array")
+  if(rlang::is_scalar_atomic(rho_list))
+    stop("Parameter rho_list must be a vector")
+  if(!is.null(cos_sim_ps) && length(dim(cos_sim_ps))!=3)
+    stop("Parameter cos_sim_ps must be a 3d-array")
+  if(is.null(cos_sim_ps))
+    cos_sim_ps <- cosine_polysph(x)
+  P <- high_dimension(x, rho_list, cos_sim_ps)
   op <- P*log2(P)
   diag(op) <- 0
   return(2^(-rowSums(op)))
 }
 
-# inefficient process to calculate the rho
+# microbenchmark::microbenchmark(
+#   to_perplexity_P(x, 1, 0.5),
+#   to_perp(x, rep(.5, nrow(x)), cosine_polysph(x))
+# )
+# 
+# Unit: milliseconds
+# expr      min       lq      mean    median        uq      max neval
+# to_perplexity_P(x, 1, 0.5) 16.52357  18.1450  26.02556  19.03716  32.80008 175.8253   100
+# to_perp(x, rep(0.5, nrow(x)), cos_sim_sph) 96.76836 123.6451 152.28035 142.41592 149.62526 381.0817   100
 
-## scalar calculus
-## Time difference of 25.88906 mins
-## 50 rows 25 spheres
-rho_optim_inefficient <- function(x, perplexity) {
+# optimize rho based on the perplexity
+
+### scalar calculus
+
+# Time difference of 10.21872 mins
+
+rho_optim_serial <- function(x, perplexity) {
   n <- nrow(x)
   d <- (ncol(x)-1)
-  num_cores <- detectCores()-1
-  cl <- makeForkCluster(num_cores, outfile="log.txt")
   start_time <- Sys.time()
-  rho_opt <- parLapply(cl, 1:n, function(i){
-    print(i)
+  rho_opt <- sapply(1:n, function(i){
     stats::optim(par = 0.5, 
           fn = function(rho) {
-            total_p <- P_i_psc(x, rep(rho, n), d)
             res <- (to_perplexity_P(x, i, rho) - perplexity)^2
-            print(res)
             ifelse(is.finite(res), res, 1e6)
           },
           method="L-BFGS-B", lower=0, upper=.9999)$par
+  })
+  end_time <- Sys.time()
+  print(end_time-start_time)
+  rho_opt <- simplify2array(rho_opt)
+  return(rho_opt)
+}
+
+# Time difference of 18.12201 mins
+
+rho_optim_parallel <- function(x, perplexity) {
+  n <- nrow(x)
+  d <- (ncol(x)-1)
+  num_cores <- detectCores()-1
+  cl <- makeForkCluster(num_cores)
+  start_time <- Sys.time()
+  rho_opt <- parLapply(cl, 1:n, function(i){
+    stats::optim(par = 0.5, 
+                 fn = function(rho) {
+                   res <- (to_perplexity_P(x, i, rho) - perplexity)^2
+                   ifelse(is.finite(res), res, 1e6)
+                 },
+                 method="L-BFGS-B", lower=0, upper=.9999)$par
   })
   end_time <- Sys.time()
   print(end_time-start_time)
@@ -83,25 +136,20 @@ rho_optim_inefficient <- function(x, perplexity) {
 
 rho_optim_ineff <- function(x, perplexity) {
   n <- nrow(x)
-  num_cores <- detectCores()-1
-  cl <- makeForkCluster(num_cores, outfile="log.txt")
   start_time <- Sys.time()
   cosine_polysph <- cosine_polysph(x)
-  rho_opt <- parLapply(cl, 1:n, function(i){
-    print(paste("Observation :", i))
-    stats::optim(par = 0.5, 
+  rho_opt <- sapply(1:n, function(i){
+    stats::optim(par = rep(0.5, n), 
           fn = function(rho) {
             print(rho)
-            res <- (to_perp(x, rep(rho,n), cosine_polysph)[i] - perplexity)^2
-            print(res)
+            dif <- to_perp(x, rho, cosine_polysph) - perplexity
+            res <- t(dif) %*% dif
             ifelse(is.finite(res), res, 1e6)
             },
-          method="L-BFGS-B", lower=0, upper=.9999)$par
+          method="L-BFGS-B", lower=rep(0,n), upper=rep(.9999,n))$par
   })
   end_time <- Sys.time()
   print(end_time-start_time)
-  rho_opt <- simplify2array(rho_opt)
-  stopCluster(cl)
   return(rho_opt)
 }
 
@@ -121,7 +169,7 @@ rho_optimize_1 <- function(x, perplexity) {
     stats::optim(par = 0.5, 
           fn = function(rho) {
             print(rho)
-            res <- (to_perplexity(X = x, i = i, rho=rho, cosine_polysph) - perplexity)^2
+            res <- (to_perplexity(x = x, i = i, rho=rho, cosine_polysph) - perplexity)^2
             ifelse(is.finite(res), res, 1e6)
           },
           method="L-BFGS-B", lower=0, upper=.9999)$par
@@ -146,7 +194,7 @@ rho_optimize_2 <- function(x, perplexity) {
   rho_opt <- parLapply(cl, 1:n, function(i){
     stats::optim(par = 0.5, 
           fn = function(rho) {
-            res <- (to_perplexity(X = x, i = i, rho=rho) - perplexity)^2
+            res <- (to_perplexity(x = x, i = i, rho=rho) - perplexity)^2
             ifelse(is.finite(res), res, 1e6)
           },
           method="L-BFGS-B", lower=0, upper=.9999)$par

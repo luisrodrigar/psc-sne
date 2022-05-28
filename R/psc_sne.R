@@ -44,7 +44,7 @@ rho_optimize <- function(x, perplexity, cosine_polysph=NULL, num_cores = 2) {
   rho_opt <- parLapply(cl, 1:n, function(i){
     stats::optim(par = 0.5, 
           fn = function(rho) {
-            res <- (to_perplexity(X = x, i = i, rho=rho, cosine_polysph = cosine_polysph) - perplexity)^2
+            res <- (to_perplexity(x = x, i = i, rho=rho, cos_sim_ps = cosine_polysph) - perplexity)^2
             ifelse(is.finite(res), res, 1e6)
           },
           method="L-BFGS-B", lower=0, upper=.9999)$par
@@ -54,34 +54,6 @@ rho_optimize <- function(x, perplexity, cosine_polysph=NULL, num_cores = 2) {
   rho_opt <- simplify2array(rho_opt)
   stopCluster(cl)
   return(rho_opt)
-}
-
-high_dimension <- function(x, rho, cosine_polysphere=NULL) {
-  n <- nrow(x)
-  d <- ncol(x)-1
-  r <- dim(x)[3]
-  if(is.null(cosine_polysphere))
-    cosine_polysphere <- cosine_polysph(x)
-  
-  P <- sweep(cosine_polysphere, MARGIN=1, STATS=(-2*rho), FUN="*", 
-             check.margin=FALSE)
-  P <- sweep(P, MARGIN=1, STATS=(rho^2), FUN="+", 
-             check.margin=FALSE)
-  P <- 1/(1+P)^d
-  
-  Paux <- P
-  P <- sapply(1:r, FUN=diag_3d, x=Paux, val=0, simplify = 'array')
-  P_i_r <- apply(P, MARGIN=c(1,2), prod)
-  Pi <- rowSums(P_i_r)
-  P_ij = sweep(x=P_i_r, MARGIN=c(1,2), STATS=Pi, FUN="/", 
-               check.margin=FALSE)
-  return(P_ij)
-}
-
-symmetric_probs <- function(P) {
-  n <- nrow(P)
-  P = (P + t(P)) / (2*n)
-  return(P)
 }
 
 low_dimension_Q <- function(Y, d, rho) {
@@ -126,6 +98,8 @@ psc_sne <- function(X, d, rho_psc_list=NULL ,rho=0.5, perplexity=15, num_iterati
   if(d<1)
     stop("Error, d value must be greater or equal than 1")
 
+  X <- radial_projection_ps(X)
+  
   n <- nrow(X)
   p <- ncol(X)-1
   
@@ -133,7 +107,7 @@ psc_sne <- function(X, d, rho_psc_list=NULL ,rho=0.5, perplexity=15, num_iterati
   if(is.null(rho_psc_list))
     rho_psc_list <- rho_optimize(X, perplexity, 
                                  cosine_polysph = cosine_sim_polysphere)
-  P_cond <- high_dimension(x=X, rho=rho_psc_list, cosine_polysphere = cosine_sim_polysphere)
+  P_cond <- high_dimension(x=X, rho_list=rho_psc_list, cos_sim_pol = cosine_sim_polysphere)
   P <- symmetric_probs(P_cond)
   
   total_iterations <- num_iteration + 2
