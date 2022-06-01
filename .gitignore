@@ -43,3 +43,6 @@ vignettes/*.pdf
 
 # Log file
 log.txt
+
+# Ignore files
+spokes.RData

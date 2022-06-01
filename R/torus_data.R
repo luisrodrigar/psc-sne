@@ -14,9 +14,9 @@ plot(x, xlim = c(-pi, pi), ylim = c(-pi, pi), axes = FALSE,
 sdetorus::torusAxis()
 
 # Cartesian coordinates
-x_array <- array(dim = c(2 * n, 2, 2))
-x_array[, , 1] <- DirStats::to_cir(x[, 1])
-x_array[, , 2] <- DirStats::to_cir(x[, 2])
+# x_array <- array(dim = c(2 * n, 2, 2))
+# x_array[, , 1] <- DirStats::to_cir(x[, 1])
+# x_array[, , 2] <- DirStats::to_cir(x[, 2])
 
 # Sample spherical Cauchy with mean e_p = (0, 0, …, 1) (well, one that is
 # very similar) on S^d

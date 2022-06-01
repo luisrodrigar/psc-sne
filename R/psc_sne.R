@@ -93,12 +93,10 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim=NULL, Q=NULL) {
 
 
 psc_sne <- function(X, d, rho_psc_list=NULL ,rho=0.5, perplexity=15, num_iteration=200, 
-                    initial_momentum=0.5, final_momentum=0.8, eta=100, 
-                    exageration=TRUE, colors=NULL, visualize_prog=FALSE) {
+                    initial_momentum=0.5, final_momentum=0.8, eta=200, 
+                    early_exageration=12.0, colors=NULL, visualize_prog=FALSE) {
   if(d<1)
     stop("Error, d value must be greater or equal than 1")
-
-  X <- radial_projection_ps(X)
   
   n <- nrow(X)
   p <- ncol(X)-1
@@ -109,6 +107,7 @@ psc_sne <- function(X, d, rho_psc_list=NULL ,rho=0.5, perplexity=15, num_iterati
                                  cosine_polysph = cosine_sim_polysphere)
   P_cond <- high_dimension(x=X, rho_list=rho_psc_list, cos_sim_pol = cosine_sim_polysphere)
   P <- symmetric_probs(P_cond)
+  P = P * early_exageration
   
   total_iterations <- num_iteration + 2
   Y <- array(NA, c(n, d+1, total_iterations))
@@ -119,27 +118,30 @@ psc_sne <- function(X, d, rho_psc_list=NULL ,rho=0.5, perplexity=15, num_iterati
   
   range_iterations <- seq_len(num_iteration) + 2
   for(i in range_iterations) {
-    print(sprintf("Iteration %d", i))
-    if(i>=0.75*num_iteration)
+    print(sprintf("Iteration %d", i-2))
+    if(i>=250)
       momentum = final_momentum
     
     grad = t(simplify2array(mclapply(mc.cores = detectCores()-1, 1:n, 
                       kl_divergence_grad, Y=Y[,,i-1], rho=rho, d=d, P=P, 
                       cos_sim = cosine(t(Y[,,i-1])), 
                       Q=low_dimension_Q(Y[,,i-1], d, rho))))
-    ddir = - eta*grad
     
-    Y_i <- Y[,,i-1] + ddir + momentum*(Y[,,i-1]-Y[,,i-2])
-    Y[,,i] = radial_projection(Y_i)
+    Y_i <- Y[,,i-1] + (eta*-grad) + momentum*(Y[,,i-1]-Y[,,i-2])
+    Y[,,i] <- radial_projection(Y_i)
+    
+    if(i == 102) {
+      P = P / early_exageration
+    }
     
     if(visualize_prog && (i == 3 || (i-2) %% 5 == 0)) {
       Q <- low_dimension_Q(Y[,,i], d, rho)
       C = sum(P * log(P/Q), na.rm=TRUE)
-      print(sprintf("Iteration %d: objective function value is %f", i, C))
+      print(sprintf("Iteration %d: objective function value is %f", i-2, C))
       visualize_iter_sol(Y, i, d, colors)
     }
   }
-  Y[,,total_iterations]
+  return(Y)
 }
 
 visualize_iter_sol <- function(Y, i, d, colors) {

@@ -65,15 +65,51 @@ plot(x, xlim = c(-pi, pi), ylim = c(-pi, pi), axes = FALSE,
      xlab = "x", ylab = "y")
 sdetorus::torusAxis()
 
+```
+
+```{r}
 # Cartesian coordinates
-x_array <- array(dim = c(2 * n, 2, 2))
+n <- 400
+x_array <- array(dim = c(n, 2, 2))
 x_array[, , 1] <- DirStats::to_cir(x[, 1])
 x_array[, , 2] <- DirStats::to_cir(x[, 2])
 ```
 
 ```{r}
-Y <- psc_sne(X=x_array, d=1, rho_psc_list = rep(0.5, n), num_iteration=60,
-             colors=rep(c(1,2), each=n))
+# Time difference of 2.582784 mins
+rho_first_20 <- rho_optim_parallel(x_array, 20)
+```
+
+```{r}
+# Time difference of 2.012986 mins
+rho_first_45 <- rho_optim_parallel(x_array, 45)
+```
+
+```{r}
+# Time difference of 2.200676 mins
+rho_first_45 <- rho_optim_parallel(x_array, 7)
+```
+
+```{r}
+Y <- psc_sne(X=x_array, d=1, rho_psc_list = rho_first_20, num_iteration=125, colors=rep(c(1,2), each=nrow(x_array)/2), visualize_prog = TRUE)
+```
+
+```{r}
+Y <- psc_sne(X=x_array, d=2, rho_psc_list = rho_first_20, num_iteration=125,
+             colors=rep(c(1,2), each=nrow(x_array)/2), visualize_prog = TRUE, eta=100)
+```
+
+```{r}
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "gray",
+             lit = FALSE)
+rgl::points3d(Y, col = rep(c(1,2), nrow(x_array)/2))
+```
+
+```{r}
+scatterplot3d::scatterplot3d(Y,
+                                 xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+                                 color = rep(c(1,2), nrow(x_array)/2))
 ```
 
 ```{r}
@@ -97,7 +133,7 @@ polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=
 ```{r pressure, echo=FALSE}
 n=200
 d=2
-r=3
+r=2
 samp1 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 0, ph = 0.5)),
                         kappa = 50)
 samp2 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 2, ph = -1.5)),
@@ -131,13 +167,24 @@ rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
              lit = FALSE)
 rgl::points3d(x2, col = rep(c(1,2,3), each=n))
 
-x <- rbind(x1, x2)
-x <- array(x, c(n*3, d+1, r))
+
+x_2 <- array(dim = c(n*3, 3, 2))
+x_2[, , 1] <- x1
+x_2[, , 2] <- x2
+n <- 600
 ```
 
 ```{r}
-Y <- psc_sne(X=x, d=2, rho_psc_list = rep(0.5, n), num_iteration=250,
-             colors=rep(c(1,2,3), each=n))
+Y <- psc_sne(X=x_2, d=1, rho_psc_list = rep(0.5, n), num_iteration=250, eta=75,
+             colors=rep(c(1,2,3), each=n/3), visualize_prog = TRUE)
+```
+
+```{r}
+```
+
+```{r}
+Y <- psc_sne(X=x_2, d=2, rho_psc_list = rep(0.5, n), num_iteration=250, eta=75,
+             colors=rep(c(1,2,3), each=n/3), visualize_prog = TRUE)
 ```
 
 ```{r}
