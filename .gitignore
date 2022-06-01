@@ -46,3 +46,8 @@ log.txt
 
 # Ignore files
 spokes.RData
+
+*_files/
+*.pdf
+*.html
+*.out
