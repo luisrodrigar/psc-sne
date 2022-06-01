@@ -94,7 +94,7 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim=NULL, Q=NULL) {
 
 psc_sne <- function(X, d, rho_psc_list=NULL ,rho=0.5, perplexity=15, num_iteration=200, 
                     initial_momentum=0.5, final_momentum=0.8, eta=200, 
-                    early_exageration=12.0, colors=NULL, visualize_prog=FALSE) {
+                    early_exageration=4.0, colors=NULL, visualize_prog=FALSE) {
   if(d<1)
     stop("Error, d value must be greater or equal than 1")
   
@@ -134,7 +134,7 @@ psc_sne <- function(X, d, rho_psc_list=NULL ,rho=0.5, perplexity=15, num_iterati
       P = P / early_exageration
     }
     
-    if(visualize_prog && (i == 3 || (i-2) %% 5 == 0)) {
+    if(visualize_prog && (i == 3 || (i-2) %% 5 == 0 || i == num_iteration+2)) {
       Q <- low_dimension_Q(Y[,,i], d, rho)
       C = sum(P * log(P/Q), na.rm=TRUE)
       print(sprintf("Iteration %d: objective function value is %f", i-2, C))
