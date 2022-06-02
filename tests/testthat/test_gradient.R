@@ -109,7 +109,7 @@ rho <- 0.5
 perplexity <- 15
 
 X <- gen_polysphere(n, p, r)
-rho_hat <- rho_optimize(X, perplexity)
+rho_hat <- rho_optim_bst(X, perplexity)$rho_values
 P <- high_dimension(X, rho_hat)
 P <- symmetric_probs(P)
 Y <- r_unif_sphere(n, (d+1))

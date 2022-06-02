@@ -35,27 +35,6 @@ radial_projection_ps <- function(X) {
 
 ### Perplexity
 
-rho_optimize <- function(x, perplexity, cosine_polysph=NULL, num_cores = 2) {
-  n <- nrow(x)
-  cl <- makeForkCluster(num_cores)
-  start_time <- Sys.time()
-  if(is.null(cosine_polysph))
-    cosine_polysph <- cosine_polysph(x)
-  rho_opt <- parLapply(cl, 1:n, function(i){
-    stats::optim(par = 0.5, 
-          fn = function(rho) {
-            res <- (to_perplexity(x = x, i = i, rho=rho, cos_sim_ps = cosine_polysph) - perplexity)^2
-            ifelse(is.finite(res), res, 1e6)
-          },
-          method="L-BFGS-B", lower=0, upper=.9999)$par
-  })
-  end_time <- Sys.time()
-  print(end_time-start_time)
-  rho_opt <- simplify2array(rho_opt)
-  stopCluster(cl)
-  return(rho_opt)
-}
-
 low_dimension_Q <- function(Y, d, rho) {
   Z <- radial_projection(Y)
   cos_simil <- cosine(t(Z))
@@ -92,7 +71,7 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim=NULL, Q=NULL) {
 }
 
 
-psc_sne <- function(X, d, rho_psc_list=NULL ,rho=0.5, perplexity=15, num_iteration=200, 
+psc_sne <- function(X, d, rho_psc_list=NULL, rho=0.5, perplexity=30, num_iteration=200, 
                     initial_momentum=0.5, final_momentum=0.8, eta=200, 
                     early_exageration=4.0, colors=NULL, visualize_prog=FALSE) {
   if(d<1)
@@ -100,12 +79,17 @@ psc_sne <- function(X, d, rho_psc_list=NULL ,rho=0.5, perplexity=15, num_iterati
   
   n <- nrow(X)
   p <- ncol(X)-1
+  P_cond <- NULL
   
-  cosine_sim_polysphere <- cosine_polysph(X)
-  if(is.null(rho_psc_list))
-    rho_psc_list <- rho_optimize(X, perplexity, 
-                                 cosine_polysph = cosine_sim_polysphere)
-  P_cond <- high_dimension(x=X, rho_list=rho_psc_list, cos_sim_pol = cosine_sim_polysphere)
+  if(is.null(rho_psc_list)) {
+    res_opt <- rho_optim_bst(X, perplexity)
+    rho_psc_list <- res_opt$rho_values
+    P_cond <- res_opt$P
+  } else {
+    cosine_sim_polysphere <- cosine_polysph(X)
+    P_cond <- high_dimension(x=X, rho_list=rho_psc_list, cos_sim_pol = cosine_sim_polysphere)
+  }
+    
   P <- symmetric_probs(P_cond)
   P = P * early_exageration
   
