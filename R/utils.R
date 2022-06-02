@@ -55,26 +55,6 @@ entropy_beta <- function(D_i, beta = 1) {
 }
 
 
-binary_search <- function(h_diff, beta, i, beta_min, beta_max) {
-  if (h_diff > 0) {
-    beta_min <- beta[i]
-    if (beta_max == -Inf || beta_max == Inf) {
-      beta[i] <- beta[i] * 2
-    } else {
-      beta[i] <- (beta[i] + beta_max) / 2
-    }
-  } else {
-    beta_max <- beta[i]
-    if (beta_min == -Inf || beta_min == Inf) {
-      beta[i] <- beta[i] / 2
-    } else {
-      beta[i] <- (beta[i] + beta_min) / 2
-    }
-  }
-  return(list(beta = beta, min = beta_min, max = beta_max))
-}
-
-
 binary_search_optimization <- function(D_i, i, beta, h_star, prob_star, log_perp,
                                        tolerance = 1e-5) {
   beta_min <- -Inf
@@ -96,4 +76,11 @@ binary_search_optimization <- function(D_i, i, beta, h_star, prob_star, log_perp
     tries <- tries + 1
   }
   return(list(probs = prob_star, beta = beta))
+}
+
+clusterFactory <- function(num_cores, outfile = "") {
+  if(tolower(.Platform$OS.type) != "windows"){
+    cl <- makeCluster(spec=num_cores, type="FORK", outfile=outfile)  
+  } else
+    cl <- makeCluster(spec=num_cores, outfile=outfile)
 }
