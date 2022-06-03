@@ -48,6 +48,5 @@ log.txt
 spokes.RData
 
 *_files/
-*.pdf
 *.html
 *.out
