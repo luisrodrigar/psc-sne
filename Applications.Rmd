@@ -23,6 +23,7 @@ source(here('R', "perplexity.R"))
 source(here('R', "low_dimension.R"))
 source(here('R', "high_dimension.R"))
 source(here('R', "prob_distribution.R"))
+source(here('R', "utils.R"))
 ```
 
 ## Cases
@@ -75,7 +76,7 @@ rho_first_20 <- rho_optim_bst(x_array, 20)
 
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
-```{r cache=TRUE}
+```{r cache=TRUE, fig.height=10, fig.width=10}
 Y <- psc_sne(X=x_array, d=1, rho_psc_list = rho_first_20, num_iteration=125, colors=rep(c(1,2), each=nrow(x_array)/2), visualize_prog = TRUE, check = F)
 ```
 
@@ -95,7 +96,7 @@ polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=
 
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
-```{r cache=TRUE}
+```{r cache=TRUE, fig.height=10, fig.width=10}
 Y <- psc_sne(X=x_array, d=2, rho_psc_list = rho_first_20, num_iteration=125,
              colors=rep(c(1,2), each=nrow(x_array)/2), visualize_prog = TRUE, eta=100)
 ```
@@ -172,7 +173,7 @@ rho_second_perp20 <- rho_optim_parallel(x_2, 20)
 
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
-```{r cache=TRUE}
+```{r cache=TRUE, fig.height=10, fig.width=10}
 Y <- psc_sne(X=x_2, d=1, rho_psc_list = rho_second_perp20, num_iteration=250, eta=75,
              colors=rep(c(1,2,3), each=n/3), visualize_prog = TRUE)
 ```
@@ -192,7 +193,7 @@ polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=
 
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
-```{r cache=TRUE}
+```{r cache=TRUE, fig.height=10, fig.width=10}
 Y <- psc_sne(X=x_2, d=2, rho_psc_list = rho_second_perp20, num_iteration=250, eta=75,
              colors=rep(c(1,2,3), each=n/3), visualize_prog = TRUE)
 ```
@@ -243,47 +244,5 @@ Now, let's do the same visualization with the data on the torus:
 
 ```{r}
 x <- rbind(x1, x2, x3)
-scatterplot3d::scatterplot3d(x)
-sdetorus::torusAxis()
-rgl::plot(x, type="s")
 ```
 
-```{r}
-createTorusMesh <- function(R=1, r=0.25, S=64, s=32, arc=2*pi){
-  vertices <- indices <- NULL
-  for (j in 0:s) {
-    for (i in 0:S) {
-      u <- i / S * arc
-      v <- j / s * 2*pi
-      vertex <- c(
-        (R + r*cos(v)) * cos(u),
-        (R + r*cos(v)) * sin(u),
-        r * sin(v)
-      )
-      vertices <- cbind(vertices, vertex)
-    }
-  }
-  for (j in 1:s) {
-    for (i in 1:S) {
-      a <- (S + 1) * j + i 
-      b <- (S + 1) * (j - 1) + i 
-      c <- (S + 1) * (j - 1) + i + 1
-      d <- (S + 1) * j + i + 1
-      indices <- cbind(indices, c(a,b,d), c(b,c,d))
-    }
-  }
-
-  list(vertices=vertices, indices=indices)  
-}
-
-
-# test ####
-torus <- createTorusMesh()
-verts <- rbind(torus$vertices,1)
-trgls <- torus$indices
-
-library(rgl)
-tmesh <- tmesh3d(verts, trgls)
-shade3d(tmesh, color="gray")
-points3d(x, color=rep(c(1,2,3), each=n))
-```
