@@ -36,43 +36,15 @@ Data:
 ```{r}
 # Sample on the (S^1)^2
 n <- 200
-set.seed(123)
 vmf11 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 10)
-set.seed(123)
 vmf12 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi)), kappa = 10)
 x1 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf11),
                               DirStats::to_rad(vmf12)))
 
-set.seed(123)
 vmf21 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi / 2)), kappa = 5)
-set.seed(123)
 vmf22 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 5)
 x2 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf21),DirStats::to_rad(vmf22)))
 
-```
-
-Let's take a look to the data we have generated for the first circumference:
-
-```{r fig.height=2, fig.width=2, fig.align='center'}
-r <- 1
-plot(rbind(vmf11, vmf12),
-     xlim = c(-r, r), ylim = c(-r, r),
-     col = rep(1:2, each = n),
-     xlab = "x", ylab="y")
-
-polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
-```
-
-Now, it is time to see the second circumference we have generated randomly before:
-
-```{r fig.height=2, fig.width=2, fig.align='center'}
-r <- 1
-plot(rbind(vmf21, vmf22),
-     xlim = c(-r, r), ylim = c(-r, r),
-     col = rep(1:2, each = n),
-     xlab = "x", ylab="y")
-
-polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
 ```
 
 Now, let's do the same visualization with the data on the torus:
@@ -98,13 +70,13 @@ Let's calculate the rho parameters based on a perplexity of 20:
 
 ```{r cache=TRUE}
 # Time difference of 2.582784 mins
-rho_first_20 <- rho_optim_parallel(x_array, 20)
+rho_first_20 <- rho_optim_bst(x_array, 20)
 ```
 
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE}
-Y <- psc_sne(X=x_array, d=1, rho_psc_list = rho_first_20, num_iteration=125, colors=rep(c(1,2), each=nrow(x_array)/2), visualize_prog = TRUE)
+Y <- psc_sne(X=x_array, d=1, rho_psc_list = rho_first_20, num_iteration=125, colors=rep(c(1,2), each=nrow(x_array)/2), visualize_prog = TRUE, check = F)
 ```
 
 ```{r}
@@ -152,13 +124,10 @@ Sample on the $(\mathbb{S}^2)^2$ where $p=2$ and $r=2$.
 n=200
 d=2
 r=2
-set.seed(123)
 samp1 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 0, ph = 0.5)),
                         kappa = 50)
-set.seed(123)
 samp2 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 2, ph = -1.5)),
                         kappa = 50)
-set.seed(123)
 samp3 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = -1, ph = 0)),
                         kappa = 50)
 x1 <- rbind(samp1, samp2, samp3)
@@ -172,13 +141,10 @@ rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
              lit = FALSE)
 rgl::points3d(x1, col = rep(c(1,2,3), each=n))
 
-set.seed(123)
 samp4 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 0, ph = 0.55)),
                         kappa = 60)
-set.seed(123)
 samp5 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 2, ph = -1.41)),
                         kappa = 60)
-set.seed(123)
 samp6 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = -1.1, ph = 0.05)),
                         kappa = 60)
 x2 <- rbind(samp4, samp5, samp6)
@@ -245,3 +211,79 @@ scatterplot3d::scatterplot3d(Y[,,252],xlim = c(-1, 1), ylim = c(-1, 1), zlim = c
 ```
 
 It's clearly clustered the three groups we had in the original generated data.
+
+
+# Case 3
+
+```{r}
+# Sample on the (S^1)^2
+n <- 200
+vmf11 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 10)
+vmf12 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi)), kappa = 10)
+vmf13 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi/2)), kappa = 10)
+x1 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf11),
+                              DirStats::to_rad(vmf12),
+                              DirStats::to_rad(vmf13)))
+
+vmf21 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi / 2)), kappa = 5)
+vmf22 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 5)
+vmf23 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi)), kappa = 5)
+x2 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf21),DirStats::to_rad(vmf22), 
+                              DirStats::to_rad(vmf23)))
+
+vmf31 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi)), kappa = 30)
+vmf32 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 30)
+vmf33 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi/2)), kappa = 30)
+x3 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf31),DirStats::to_rad(vmf32), 
+                              DirStats::to_rad(vmf33)))
+
+```
+
+Now, let's do the same visualization with the data on the torus:
+
+```{r}
+x <- rbind(x1, x2, x3)
+scatterplot3d::scatterplot3d(x)
+sdetorus::torusAxis()
+rgl::plot(x, type="s")
+```
+
+```{r}
+createTorusMesh <- function(R=1, r=0.25, S=64, s=32, arc=2*pi){
+  vertices <- indices <- NULL
+  for (j in 0:s) {
+    for (i in 0:S) {
+      u <- i / S * arc
+      v <- j / s * 2*pi
+      vertex <- c(
+        (R + r*cos(v)) * cos(u),
+        (R + r*cos(v)) * sin(u),
+        r * sin(v)
+      )
+      vertices <- cbind(vertices, vertex)
+    }
+  }
+  for (j in 1:s) {
+    for (i in 1:S) {
+      a <- (S + 1) * j + i 
+      b <- (S + 1) * (j - 1) + i 
+      c <- (S + 1) * (j - 1) + i + 1
+      d <- (S + 1) * j + i + 1
+      indices <- cbind(indices, c(a,b,d), c(b,c,d))
+    }
+  }
+
+  list(vertices=vertices, indices=indices)  
+}
+
+
+# test ####
+torus <- createTorusMesh()
+verts <- rbind(torus$vertices,1)
+trgls <- torus$indices
+
+library(rgl)
+tmesh <- tmesh3d(verts, trgls)
+shade3d(tmesh, color="gray")
+points3d(x, color=rep(c(1,2,3), each=n))
+```
