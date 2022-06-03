@@ -36,16 +36,16 @@ Data:
 ```{r}
 # Sample on the (S^1)^2
 n <- 200
-set.seed(100469000)
+set.seed(123)
 vmf11 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 10)
-set.seed(100469000)
+set.seed(123)
 vmf12 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi)), kappa = 10)
 x1 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf11),
                               DirStats::to_rad(vmf12)))
 
-set.seed(100469000)
+set.seed(123)
 vmf21 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi / 2)), kappa = 5)
-set.seed(100469000)
+set.seed(123)
 vmf22 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 5)
 x2 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf21),DirStats::to_rad(vmf22)))
 
@@ -152,13 +152,13 @@ Sample on the $(\mathbb{S}^2)^2$ where $p=2$ and $r=2$.
 n=200
 d=2
 r=2
-set.seed(100469000)
+set.seed(123)
 samp1 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 0, ph = 0.5)),
                         kappa = 50)
-set.seed(100469000)
+set.seed(123)
 samp2 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 2, ph = -1.5)),
                         kappa = 50)
-set.seed(100469000)
+set.seed(123)
 samp3 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = -1, ph = 0)),
                         kappa = 50)
 x1 <- rbind(samp1, samp2, samp3)
@@ -172,13 +172,13 @@ rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
              lit = FALSE)
 rgl::points3d(x1, col = rep(c(1,2,3), each=n))
 
-set.seed(100469000)
+set.seed(123)
 samp4 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 0, ph = 0.55)),
                         kappa = 60)
-set.seed(100469000)
+set.seed(123)
 samp5 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = 2, ph = -1.41)),
                         kappa = 60)
-set.seed(100469000)
+set.seed(123)
 samp6 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_sph(th = -1.1, ph = 0.05)),
                         kappa = 60)
 x2 <- rbind(samp4, samp5, samp6)
