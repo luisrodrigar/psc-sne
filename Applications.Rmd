@@ -34,7 +34,7 @@ Sample on the $(\mathbb{S}^1)^2$ where $p=1$ and $r=2$.
 
 Data:
 
-```{r}
+```{r cache=TRUE}
 # Sample on the (S^1)^2
 n <- 200
 vmf11 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 10)
@@ -46,25 +46,23 @@ vmf21 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi / 2)), kappa =
 vmf22 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 5)
 x2 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf21),DirStats::to_rad(vmf22)))
 
-```
-
-Now, let's do the same visualization with the data on the torus:
-
-```{r}
 x <- rbind(x1, x2)
-plot(x, xlim = c(-pi, pi), ylim = c(-pi, pi), axes = FALSE,
-     col = rep(c(1, 2), each = n), pch = 16, 
-     xlab = "x", ylab = "y")
-sdetorus::torusAxis()
 
-```
-
-```{r}
 # Cartesian coordinates
 n <- 400
 x_array <- array(dim = c(n, 2, 2))
 x_array[, , 1] <- DirStats::to_cir(x[, 1])
 x_array[, , 2] <- DirStats::to_cir(x[, 2])
+
+indexes <- sample(1:n)
+x_array <- x_array[indexes,,]
+colors <- rep(c(1, 2), each = n/2)[indexes]
+
+plot(x, xlim = c(-pi, pi), ylim = c(-pi, pi), axes = FALSE,
+     col = rep(c(1, 2), each = n/2), pch = 16, 
+     xlab = "x", ylab = "y")
+sdetorus::torusAxis()
+
 ```
 
 Let's calculate the rho parameters based on a perplexity of 20:
@@ -76,18 +74,19 @@ rho_first_20 <- rho_optim_bst(x_array, 20)
 
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
-```{r cache=TRUE, fig.height=10, fig.width=10}
-Y <- psc_sne(X=x_array, d=1, rho_psc_list = rho_first_20, num_iteration=125, colors=rep(c(1,2), each=nrow(x_array)/2), visualize_prog = TRUE, check = F)
+```{r cache=TRUE, fig.asp=1}
+Y <- psc_sne(X=x_array, d=1, rho_psc_list = rho_first_20, num_iteration=125, 
+             colors=colors, visualize_prog = TRUE)
 ```
 
-```{r}
-Y_rad <- DirStats::to_rad(Y[,,127])
+```{r fig.asp=1}
+Y_rad <- DirStats::to_rad(Y)
 r <- 1
 theta <- Y_rad
 
 plot(r*sin(theta),
      r*cos(theta),
-     col=rep(c(1,2), each=nrow(Y)/2),
+     col=colors,
      xlim=c(-max(r),max(r)),
      ylim=c(-max(r),max(r)))
 
@@ -96,22 +95,14 @@ polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=
 
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
-```{r cache=TRUE, fig.height=10, fig.width=10}
+```{r cache=TRUE, fig.asp=1}
 Y <- psc_sne(X=x_array, d=2, rho_psc_list = rho_first_20, num_iteration=125,
-             colors=rep(c(1,2), each=nrow(x_array)/2), visualize_prog = TRUE, eta=100)
+             colors=colors, visualize_prog = TRUE, eta=100, check=F)
 ```
 
-```{r rgl=TRUE, dev='png', fig.align='center'}
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "gray",
-             lit = FALSE)
-rgl::points3d(Y[,,127], col = rep(c(1,2), each=nrow(x_array)/2))
-```
-
-```{r}
-scatterplot3d::scatterplot3d(Y[,,127],
-                                 xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-                                 color = rep(c(1,2), each=nrow(x_array)/2))
+```{r fig.asp=1}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
+                             zlim = c(-1, 1), color = colors)
 ```
 
 It's clearly clustered the two groups we had in the original generated data.
@@ -121,7 +112,7 @@ It's clearly clustered the two groups we had in the original generated data.
 Sample on the $(\mathbb{S}^2)^2$ where $p=2$ and $r=2$.
 
 
-```{r pressure, echo=FALSE}
+```{r cache=TRUE}
 n=200
 d=2
 r=2
@@ -162,29 +153,33 @@ rgl::points3d(x2, col = rep(c(1,2,3), each=n))
 x_2 <- array(dim = c(n*3, 3, 2))
 x_2[, , 1] <- x1
 x_2[, , 2] <- x2
-n <- 600
+
+n <- nrow(x_2)
+indexes <- sample(1:n)
+x_2 <- x_2[indexes,,]
+colors <- rep(c(1, 2, 3), each = n / 3)[indexes]
 ```
 
 Let's calculate the rho parameters based on a perplexity of 20:
 
 ```{r cache=TRUE}
-rho_second_perp20 <- rho_optim_parallel(x_2, 20)
+rho_second_perp20 <- rho_optim_bst(x_2, 20)
 ```
 
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
-Y <- psc_sne(X=x_2, d=1, rho_psc_list = rho_second_perp20, num_iteration=250, eta=75,
-             colors=rep(c(1,2,3), each=n/3), visualize_prog = TRUE)
+Y <- psc_sne(X=x_2, d=1, rho_psc_list = rho_second_perp20, num_iteration=200,
+             colors=colors, visualize_prog = TRUE)
 ```
 
 ```{r}
-Y_rad <- DirStats::to_rad(Y[,,252])
+Y_rad <- DirStats::to_rad(Y)
 r <- 1
 theta <<- Y_rad
 plot(r*sin(theta),
      r*cos(theta),
-     col=rep(c(1,2,3), each=n/3),
+     col=colors,
      xlim=c(-max(r),max(r)),
      ylim=c(-max(r),max(r)))
 
@@ -194,21 +189,14 @@ polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
-Y <- psc_sne(X=x_2, d=2, rho_psc_list = rho_second_perp20, num_iteration=250, eta=75,
-             colors=rep(c(1,2,3), each=n/3), visualize_prog = TRUE)
+Y <- psc_sne(X=x_2, d=2, rho_psc_list = rho_second_perp20, num_iteration=200,
+             colors=colors, visualize_prog = TRUE)
 ```
 
-```{r rgl=TRUE, dev='png', fig.align='center'}
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "gray",
-             lit = FALSE)
-rgl::points3d(Y[,,252], col = rep(c(1,2), each=nrow(Y)/2))
 
-```
-
-```{r}
-scatterplot3d::scatterplot3d(Y[,,252],xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1), 
-                             color = rep(c(1,2,3), each=n/3))
+```{r fig.asp=1}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1), 
+                             color = colors)
 ```
 
 It's clearly clustered the three groups we had in the original generated data.
@@ -216,25 +204,27 @@ It's clearly clustered the three groups we had in the original generated data.
 
 # Case 3
 
-```{r}
+Sample on the $(\mathbb{S}^1)^3$ where $p=1$ and $r=3$.
+
+```{r cache=TRUE}
 # Sample on the (S^1)^2
-n <- 200
-vmf11 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 10)
-vmf12 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi)), kappa = 10)
-vmf13 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi/2)), kappa = 10)
+n_ori <- 200
+vmf11 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = 0)), kappa = 10)
+vmf12 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi)), kappa = 10)
+vmf13 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi/2)), kappa = 10)
 x1 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf11),
                               DirStats::to_rad(vmf12),
                               DirStats::to_rad(vmf13)))
 
-vmf21 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi / 2)), kappa = 5)
-vmf22 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 5)
-vmf23 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi)), kappa = 5)
+vmf21 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi / 2)), kappa = 5)
+vmf22 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = 0)), kappa = 5)
+vmf23 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi)), kappa = 5)
 x2 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf21),DirStats::to_rad(vmf22), 
                               DirStats::to_rad(vmf23)))
 
-vmf31 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi)), kappa = 30)
-vmf32 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 30)
-vmf33 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi/2)), kappa = 30)
+vmf31 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi)), kappa = 30)
+vmf32 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = 0)), kappa = 30)
+vmf33 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi/2)), kappa = 30)
 x3 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf31),DirStats::to_rad(vmf32), 
                               DirStats::to_rad(vmf33)))
 
@@ -242,7 +232,61 @@ x3 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf31),DirStats::to_rad(vmf32),
 
 Now, let's do the same visualization with the data on the torus:
 
-```{r}
+```{r fig.asp=1}
 x <- rbind(x1, x2, x3)
+n <- n_ori * 3
+x_3 <- array(dim = c(n, 2, 3))
+x_3[, , 1] <- DirStats::to_cir(x[, 1])
+x_3[, , 2] <- DirStats::to_cir(x[, 2])
+x_3[, , 3] <- DirStats::to_cir(x[, 3])
+
+n <- nrow(x_3)
+indexes <- sample(1:n)
+x_3 <- x_3[indexes,,]
+colors <- rep(c(1, 2, 3), each = n / 3)[indexes]
+
+
+pairs(x[indexes,], col = colors)
+scatterplot3d::scatterplot3d(x[indexes,], xlim = c(-pi, pi), ylim = c(-pi, pi), zlim = c(-pi, pi), 
+                             color = colors)
 ```
+
+Let's calculate the rho parameters based on a perplexity of 25:
+
+```{r cache=TRUE}
+rho_third_perp25 <- rho_optim_bst(x_3, 25)
+```
+
+First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
+
+```{r cache=TRUE, fig.height=10, fig.width=10}
+Y <- psc_sne(X=x_3, d=1, rho_psc_list = rho_third_perp25, num_iteration=200,
+             colors=colors, visualize_prog = TRUE)
+```
+
+```{r fig.asp=1}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <<- Y_rad
+plot(r*sin(theta),
+     r*cos(theta),
+     col=colors,
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
+
+```{r cache=TRUE, fig.height=10, fig.width=10}
+Y <- psc_sne(X=x_3, d=2, rho_psc_list = rho_third_perp25, num_iteration=200,
+             colors=colors, visualize_prog = TRUE)
+```
+
+```{r fig.asp=1}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1), 
+                             color = colors)
+```
+
 
