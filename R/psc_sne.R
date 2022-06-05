@@ -91,10 +91,18 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
     stop("Error, d value must be greater or equal than 1")
   }
 
+  # Initializing the vectors for the objective value, errors and gradient norm
+  obj_func_iter <- numeric(length = nrow(X))
+  absolute_errors <- numeric(length = nrow(X))
+  relative_errors <- numeric(length = nrow(X))
+  gradient_norms <- numeric(length = nrow(X))
+
   n <- nrow(X)
   p <- ncol(X) - 1
   P_cond <- NULL
+  Y_i <- NULL
 
+  # Based on the rho values parameter, calculating or processing them
   if (is.null(rho_psc_list)) {
     res_opt <- rho_optim_bst(X, perplexity)
     rho_psc_list <- res_opt$rho_values
@@ -107,28 +115,37 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
     P_cond <- high_dimension(x = X, rho_list = rho_psc_list, cos_sim_pol = cosine_sim_polysphere)
   }
 
+  # Generating the P matrix, high-dimensional probabilities (P_j|i + P_i|j) / 2n
   P <- symmetric_probs(P_cond)
+
+  # Early exaggeration in the high-dimensional probabilities
   P <- P * early_exageration
 
+  # Matrices to store the Y's and the Q's in each iteration
   total_iterations <- num_iteration + 2
   Y <- array(NA, c(n, d + 1, total_iterations))
   Y[, , 1] <- Y[, , 2] <- gen_opt_sphere(n, d)
   Qs <- array(NA, c(n, n, total_iterations))
   Qs[, , 1] <- Qs[, , 2] <- low_dimension_Q(Y[, , 2], d, rho)
 
+  # Initial momentum
   momentum <- initial_momentum
 
-  obj_func_iter <- vector(mode = "numeric", length = nrow(X))
+  # Visualizing the plots in a 4x4 grid
+  if (visualize_prog) {
+    par(mfrow = c(4, 4))
+  }
 
-  if (visualize_prog) par(mfrow = c(4, 4))
-
+  # Interval from 2 to number of iterations + 2
   range_iterations <- seq_len(num_iteration) + 2
+
   for (i in range_iterations) {
-    print(sprintf("Iteration %d", i - 2))
+    # apply final momentum
     if (i >= 250) {
       momentum <- final_momentum
     }
 
+    # gradient of the objective function
     grad <- t(simplify2array(mclapply(
       mc.cores = detectCores() - 1, 1:n,
       kl_divergence_grad, Y = Y[, , i - 1], rho = rho, d = d, P = P,
@@ -136,12 +153,31 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
       Q = Qs[, , i - 1]
     )))
 
+    # gradient descent
     Y_i <- Y[, , i - 1] + (eta * -grad) + momentum * (Y[, , i - 1] - Y[, , i - 2])
-    Y[, , i] <- radial_projection(Y_i)
 
+    # Projecting iteration solution onto the sphere/circumference of radio 1
+    Y_i <- radial_projection(Y_i)
+
+    # Store the iteration's Y in the 3d Y's matrix
+    Y[, , i] <- Y_i
+
+    # Generate the Q matrix with the low-dimension probabilities
     Qs[, , i] <- low_dimension_Q(Y[, , i], d, rho)
+
+    # Objective func value, absolute and relative errors and the gradient norm
     obj_func_iter[i - 2] <- sum(P * log(P / Qs[, , i]), na.rm = TRUE)
-    print(sprintf("Iteration %d: Objective function value is %f", i - 2, obj_func_iter[i - 2]))
+    if (i > 3) {
+      absolute_errors[i - 2] <- abs(obj_func_iter[i - 3] - obj_func_iter[i - 2])
+      relative_errors[i - 2] <- absolute_errors[i - 2] / obj_func_iter[i - 3]
+    }
+    gradient_norms[i - 2] <- norm(grad, "2")
+
+    print(sprintf(
+      "Iter %d, obj %f, abs %f, rel %f, norm %f", i - 2,
+      obj_func_iter[i - 2], absolute_errors[i - 2],
+      relative_errors[i - 2], gradient_norms[i - 2]
+    ))
 
     if (visualize_prog && (i == 3 || (i - 2) %% 25 == 0 || i == num_iteration + 2)) {
       visualize_iter_sol(Y, i, d, colors)
@@ -153,14 +189,14 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
     }
 
     # Relative error less than 1%, then break the loop
-    if (check && i - 2 > 1 && obj_func_iter[i - 2] != 0) {
-      res <- obj_func_iter[i - 2] - obj_func_iter[i - 3]
-      err <- res * 100 / obj_func_iter[i - 2]
-      if (err < tol) break
+    if (check && i - 2 > 1) {
+      if (relative_errors[i - 2] < tol) break
     }
   }
-  if (visualize_prog) par(mfrow = c(1, 1))
-  return(Y)
+  if (visualize_prog) {
+    par(mfrow = c(1, 1))
+  }
+  return(Y_i)
 }
 
 gen_opt_sphere <- function(n, d) {
