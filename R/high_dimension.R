@@ -39,10 +39,9 @@ diag_3d <- function(x, k, val) {
 #' Calculates the cosine similarity for each matrix
 #'
 #' @param x array 3-dimensional
-#' @return a 3-dimensional matrix with the cosine similarities of each matrix of \code{x}
+#' @return a 3-dimensional array with the cosine similarities of each matrix of \code{x}
 #' @examples
-#' cosine_polysph(matrix(runif(3 * 3), nrow = 3, ncol = 3))
-#' cosine_polysph(diag(3))
+#' cosine_polysph(x)
 cosine_polysph <- function(x) {
   r <- dim(x)[3]
   cosine_sphere_ith <- function(k) {
@@ -57,10 +56,10 @@ cosine_polysph <- function(x) {
 #' @param x array 3-dimensional
 #' @param rho_list rho parameter for each \code{i}-th observation
 #' @param cos_sim_pol cosine similarities of the polysphere
-#' @return a 3-dimensional matrix with the high-dimension probabilities of the array \code{x}
+#' @return a 3-dimensional array with the high-dimension probabilities of the array \code{x}
 #' @examples
-#' high_dimension(matrix(runif(3 * 3), nrow = 3, ncol = 3), rep(0.5, 3))
-#' high_dimension(diag(3), rep(0.5, 3), cosine_polysph(diag(3)))
+#' high_dimension(x, rep(0.5, 3))
+#' high_dimension(x, rep(0.5, 3), cosine_polysph(diag(3)))
 high_dimension <- function(x, rho_list, cos_sim_pol = NULL) {
   if (!rlang::is_vector(rho_list)) {
     stop("Parameter rho_list must be a vector")
@@ -112,14 +111,14 @@ high_dimension <- function(x, rho_list, cos_sim_pol = NULL) {
 }
 
 #' Scalar version
-#' Calculates the high-dimension probabilities of a polyspherical cauchy distribution
+#' Calculates the high-dimension probabilities of a polyspherical Cauchy distribution
 #'
 #' @param x array 3-dimensional
 #' @param rho_list rho parameter for each \code{i}-th observation
 #' @return a 3-dimensional matrix with the high-dimension probabilities of the array \code{x}
 #' @examples
-#' high_dimension_p(matrix(runif(3 * 3), nrow = 3, ncol = 3), rep(0.5, 3))
-#' high_dimension_p(diag(3), rep(0.5, 3))
+#' high_dimension_p(x, rep(0.5, 3))
+#' high_dimension_p(x, rep(0.5, 3))
 high_dimension_p <- function(x, rho_list) {
   if (!rlang::is_vector(rho_list)) {
     stop("Parameter rho_list must be a vector")

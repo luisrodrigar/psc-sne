@@ -2,48 +2,6 @@ library(parallel)
 library(doParallel)
 library(lsa)
 
-cos_sim_ij <- function(i, j) {
-  (t(i) %*% j)[1]
-}
-
-## High-dimensional space
-
-diag_3d <- function(x, k, val) {
-  diag(x[, , k]) <- val
-  return(x[, , k])
-}
-
-### cosine similarity
-
-cosine_polysph <- function(X) {
-  r <- dim(X)[3]
-  sapply(1:r, function(x, k) cosine(t(x[, , k])), x = X, simplify = "array")
-}
-
-### Radial projection
-
-radial_projection <- function(X) {
-  t(sapply(1:nrow(X), function(i) {
-    X[i, ] / norm(X[i, ], type = "2")
-  }))
-}
-
-radial_projection_ps <- function(X) {
-  r <- dim(X)[3]
-  sapply(1:r, function(x, k) radial_projection(x[, , k]), x = X, simplify = "array")
-}
-
-### Perplexity
-
-low_dimension_Q <- function(Y, d, rho) {
-  Z <- radial_projection(Y)
-  cos_simil <- cosine(t(Z))
-  Q <- (1 + rho^2 - 2 * rho * cos_simil)^(-d)
-  diag(Q) <- 0
-  Qi <- sum(Q)
-  Q_ij <- Q / Qi
-  return(Q_ij)
-}
 
 kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   if (i < 1 || i > nrow(Y)) {
@@ -72,7 +30,7 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
     cos_sim <- cosine(t(Z))
   }
   if (is.null(Q)) {
-    Q <- low_dimension_Q(Z, d, rho)
+    Q <- low_dimension_Q(Z, rho)
   }
   n_minus_i <- (1:nrow(Y))[-i]
   (4 * d * rho * colSums(t(
@@ -126,7 +84,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
   Y <- array(NA, c(n, d + 1, total_iterations))
   Y[, , 1] <- Y[, , 2] <- gen_opt_sphere(n, d)
   Qs <- array(NA, c(n, n, total_iterations))
-  Qs[, , 1] <- Qs[, , 2] <- low_dimension_Q(Y[, , 2], d, rho)
+  Qs[, , 1] <- Qs[, , 2] <- low_dimension_Q(Y[, , 2], rho)
 
   # Initial momentum
   momentum <- initial_momentum
@@ -163,7 +121,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
     Y[, , i] <- Y_i
 
     # Generate the Q matrix with the low-dimension probabilities
-    Qs[, , i] <- low_dimension_Q(Y[, , i], d, rho)
+    Qs[, , i] <- low_dimension_Q(Y[, , i], rho)
 
     # Objective func value, absolute and relative errors and the gradient norm
     obj_func_iter[i - 2] <- sum(P * log(P / Qs[, , i]), na.rm = TRUE)
