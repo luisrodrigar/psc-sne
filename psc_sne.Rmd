@@ -559,7 +559,7 @@ result_should_be <- diff_C_wr_sij(Y, i, j, rho, d, P)
 
 ## calculated value of the analytical expression
 
-Q <- low_dimension_Q(Y, d, rho)
+Q <- low_dimension_Q(Y, rho)
 
 numerator <- 2*d*rho
 denominator <- (1+rho^2-2*rho*s_ij)
