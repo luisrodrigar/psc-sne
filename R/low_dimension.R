@@ -20,7 +20,7 @@ radial_projection <- function(x) {
 }
 
 #' Calculate the low-dimension probabilities of a reduced matrix Y
-#' Using 
+#' Using
 #'
 #' @param Y matrix with the points in the sphere
 #' @param rho parameter between 0 and 1 (not included)
@@ -31,7 +31,7 @@ radial_projection <- function(x) {
 #' low_dimension_Q(Y, 0.9999)
 low_dimension_Q <- function(Y, rho) {
   # Obtaining d, where S^d
-  d <- ncol(Y)-1
+  d <- ncol(Y) - 1
   # Projecting the points onto de sphere, in case they are not
   Z <- radial_projection(Y)
   # Calculate the cosine similarities matrix of Z
@@ -42,7 +42,7 @@ low_dimension_Q <- function(Y, rho) {
   diag(Q) <- 0
   # Calculate the total probability
   Qi <- sum(Q)
-  # Calculate the matrix probability of the joint probabilities 
+  # Calculate the matrix probability of the joint probabilities
   Q_ij <- Q / Qi
   return(Q_ij)
 }

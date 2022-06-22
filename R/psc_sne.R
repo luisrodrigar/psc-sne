@@ -2,7 +2,15 @@ library(parallel)
 library(doParallel)
 library(lsa)
 
-
+#' Calculates analytically the gradient of the Kullback-Leibler divergence function
+#'
+#' @param Y data point onto the low-dimension (S^d)
+#' @param i the index of the i-th observation where the gradient is calculated
+#' @param rho parameter between 0 and 0.9999 (not included)
+#' @return data onto the sphere
+#' @examples
+#' kl_divergence_grad(Y, 2, 0.5, 2, P)
+#' kl_divergence_grad(Y, 2, 0.5, 2, P, cosine(t(Y)), low_dimension_Q(Y, 0.5))
 kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   if (i < 1 || i > nrow(Y)) {
     stop(paste(
@@ -25,13 +33,17 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   if (d + 1 != ncol(Y)) {
     stop("Error, the columns of Y does not match with the value of d")
   }
+  # Calculate the radial projection in case it is not in the sphere or radius 1
   Z <- radial_projection(Y)
+  # Calculate the cosine similarities in case it is not passing as a parameter
   if (is.null(cos_sim)) {
     cos_sim <- cosine(t(Z))
   }
+  # Calculate the low dimension probabilities based on the data Z
   if (is.null(Q)) {
     Q <- low_dimension_Q(Z, rho)
   }
+  # Applying the formula of the gradient: 4dp\sum_{j=1}^n[y_i'/(1+rho^2-2rho*y_i'*y_j)*(q_{ij}-p_{ij})]
   n_minus_i <- (1:nrow(Y))[-i]
   (4 * d * rho * colSums(t(
     sapply(n_minus_i, function(j) {
@@ -40,7 +52,14 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   )))
 }
 
-
+#' Calculates the poly-spherical-Cauchy-SNE given a data onto the poly-sphere and the reduced dimension
+#'
+#' @param X data point onto the high-dimension (S^p)^r
+#' @param d reduced dimension
+#' @return data onto the low-dimension sphere
+#' @examples
+#' psc_sne(X, 1)
+#' psc_sne(X, 2)
 psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_iteration = 200,
                     initial_momentum = 0.5, final_momentum = 0.8, eta = 200,
                     early_exageration = 4.0, colors = NULL, visualize_prog = FALSE,
@@ -55,25 +74,34 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
   relative_errors <- numeric(length = nrow(X))
   gradient_norms <- numeric(length = nrow(X))
 
+  # Sample size
   n <- nrow(X)
+  # Number of dimensions
   p <- ncol(X) - 1
+
+  # Initialize to null
+  # Conditional probabilities of high-dimension
   P_cond <- NULL
+  # Current data onto the reduced sphere
   Y_i <- NULL
 
-  # Based on the rho values parameter, calculating or processing them
+  # Based on the rho values parameter, do different things
   if (is.null(rho_psc_list)) {
+    # Calculating the rho optimal values by means of the 'rho_optim_bst' method
     res_opt <- rho_optim_bst(X, perplexity)
-    rho_psc_list <- res_opt$rho_values
     P_cond <- res_opt$P
+    rho_psc_list <- res_opt$rho_values
   } else if (class(rho_psc_list) == "list") {
-    P_cond <- rho_psc_list$`P`
+    # Obtaining the values from the object of the parameter
+    P_cond <- rho_psc_list$P
     rho_psc_list <- rho_psc_list$rho_values
   } else {
+    # Calculating the probabilities based on the rho values
     cosine_sim_polysphere <- cosine_polysph(X)
     P_cond <- high_dimension(x = X, rho_list = rho_psc_list, cos_sim_pol = cosine_sim_polysphere)
   }
 
-  # Generating the P matrix, high-dimensional probabilities (P_j|i + P_i|j) / 2n
+  # Generating the high-dimension symmetric P matrix, (P_j|i + P_i|j) / 2n
   P <- symmetric_probs(P_cond)
 
   # Early exaggeration in the high-dimensional probabilities
@@ -82,8 +110,10 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
   # Matrices to store the Y's and the Q's in each iteration
   total_iterations <- num_iteration + 2
   Y <- array(NA, c(n, d + 1, total_iterations))
+  # Generate points evenly spaced
   Y[, , 1] <- Y[, , 2] <- gen_opt_sphere(n, d)
   Qs <- array(NA, c(n, n, total_iterations))
+  # Generate low-dimension probabilities for the data generated
   Qs[, , 1] <- Qs[, , 2] <- low_dimension_Q(Y[, , 2], rho)
 
   # Initial momentum
@@ -98,12 +128,12 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
   range_iterations <- seq_len(num_iteration) + 2
 
   for (i in range_iterations) {
-    # apply final momentum
+    # applying final momentum
     if (i >= 250) {
       momentum <- final_momentum
     }
 
-    # gradient of the objective function
+    # gradient of the objective function for all the observations
     grad <- t(simplify2array(mclapply(
       mc.cores = detectCores() - 1, 1:n,
       kl_divergence_grad, Y = Y[, , i - 1], rho = rho, d = d, P = P,
@@ -151,41 +181,26 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
       if (relative_errors[i - 2] < tol) break
     }
   }
+  # Undo the par configuration (grid 4x4)
   if (visualize_prog) {
     par(mfrow = c(1, 1))
   }
   return(Y_i)
 }
 
-gen_opt_sphere <- function(n, d) {
-  Y <- NULL
-  if (n < 1) {
-    stop("Parameter n not valid, it has to be positive integer")
-  }
-  if (d == 1) {
-    Y <- DirStats::to_cir(seq(0, 2 * pi, l = n + 1)[-(n + 1)]) # 0 == 2 * pi, so we exclude it
-  } else if (d == 2) {
-    Y <- X_Fib(n)
-  } else {
-    stop("Parameter d not valid, only 1 or 2")
-  }
-  return(Y)
-}
-
-X_Fib <- function(N) {
-  phi_inv <- (1 - sqrt(5)) / 2
-  N <- N / 2
-  i <- (-N:N)[-N]
-  lat <- asin(2 * i / (2 * N + 1))
-  lon <- (2 * pi * i * phi_inv) %% (2 * pi)
-  X <- cbind(cbind(cos(lon), sin(lon)) * cos(lat), sin(lat))
-  return(X)
-}
-
-visualize_iter_sol <- function(Y, i, d, colors) {
+#' Visualize the iteration solution in a plot
+#'
+#' @param Y data point onto the low-dimension S^d
+#' @param i the i-th iteration
+#' @examples
+#' visualize_iter_sol(Y, 10, 2)
+#' visualize_iter_sol(Y, 10, 2, rep(c(1, 2), each = nrow(Y) / 2))
+visualize_iter_sol <- function(Y, i, d, colors = NULL) {
+  # If colors is null, set all of them to black
   if (is.null(colors)) {
     colors <- rep(1, n)
   }
+  # Plot in a circumference
   if (d == 1) {
     Y_rad <- DirStats::to_rad(Y[, , i])
     r <- 1
@@ -198,7 +213,9 @@ visualize_iter_sol <- function(Y, i, d, colors) {
     )
 
     polygon(max(r) * sin(seq(0, 2 * pi, length.out = 100)), max(r) * cos(seq(0, 2 * pi, length.out = 100)))
-  } else if (d == 2) {
+  }
+  # Plot in an sphere
+  else if (d == 2) {
     scatterplot3d::scatterplot3d(Y[, , i],
       xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
       color = colors, main = paste("Iteration", i - 2)

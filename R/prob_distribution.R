@@ -3,23 +3,6 @@ library(Directional)
 library(rotasym)
 library(rlang)
 
-#' Poly-spherical data generation
-#'
-#' @param n sample size
-#' @param p number of dimension in the sphere (S^p)
-#' @param r number of spheres (S^p)^r
-#' @return data onto the sphere
-#' @examples
-#' gen_polysphere(100, 1, 3)
-#' gen_polysphere(250, 2, 5)
-gen_polysphere <- function(n, p, r) {
-  polysphere <- array(NA, dim = c(n, p + 1, r))
-  for (k in seq_len(r)) {
-    polysphere[, , k] <- r_unif_sphere(n, p + 1)
-  }
-  polysphere
-}
-
 #####################################
 ### Spherical Cauchy Distribution ###
 #####################################
