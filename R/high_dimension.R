@@ -73,7 +73,7 @@ high_dimension <- function(x, rho_list, cos_sim_pol = NULL) {
   # Number of observations
   n <- nrow(x)
   # Number of columns
-  d <- ncol(x) - 1
+  p <- ncol(x) - 1
   # Number of spheres
   r <- dim(x)[3]
 
@@ -92,8 +92,8 @@ high_dimension <- function(x, rho_list, cos_sim_pol = NULL) {
     MARGIN = 1, STATS = (rho_list^2), FUN = "+",
     check.margin = FALSE
   )
-  # Calculate 1 / (1 + P)^d
-  P <- 1 / (1 + P)^d
+  # Calculate 1 / (1 + P)^p
+  P <- 1 / (1 + P)^p
 
   # Set the diagonal of each matrix of the 3d-array to zero
   Paux <- P

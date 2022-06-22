@@ -18,18 +18,25 @@ gen_polysphere <- function(n, p, r) {
 
 # polysphere <- gen_polysphere(n, p, r)
 
-#######################################
-###      Gaussian Distribution      ###
-#######################################
-
-# TODO: for the gaussian distribution which is implemented for the regular t-SNE
-
 #####################################
 ### Spherical Cauchy Distribution ###
 #####################################
 
 ## High-dimension
 
+#' Scalar version
+#' Calculate the spherical Cauchy density function
+#'
+#' @param x 3d-array that is a poly-sphere, (S^p)^r
+#' @param i corresponds to the i-th observation index
+#' @param j corresponds to the j-th observation index
+#' @param rho param between 0 and 1 (not included)
+#' @param k corresponds to the k-th sphere index
+#' @param p corresponds to S^p, associated to R^(p+1)
+#' @return spherical Cauchy density value given the parameters
+#' @examples
+#' simple_dspcauchy_hd(x, 1, 2, 0.5. 2, 1)
+#' simple_dspcauchy_hd(x, 4, 0.9999, 3, 2)
 simple_dspcauchy_hd <- function(x, i, j, rho, k, p) {
   if (i < 1 || i > nrow(x) || j < 1 || j > nrow(x)) {
     stop("The indexes (i and j) not valid, must be >= 1 and <= nrow(x)")
@@ -43,6 +50,7 @@ simple_dspcauchy_hd <- function(x, i, j, rho, k, p) {
   if (p + 1 != ncol(x)) {
     stop("Parameter p is not valid, it must match with the dataset dimension")
   }
+  # Apply the formula: 1 + rho^2 - 2 * rho * x[i,,k]'x[j,,k]
   drop((1 + rho^2 - 2 * rho * t(x[i, , k]) %*% x[j, , k])^(-p))
 }
 
