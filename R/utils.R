@@ -47,22 +47,33 @@ gen_opt_sphere <- function(n, d) {
   if (n < 1) {
     stop("Parameter n not valid, it has to be positive integer")
   }
+  # Generate data for the circumference S^1
   if (d == 1) {
     Y <- DirStats::to_cir(seq(0, 2 * pi, l = n + 1)[-(n + 1)]) # 0 == 2 * pi, so we exclude it
-  } else if (d == 2) {
-    Y <- X_Fib(n)
+  }
+  # Generate data for the sphere S^2
+  else if (d == 2) {
+    Y <- fibonacci_lattice(n)
   } else {
     stop("Parameter d not valid, only 1 or 2")
   }
   return(Y)
 }
 
-X_Fib <- function(N) {
-  phi_inv <- (1 - sqrt(5)) / 2
-  N <- N / 2
-  i <- (-N:N)[-N]
-  lat <- asin(2 * i / (2 * N + 1))
-  lon <- (2 * pi * i * phi_inv) %% (2 * pi)
-  X <- cbind(cbind(cos(lon), sin(lon)) * cos(lat), sin(lat))
-  return(X)
+#' Generated optimal evenly separated points onto the sphere S^2
+#'
+#' @param n number of points to be generated
+#' @return evenly optimal separated points onto the low-dimension sphere S^2
+#' @examples
+#' fibonacci_lattice(100)
+#' fibonacci_lattice(250)
+fibonacci_lattice <- function(n) {
+  i <- seq(0, n - 1) + 0.5
+  phi <- acos(1 - 2 * i / n)
+  goldenRatio <- (1 + 5**0.5) / 2
+  theta <- 2 * pi * i / goldenRatio
+  x <- cos(theta) * sin(phi)
+  y <- sin(theta) * sin(phi)
+  z <- cos(phi)
+  return(cbind(x, y, z))
 }
