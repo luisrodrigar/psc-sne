@@ -3,7 +3,7 @@ library(numDeriv)
 library(mvtnorm)
 
 simple_dspcauchy_sim <- function(s_ij, rho, d) {
-  ((1 + rho^2 - 2 * rho * s_ij)^(-d))
+  drop((1 + rho^2 - 2 * rho * s_ij)^(-d))
 }
 
 q_i_not_j <- function(Y, i, j, rho, d) {
@@ -46,15 +46,15 @@ log_Z <- function(Y, s_ij, i, j, rho, d) {
 }
 
 simple_dspcauchy_yi <- function(Y, yi, j, rho, d) {
-  ((1 + rho^2 - 2 * rho * t(yi) %*% Y[j, ])^(-d))
+  drop((1 + rho^2 - 2 * rho * t(yi) %*% Y[j, ])^(-d))
 }
 
 simple_dspcauchy_yj <- function(Y, yi, i, rho, d) {
-  ((1 + rho^2 - 2 * rho * t(Y[i, ]) %*% yi)^(-d))
+  drop((1 + rho^2 - 2 * rho * t(Y[i, ]) %*% yi)^(-d))
 }
 
 simple_dspcauchy_ld <- function(Y, i, j, rho, d) {
-  ((1 + rho^2 - 2 * rho * t(Y[i, ]) %*% Y[j, ])^(-d))
+  drop((1 + rho^2 - 2 * rho * t(Y[i, ]) %*% Y[j, ])^(-d))
 }
 
 Z_yi <- function(Y, rho, d, yi, diff_i) {
@@ -110,8 +110,9 @@ rho <- 0.5
 perplexity <- 15
 
 X <- gen_polysphere(n, p, r)
-rho_hat <- rho_optim_bst(X, perplexity)$rho_values
-P <- high_dimension(X, rho_hat)
+optim_hat <- rho_optim_bst(X, perplexity)
+rho_hat <- optim_hat$rho_values
+P <- optim_hat$P
 P <- symmetric_probs(P)
 Y <- r_unif_sphere(n, (d + 1))
 

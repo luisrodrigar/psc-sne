@@ -25,11 +25,11 @@ Imports:
     Directional,
     rotasym,
     numDeriv,
-    testthat
+    testthat,
+    mvtnorm
 Suggests:
     knitr,
     markdown,
-    mvtnorm,
     progress,
     progressr,
     rmarkdown,
