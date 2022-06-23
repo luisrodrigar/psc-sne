@@ -9,9 +9,9 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 library(rprojroot)
 library(here)
-print(here())
 library(knitr)
 library(rgl)
+library(mvtnorm)
 rgl::setupKnitr()
 ```
 
@@ -290,3 +290,54 @@ scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1
 ```
 
 
+# Case 4
+
+```{r}
+d <- 3
+n <- 5e2
+samp <- sdetorus::toPiInt(mvtnorm::rmvnorm(n = n, mean = rep(pi, d)))
+pairs(samp)
+scatterplot3d::scatterplot3d(samp, xlim = c(-pi, pi), ylim = c(-pi, pi), zlim = c(-pi, pi))
+
+x_4 <- array(dim = c(n, 2, 3))
+x_4[, , 1] <- DirStats::to_cir(samp[, 1])
+x_4[, , 2] <- DirStats::to_cir(samp[, 2])
+x_4[, , 3] <- DirStats::to_cir(samp[, 3])
+
+```
+
+Let's calculate the rho parameters based on a perplexity of 25:
+
+```{r cache=TRUE}
+rho_four_perp20 <- rho_optim_bst(x_4, 20)
+```
+
+First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
+
+```{r cache=TRUE, fig.height=10, fig.width=10}
+Y <- psc_sne(X=x_4, d=1, rho_psc_list = rho_four_perp20, num_iteration=200, 
+             visualize_prog = TRUE)
+```
+
+```{r fig.asp=1}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <<- Y_rad
+plot(r*sin(theta),
+     r*cos(theta),
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
+
+```{r cache=TRUE, fig.height=10, fig.width=10}
+Y <- psc_sne(X=x_4, d=2, rho_psc_list = rho_four_perp20, num_iteration=200,
+             visualize_prog = TRUE)
+```
+
+```{r fig.asp=1}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1))
+```
