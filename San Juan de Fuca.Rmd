@@ -1,0 +1,158 @@
+---
+title: "San Juan de Fuca"
+author: "Luis Ángel Rodríguez García"
+date: "25-05-2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(echo = TRUE, root.dir = rprojroot::find_rstudio_root_file())
+library(rprojroot)
+library(here)
+library(knitr)
+library(rgl)
+rgl::setupKnitr()
+source(here('R', 'psc_sne.R'))
+source(here('R', 'psc_sne.R'))
+source(here('R', "perplexity.R"))
+source(here('R', "low_dimension.R"))
+source(here('R', "high_dimension.R"))
+source(here('R', "prob_distribution.R"))
+source(here('R', "utils.R"))
+```
+
+
+```{r}
+data_ID <- "HFR/USWC/6km/hourly/RTV/HFRADAR_US_West_Coast_6km_Resolution_Hourly_RTV_best.ncd"
+data_url <- paste0("http://hfrnet-tds.ucsd.edu/thredds/dodsC/", data_ID)
+data <- ncdf4::nc_open(data_url)
+
+lat <- ncdf4::ncvar_get(data,"lat")
+lon <- ncdf4::ncvar_get(data,"lon")
+tim <- lubridate::date("2012-01-01 00:00:00 UTC") + 
+  lubridate::hours(ncdf4::ncvar_get(data, "time")) # Fix weird data time
+
+# Strait of Juan de Fuca -- just 2 months
+loc <- "Strait of Juan de Fuca"
+begin_lat <- 48.1
+end_lat <- 48.5
+begin_lon <- -124.5
+end_lon <- -123
+begin_tim <- lubridate::date("2021-01-01 00:00:00 UTC")
+end_tim <- lubridate::date("2021-03-01 00:00:00 UTC")
+
+# Get data function -- takes info from global environment and writes on it,
+# not very elegant but does the job
+get_data <- function() {
+
+  # Obtain the data indexes associated to the given information
+  begin_lat_ind <<- which(lat >= begin_lat)[1]
+  begin_lon_ind <<- which(lon >= begin_lon)[1]
+  begin_tim_ind <<- which(tim >= begin_tim)[1]
+  end_lat_ind <<- which(lat <= end_lat)
+  end_lon_ind <<- which(lon <= end_lon)
+  end_tim_ind <<- which(tim <= end_tim)
+  end_lat_ind <<- end_lat_ind[length(end_lat_ind)]
+  end_lon_ind <<- end_lon_ind[length(end_lon_ind)]
+  end_tim_ind <<- end_tim_ind[length(end_tim_ind)]
+
+  # Download sizes
+  l_lat <<- end_lat_ind - begin_lat_ind + 1
+  l_lon <<- end_lon_ind - begin_lon_ind + 1
+  l_tim <<- end_tim_ind - begin_tim_ind + 1
+  stopifnot(l_lat > 0)
+  stopifnot(l_lon > 0)
+  stopifnot(l_tim > 0)
+
+  # Upper bound on the size of one out of two objects to be downloaded
+  cat("Data size:", format(object.size(rnorm(l_lat * l_lon * l_tim)),
+                           units = "Mb"))
+
+  # Download (u, v), being:
+  # u (m/s) = surface_eastward_sea_water_velocity = surface_eastward_sea_water_velocity
+  # v (m/s) = surface_northward_sea_water_velocity = surface_northward_sea_water_velocity
+  u <<- ncdf4::ncvar_get(data, "u", 
+                         start = c(begin_lon_ind, begin_lat_ind, begin_tim_ind),
+                         count = c(l_lon, l_lat, l_tim))
+  v <<- ncdf4::ncvar_get(data, "v", 
+                         start = c(begin_lon_ind, begin_lat_ind, begin_tim_ind),
+                         count = c(l_lon, l_lat, l_tim))
+}
+
+data <- get_data()
+
+filled.contour(lon[begin_lon_ind:end_lon_ind], lat[begin_lat_ind:end_lat_ind],
+               apply(u, 1:2, function(x) mean(is.na(x))),
+               ylab = "lat", xlab = "lon", zlim = c(0, 1),
+               main = "Proportion NAs", plot.axes = {
+                  box(); axis(1); axis(2)
+                  points(expand.grid(lon[begin_lon_ind:end_lon_ind],
+                                     lat[begin_lat_ind:end_lat_ind]),
+                         pch = 16, cex = 0.5)
+                  })
+```
+
+```{r}
+
+plot_vfield <- function(i) {
+
+  speed <- sqrt(u[, , i]^2 + v[, , i]^2)
+  tim_i <- format(tim[(begin_tim_ind:end_tim_ind)[i]], "%Y-%m-%d %H:%M")
+  OceanView::quiver2D(u[, , i] / speed, v[, , i] / speed, 
+                      x = lon[begin_lon_ind:end_lon_ind],
+                      y = lat[begin_lat_ind:end_lat_ind],
+                      colvar = speed, clim = c(0, 1),
+                      xlim = c(begin_lon, end_lon),
+                      ylim = c(begin_lat, end_lat),
+                      main = paste(loc, tim_i), colkey = FALSE,
+                      xlab = "Latitude", ylab = "Longitude")
+  points(expand.grid(lon[begin_lon_ind:end_lon_ind],
+                     lat[begin_lat_ind:end_lat_ind]),
+         pch = 16, cex = 0.5)
+
+}
+
+par(mfrow = c(3, 3))
+for (i in seq(1, 27, by = 3)) plot_vfield(i)
+
+```
+
+
+```{r}
+
+n <- nrow(u)
+m <- ncol(u)
+r <- dim(u)[3]
+d <- 2
+names_lon_lat <- expand.grid(lon[begin_lon_ind:end_lon_ind], lat[begin_lat_ind:end_lat_ind])
+names_lon_lat <- paste(names_lon_lat$Var1, names_lon_lat$Var2, sep = ",")
+juanfuca_polysphere <- array(NA, dim=c(n*m, d+1, r), 
+                             dimnames = list(names_lon_lat, c('x','y', 'z'), 1:r))
+for(k in seq_len(r)) {
+  speed <- sqrt(u[, , k]^2 + v[, , k]^2)
+  for(i in seq_len(n)) {
+    for(j in seq_len(m)) {
+      if(!is.na(u[i,j,k])) {
+        juanfuca_polysphere[((i-1)*m)+j, , k] <- 
+          DirStats::to_sph(u[i, j, k] / speed[i,j], v[i, j, k] / speed[i,j]) 
+      }
+    }
+  }
+}
+
+```
+
+
+```{r}
+
+rho_first_20 <- rho_optim_bst(juanfuca_polysphere, 24)
+# Time difference of 56.16389 mins
+
+```
+
+```{r}
+Y <- psc_sne(X=juanfuca_polysphere, d=1, 
+             rho_psc_list = rep(0.5, nrow(juanfuca_polysphere)), 
+             num_iteration=125, 
+             visualize_prog = TRUE)
+```
