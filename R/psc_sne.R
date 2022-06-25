@@ -62,8 +62,8 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 #' psc_sne(X, 2)
 psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_iteration = 200,
                     initial_momentum = 0.5, final_momentum = 0.8, eta = 200,
-                    early_exageration = 4.0, colors = NULL, visualize_prog = FALSE,
-                    tol = 1e-6, check = TRUE) {
+                    early_exaggeration = 4.0, colors = NULL, visualize_prog = FALSE,
+                    tol = 1e-9, check = TRUE) {
   if (d < 1) {
     stop("Error, d value must be greater or equal than 1")
   }
@@ -105,7 +105,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
   P <- symmetric_probs(P_cond)
 
   # Early exaggeration in the high-dimensional probabilities
-  P <- P * early_exageration
+  P <- P * early_exaggeration
 
   # Matrices to store the Y's and the Q's in each iteration
   total_iterations <- num_iteration + 2
@@ -171,19 +171,20 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
       visualize_iter_sol(Y, i, d, colors)
     }
 
-    # Reverse the early exageration made at the begining
+    # Reverse the early exaggeration made at the beginning
     if (i == 102) {
-      P <- P / early_exageration
+      P <- P / early_exaggeration
     }
 
     # Relative error less than 1%, then break the loop
-    if (check && i - 2 > 1) {
+    if (check && i - 2 > 100) {
       if (relative_errors[i - 2] < tol) break
     }
   }
   # Undo the par configuration (grid 4x4)
   if (visualize_prog) {
     par(mfrow = c(1, 1))
+    visualize_iter_sol(Y, i, d, colors)
   }
   return(Y_i)
 }
@@ -198,6 +199,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
 visualize_iter_sol <- function(Y, i, d, colors = NULL) {
   # If colors is null, set all of them to black
   if (is.null(colors)) {
+    n <- nrow(Y)
     colors <- rep(1, n)
   }
   # Plot in a circumference

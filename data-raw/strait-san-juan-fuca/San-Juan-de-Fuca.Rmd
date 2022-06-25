@@ -1,0 +1,373 @@
+---
+title: "San Juan de Fuca"
+author: "Luis Ángel Rodríguez García"
+date: "25-05-2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(echo = TRUE, root.dir = rprojroot::find_rstudio_root_file())
+library(rprojroot)
+library(here)
+library(knitr)
+library(rgl)
+rgl::setupKnitr()
+source(here('R', 'psc_sne.R'))
+source(here('R', 'psc_sne.R'))
+source(here('R', "perplexity.R"))
+source(here('R', "low_dimension.R"))
+source(here('R', "high_dimension.R"))
+source(here('R', "prob_distribution.R"))
+source(here('R', "utils.R"))
+```
+
+
+```{r eval=FALSE}
+data_ID <- "HFR/USWC/6km/hourly/RTV/HFRADAR_US_West_Coast_6km_Resolution_Hourly_RTV_best.ncd"
+data_url <- paste0("http://hfrnet-tds.ucsd.edu/thredds/dodsC/", data_ID)
+data <- ncdf4::nc_open(data_url)
+
+lat <- ncdf4::ncvar_get(data,"lat")
+lon <- ncdf4::ncvar_get(data,"lon")
+tim <- lubridate::date("2012-01-01 00:00:00 UTC") + 
+  lubridate::hours(ncdf4::ncvar_get(data, "time")) # Fix weird data time
+
+# Strait of Juan de Fuca -- just 2 months
+loc <- "Strait of Juan de Fuca"
+begin_lat <- 48.1
+end_lat <- 48.5
+begin_lon <- -124.5
+end_lon <- -123
+begin_tim <- lubridate::date("2021-01-01 00:00:00 UTC")
+end_tim <- lubridate::date("2021-03-01 00:00:00 UTC")
+
+# Get data function -- takes info from global environment and writes on it,
+# not very elegant but does the job
+get_data <- function() {
+
+  # Obtain the data indexes associated to the given information
+  begin_lat_ind <<- which(lat >= begin_lat)[1]
+  begin_lon_ind <<- which(lon >= begin_lon)[1]
+  begin_tim_ind <<- which(tim >= begin_tim)[1]
+  end_lat_ind <<- which(lat <= end_lat)
+  end_lon_ind <<- which(lon <= end_lon)
+  end_tim_ind <<- which(tim <= end_tim)
+  end_lat_ind <<- end_lat_ind[length(end_lat_ind)]
+  end_lon_ind <<- end_lon_ind[length(end_lon_ind)]
+  end_tim_ind <<- end_tim_ind[length(end_tim_ind)]
+
+  # Download sizes
+  l_lat <<- end_lat_ind - begin_lat_ind + 1
+  l_lon <<- end_lon_ind - begin_lon_ind + 1
+  l_tim <<- end_tim_ind - begin_tim_ind + 1
+  stopifnot(l_lat > 0)
+  stopifnot(l_lon > 0)
+  stopifnot(l_tim > 0)
+
+  # Upper bound on the size of one out of two objects to be downloaded
+  cat("Data size:", format(object.size(rnorm(l_lat * l_lon * l_tim)),
+                           units = "Mb"))
+
+  # Download (u, v), being:
+  # u (m/s) = surface_eastward_sea_water_velocity = surface_eastward_sea_water_velocity
+  # v (m/s) = surface_northward_sea_water_velocity = surface_northward_sea_water_velocity
+  u <<- ncdf4::ncvar_get(data, "u", 
+                         start = c(begin_lon_ind, begin_lat_ind, begin_tim_ind),
+                         count = c(l_lon, l_lat, l_tim))
+  v <<- ncdf4::ncvar_get(data, "v", 
+                         start = c(begin_lon_ind, begin_lat_ind, begin_tim_ind),
+                         count = c(l_lon, l_lat, l_tim))
+}
+
+# Download data in a monthly loop to avoid surpassing 500Mb limit
+for (year in 2020:2022) {
+
+  month <- 1
+  if (year == 2020) {
+    month <- 5
+  }
+  while ( ( year < 2022 && month <= 12 ) || (year == 2022 && month <= 5) ) {
+
+    # Show progress
+    cat("\n", year, "-", month, "\n")
+
+    begin_tim <- date(paste(toString(year), toString(month),
+                            "01 00:00:00 UTC", sep = "-"))
+    if (month != 12) {
+
+      end_tim <- date(paste(toString(year), toString(month + 1),
+                            "01 00:00:00 UTC", sep = "-"))
+
+    } else {
+
+      end_tim <- date(paste(toString(year + 1), toString(1),
+                            "01 00:00:00 UTC", sep = "-"))
+
+    }
+
+    # Download data
+    get_data()
+
+    # Get data dimensions
+    lat_length <- dim(u)[1]
+    lon_length <- dim(u)[2]
+    time_length <- dim(u)[3]
+
+    # Find the indexes associated to dimensions
+    lat_aux <- begin_lat_ind:(begin_lat_ind + lat_length - 1)
+    lon_aux <- begin_lon_ind:(begin_lon_ind + lon_length - 1)
+    time_aux <- begin_tim_ind:(begin_tim_ind + time_length - 1)
+
+    # Join all the cases
+    join <- merge(x = lat[lat_aux], y = lon[lon_aux])
+    final_dataframe <- merge(x = join, y = tim[time_aux], by = NULL)
+    colnames(final_dataframe) <- c("lat", "lon", "time")
+
+    # Add the velocities and save the data
+    final_dataframe$u <- c(u)
+    final_dataframe$v <- c(v)
+    save(final_dataframe, file = paste(loc, "_", toString(year), "_",
+                                       toString(month), ".RData", sep = ""))
+    
+    month <- month + 1
+  }
+
+}
+
+## Obtaining daily data for zones A, B, C, and D
+
+# List individual RDatas
+files <- list.files(pattern = "*.RData", full.names = TRUE, recursive = FALSE)
+
+# Function that reads over all the files in the directory containing the raw
+# data and return the records inside a given area delimited by longitude
+# and latitude
+extract_data <- function(begin_lat, end_lat, begin_lon, end_lon) {
+  
+  # Retrieve monthly data
+  monthly_data <- lapply(files, function(x) {
+    
+    # Load raw data file
+    load(x)
+    results <- filter(final_dataframe, lat > begin_lat, lat < end_lat,
+                      lon > begin_lon, lon < end_lon)
+    
+    # Calculate directions and speed
+    results$d <- atan2(x = results$u, y = results$v)
+    results$speed <- sqrt(results$u^2 + results$v^2)
+    return(results)
+    
+  })
+  
+  # Merge available data
+  total_data <- data.frame()
+  for (i in seq_along(monthly_data)) {
+    
+    total_data <- rbind(total_data, monthly_data[[i]])
+    
+  }
+  return(total_data)
+  
+}
+```
+
+
+```{r eval=FALSE}
+
+results <- extract_data(begin_lat, end_lat, begin_lon, end_lon)
+results <- results[order(as.Date(results$time)),]
+ttt <- results %>% 
+  mutate(
+    month = lubridate::month(time), 
+    year = lubridate::year(time),
+    date = paste(year, month, sep="-"),
+    location = paste(lat, lon, sep=",")
+  ) %>% 
+  group_by(lat, lon, year, month, .drop=T) %>% 
+  na.omit %>% 
+  mutate(
+    weights = speed / sum(speed), 
+    theta=circular:::WeightedMeanCircularRad(w = weights, x = d)
+  ) %>% 
+  ungroup %>% 
+  select(location, date, theta) %>% 
+  unique %>% 
+  mutate(
+    coord = DirStats::to_cir(theta)
+  ) %>% 
+  select(-theta) %>% 
+  data.frame
+ttt <- ttt %>% filter(date != "2022-6")
+sanjuanfuca <- abind(split(ttt, ttt$date), along=3)
+rownames(sanjuanfuca) <- sanjuanfuca[,1,1]
+sanjuanfuca <- sanjuanfuca[,3:4,]
+r <- dim(sanjuanfuca)[3]
+sanjuanfuca <- sapply(1:r, function(k) apply(sanjuanfuca[, , k], 2, as.numeric), simplify = 'array')
+save(list = "sanjuanfuca", file = "sanjuanfuca.RData")
+```
+
+```{r}
+load("~/Documents/Statistics for Data Science/TFM/psc-sne/data-raw/strait-san-juan-fuca/sanjuanfuca.rda")
+```
+
+Let's calculate some rho values for a perplexity of 12, 20, 33 and 45.
+
+```{r cache=TRUE}
+
+rho_12 <- rho_optim_parallel(sanjuanfuca, 12)
+rho_20 <- rho_optim_parallel(sanjuanfuca, 20)
+rho_33 <- rho_optim_parallel(sanjuanfuca, 33)
+rho_45 <- rho_optim_parallel(sanjuanfuca, 45)
+
+```
+
+Let's reduce the dimension using the poly-spherical Cauchy SNE. First, optimized rho for a perplexity of 12 and $d=1$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=1, 
+             rho_psc_list = rho_12, 
+             num_iteration=300)
+```
+
+```{r fig.asp=1}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <<- Y_rad
+plot(r*sin(theta),
+     r*cos(theta),
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now, optimized rho for a perplexity of 12 and $d=2$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=2, 
+             rho_psc_list = rho_12, 
+             num_iteration=300)
+```
+
+```{r}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
+                             zlim = c(-1, 1), color = rep(1, nrow(Y)))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+             lit = FALSE)
+rgl::points3d(Y, col = rep(1, nrow(Y)))
+```
+Now, optimized rho for a perplexity of 20 and $d=1$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=1, 
+             rho_psc_list = rho_20, 
+             num_iteration=300)
+```
+
+```{r fig.asp=1}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <<- Y_rad
+plot(r*sin(theta),
+     r*cos(theta),
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now, optimized rho for a perplexity of 12 and $d=2$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=2, 
+             rho_psc_list = rho_12, 
+             num_iteration=300)
+```
+
+```{r}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
+                             zlim = c(-1, 1), color = rep(1, nrow(Y)))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+             lit = FALSE)
+rgl::points3d(Y, col = rep(1, nrow(Y)))
+```
+
+Now, optimized rho for a perplexity of 33 and $d=1$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=1, 
+             rho_psc_list = rho_33, 
+             num_iteration=300)
+```
+
+```{r fig.asp=1}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <<- Y_rad
+plot(r*sin(theta),
+     r*cos(theta),
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now, optimized rho for a perplexity of 33 and $d=2$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=2, 
+             rho_psc_list = rho_33, 
+             num_iteration=300)
+```
+
+```{r}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
+                             zlim = c(-1, 1), color = rep(1, nrow(Y)))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+             lit = FALSE)
+rgl::points3d(Y, col = rep(1, nrow(Y)))
+```
+
+Lastly, optimized rho for a perplexity of 45 and $d=1$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=1, 
+             rho_psc_list = rho_45, 
+             num_iteration=300)
+```
+
+```{r fig.asp=1}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <<- Y_rad
+plot(r*sin(theta),
+     r*cos(theta),
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now, optimized rho for a perplexity of 33 and $d=2$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=2, 
+             rho_psc_list = rho_45, 
+             num_iteration=300)
+```
+
+```{r}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
+                             zlim = c(-1, 1), color = rep(1, nrow(Y)))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+             lit = FALSE)
+rgl::points3d(Y, col = rep(1, nrow(Y)))
+```
