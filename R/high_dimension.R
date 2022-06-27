@@ -3,9 +3,6 @@
 ## High-dimension neighborhood probabilities ##
 ###############################################
 
-library(lsa)
-
-
 #' Calculate the symmetric probabilities of a given conditional probabilities matrix
 #'
 #' @param P matrix of probabilities (P_i|j)_{ij}
@@ -26,6 +23,7 @@ symmetric_probs <- function(P) {
 #' @param val the specific value to set in the diagonal
 #' @return The \code{k}-th matrix of \code{x} with the diagonal set to \code{val}
 #' @examples
+#' x <- gen_polysphere(100, 2, 3)
 #' diag_3d(x, 1, 0)
 #' diag_3d(x, 3, 0)
 diag_3d <- function(x, k, val) {
@@ -41,13 +39,12 @@ diag_3d <- function(x, k, val) {
 #' @param x array 3-dimensional
 #' @return a 3-dimensional array with the cosine similarities of each matrix of \code{x}
 #' @examples
+#' x <- gen_polysphere(100, 2, 3)
 #' cosine_polysph(x)
 cosine_polysph <- function(x) {
   r <- dim(x)[3]
-  cosine_sphere_ith <- function(k) {
-    cos_sim <- cosine(t(x[, , k]))
-  }
-  sapply(1:r, cosine_sphere_ith, simplify = "array")
+  # applying the cosine function to each third dimension of the array
+  sapply(1:r, function(k) lsa::cosine(t(x[, , k])), simplify = "array")
 }
 
 #' Matrix version
@@ -58,8 +55,9 @@ cosine_polysph <- function(x) {
 #' @param cos_sim_pol cosine similarities of the polysphere
 #' @return a 3-dimensional array with the high-dimension probabilities of the array \code{x}
 #' @examples
-#' high_dimension(x, rep(0.5, 3))
-#' high_dimension(x, rep(0.5, 3), cosine_polysph(diag(3)))
+#' x <- gen_polysphere(100, 2, 3)
+#' high_dimension(x, rep(0.5, 100))
+#' high_dimension(x, rep(0.5, 100), cosine_polysph(x))
 high_dimension <- function(x, rho_list, cos_sim_pol = NULL) {
   if (!rlang::is_vector(rho_list)) {
     stop("Parameter rho_list must be a vector")
@@ -117,8 +115,8 @@ high_dimension <- function(x, rho_list, cos_sim_pol = NULL) {
 #' @param rho_list rho parameter for each \code{i}-th observation
 #' @return a 3-dimensional matrix with the high-dimension probabilities of the array \code{x}
 #' @examples
-#' high_dimension_p(x, rep(0.5, 3))
-#' high_dimension_p(x, rep(0.5, 3))
+#' x <- gen_polysphere(100, 2, 3)
+#' high_dimension_p(x, rep(0.5, 100))
 high_dimension_p <- function(x, rho_list) {
   if (!rlang::is_vector(rho_list)) {
     stop("Parameter rho_list must be a vector")

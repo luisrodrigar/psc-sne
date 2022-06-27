@@ -1,16 +1,19 @@
-library(parallel)
-library(doParallel)
-library(lsa)
-
 #' Calculates analytically the gradient of the Kullback-Leibler divergence function
 #'
 #' @param Y data point onto the low-dimension (S^d)
 #' @param i the index of the i-th observation where the gradient is calculated
 #' @param rho parameter between 0 and 0.9999 (not included)
+#' @param d target dimension to reduced the data
+#' @param P high-dimensional poly-spherical Cauchy probabilities
+#' @param cos_sim cosine similarities of the high-dimension probabilities
+#' @param Q low-dimension spherical Cauchy probabilities
 #' @return data onto the sphere
 #' @examples
-#' kl_divergence_grad(Y, 2, 0.5, 2, P)
-#' kl_divergence_grad(Y, 2, 0.5, 2, P, cosine(t(Y)), low_dimension_Q(Y, 0.5))
+#' X <- gen_polysphere(40, 2, 3)
+#' rho_opt <- rho_optim_bst(X, 20, clusterFactory(2))
+#' Y <- rotasym::r_unif_sphere(40, 2)
+#' kl_divergence_grad(Y, 2, 0.5, 1, rho_opt$P)
+#' kl_divergence_grad(Y, 2, 0.5, 1, rho_opt$P, lsa::cosine(t(Y)), low_dimension_Q(Y, 0.5))
 kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   if (i < 1 || i > nrow(Y)) {
     stop(paste(
@@ -37,7 +40,7 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   Z <- radial_projection(Y)
   # Calculate the cosine similarities in case it is not passing as a parameter
   if (is.null(cos_sim)) {
-    cos_sim <- cosine(t(Z))
+    cos_sim <- lsa::cosine(t(Z))
   }
   # Calculate the low dimension probabilities based on the data Z
   if (is.null(Q)) {
@@ -56,14 +59,28 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 #'
 #' @param X data point onto the high-dimension (S^p)^r
 #' @param d reduced dimension
-#' @return data onto the low-dimension sphere
+#' @param rho_psc_list rho parameters of the high-dimensional poly-spherical Cauchy probabilities (optional, default NULL)
+#' @param rho rho parameter of the low-dimensional spherical Cauchy probabilities (optional, default 0.5)
+#' @param perplexity parameter which says what is more important: local or global aspects (optional, default 30)
+#' @param num_iteration maximum number of iterations (optional, default 200)
+#' @param initial_momentum first value of the momentum of the first 250 iterations
+#' @param final_momentum momentum to take into account after the 250 iteration
+#' @param eta is the learning rate of the optimization algorithm (optional, default 200)
+#' @param early_exaggeration the first 100 iterations results are exagerated, k times (optional, default 4.0)
+#' @param colors list with as many elements as observations are, only valid when visualization is true (optional, default NULL)
+#' @param visualize_prog defines whether the progression plots are shown or not (optional, default FALSE)
+#' @param tol is the tolerance, when is below this value it is considered that a good solution has been obtained (optional, default 10^-9)
+#' @param check whether to check or not the tolerance
+#' @param parallel_cores number of cores to use concurrently for the calculation of the gradient
+#' @return reduced dimensional data (in low-dimension)
 #' @examples
-#' psc_sne(X, 1)
-#' psc_sne(X, 2)
+#' X <- gen_polysphere(40, 2, 3)
+#' psc_sne(X, d = 1, parallel_cores = 2)
+#' psc_sne(X, d = 2, parallel_cores = 2)
 psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_iteration = 200,
                     initial_momentum = 0.5, final_momentum = 0.8, eta = 200,
                     early_exaggeration = 4.0, colors = NULL, visualize_prog = FALSE,
-                    tol = 1e-9, check = TRUE) {
+                    tol = 1e-9, check = TRUE, parallel_cores = parallel::detectCores() - 1) {
   if (d < 1) {
     stop("Error, d value must be greater or equal than 1")
   }
@@ -88,10 +105,10 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
   # Based on the rho values parameter, do different things
   if (is.null(rho_psc_list)) {
     # Calculating the rho optimal values by means of the 'rho_optim_bst' method
-    res_opt <- rho_optim_bst(X, perplexity)
+    res_opt <- rho_optim_bst(X, perplexity, clusterFactory(parallel_cores))
     P_cond <- res_opt$P
     rho_psc_list <- res_opt$rho_values
-  } else if (class(rho_psc_list) == "list") {
+  } else if (methods::is(rho_psc_list, "list")) {
     # Obtaining the values from the object of the parameter
     P_cond <- rho_psc_list$P
     rho_psc_list <- rho_psc_list$rho_values
@@ -121,7 +138,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
 
   # Visualizing the plots in a 4x4 grid
   if (visualize_prog) {
-    par(mfrow = c(4, 4))
+    graphics::par(mfrow = c(4, 4))
   }
 
   # Interval from 2 to number of iterations + 2
@@ -134,10 +151,10 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
     }
 
     # gradient of the objective function for all the observations
-    grad <- t(simplify2array(mclapply(
-      mc.cores = detectCores() - 1, 1:n,
+    grad <- t(simplify2array(parallel::mclapply(
+      mc.cores = parallel_cores, 1:n,
       kl_divergence_grad, Y = Y[, , i - 1], rho = rho, d = d, P = P,
-      cos_sim = cosine(t(Y[, , i - 1])),
+      cos_sim = lsa::cosine(t(Y[, , i - 1])),
       Q = Qs[, , i - 1]
     )))
 
@@ -183,7 +200,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
   }
   # Undo the par configuration (grid 4x4)
   if (visualize_prog) {
-    par(mfrow = c(1, 1))
+    graphics::par(mfrow = c(1, 1))
     visualize_iter_sol(Y, i, d, colors)
   }
   return(Y_i)
@@ -193,7 +210,11 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
 #'
 #' @param Y data point onto the low-dimension S^d
 #' @param i the i-th iteration
+#' @param d the dimension to reduce the original data
+#' @param colors optional value to represent the group colors in the plot
 #' @examples
+#' Y <- array(NA, dim = c(100, 3, 15))
+#' Y[, , 10] <- rotasym::r_unif_sphere(100, 3)
 #' visualize_iter_sol(Y, 10, 2)
 #' visualize_iter_sol(Y, 10, 2, rep(c(1, 2), each = nrow(Y) / 2))
 visualize_iter_sol <- function(Y, i, d, colors = NULL) {
@@ -206,7 +227,7 @@ visualize_iter_sol <- function(Y, i, d, colors = NULL) {
   if (d == 1) {
     Y_rad <- DirStats::to_rad(Y[, , i])
     r <- 1
-    theta <<- Y_rad
+    theta <- Y_rad
     plot(r * sin(theta),
       r * cos(theta),
       col = colors,
@@ -214,7 +235,7 @@ visualize_iter_sol <- function(Y, i, d, colors = NULL) {
       ylim = c(-max(r), max(r)), main = paste("Iteration", i - 2)
     )
 
-    polygon(max(r) * sin(seq(0, 2 * pi, length.out = 100)), max(r) * cos(seq(0, 2 * pi, length.out = 100)))
+    graphics::polygon(max(r) * sin(seq(0, 2 * pi, length.out = 100)), max(r) * cos(seq(0, 2 * pi, length.out = 100)))
   }
   # Plot in an sphere
   else if (d == 2) {

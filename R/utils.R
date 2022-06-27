@@ -5,14 +5,14 @@
 #' @param outfile text file where print the output, empty means no output
 #' @return the cluster created
 #' @examples
-#' clusterFactory(4)
-#' clusterFactory(7, "log.txt")
+#' clusterFactory(2)
+#' clusterFactory(2, "log.txt")
 clusterFactory <- function(num_cores, outfile = "") {
   cl <- NULL
   if (tolower(.Platform$OS.type) != "windows") {
-    cl <- makeCluster(spec = num_cores, type = "FORK", outfile = outfile)
+    cl <- parallel::makeCluster(spec = num_cores, type = "FORK", outfile = outfile)
   } else {
-    cl <- makeCluster(spec = num_cores, outfile = outfile)
+    cl <- parallel::makeCluster(spec = num_cores, outfile = outfile)
   }
   return(cl)
 }
@@ -29,7 +29,7 @@ clusterFactory <- function(num_cores, outfile = "") {
 gen_polysphere <- function(n, p, r) {
   polysphere <- array(NA, dim = c(n, p + 1, r))
   for (k in seq_len(r)) {
-    polysphere[, , k] <- r_unif_sphere(n, p + 1)
+    polysphere[, , k] <- rotasym::r_unif_sphere(n, p + 1)
   }
   polysphere
 }
