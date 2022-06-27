@@ -10,6 +10,7 @@
 #' @param rho param between 0 and 1 (not included)
 #' @return perplexity and probabilities of the i-th observation for all the j-th's
 #' @examples
+#' x <- gen_polysphere(25, 2, 3)
 #' to_perplexity_P(x, 1, 0.5)
 #' to_perplexity_P(x, 4, 0.9999)
 to_perplexity_P <- function(x, i, rho) {
@@ -44,6 +45,7 @@ to_perplexity_P <- function(x, i, rho) {
 #' @param cos_sim_ps cosine similarities of the poly-sphere
 #' @return perplexity of the i-th observation for all the j-th's
 #' @examples
+#' x <- gen_polysphere(25, 2, 3)
 #' to_perplexity(x, 1, 0.5)
 #' to_perplexity(x, 4, 0.9999)
 to_perplexity <- function(x, i, rho, cos_sim_ps = NULL) {
@@ -88,8 +90,9 @@ to_perplexity <- function(x, i, rho, cos_sim_ps = NULL) {
 #' @param rho_list list param between 0 and 1 (not included) each element
 #' @return perplexity list for each observation
 #' @examples
-#' to_perp_scalar(x, 0.5)
-#' to_perp_scalar(x, 0.9999)
+#' x <- gen_polysphere(25, 2, 3)
+#' to_perp_scalar(x, rep(0.5, 25))
+#' to_perp_scalar(x, rep(0.9999, 25))
 to_perp_scalar <- function(x, rho_list) {
   if (length(dim(x)) != 3) {
     stop("Dataset 'x' must be a 3d-array")
@@ -100,7 +103,7 @@ to_perp_scalar <- function(x, rho_list) {
   # Call to_perplexity_P (scalar way) for all the observations
   return(sapply(
     X = 1:nrow(x),
-    FUN = function(i, x, rho_list) to_perplexity_P(x, i, rho[i])$perp,
+    FUN = function(i, x, rho_list) to_perplexity_P(x, i, rho_list[i])$perp,
     x = x, rho_list = rho_list
   ))
 }
@@ -113,8 +116,9 @@ to_perp_scalar <- function(x, rho_list) {
 #' @param cos_sim_ps optional parameter with the cosine similarities of each sphere
 #' @return perplexity list for each observation
 #' @examples
-#' to_perp(x, rep(0.5, nrow(x)))
-#' to_perp(x, rep(0.9999, norw(x)), cosine_polysph(x))
+#' x <- gen_polysphere(25, 2, 3)
+#' to_perp(x, rep(0.5, 25))
+#' to_perp(x, rep(0.9999, 25), cosine_polysph(x))
 to_perp <- function(x, rho_list, cos_sim_ps = NULL) {
   if (length(dim(x)) != 3) {
     stop("Dataset 'x' must be a 3d-array")
@@ -166,6 +170,7 @@ to_perp <- function(x, rho_list, cos_sim_ps = NULL) {
 #' @param perplexity a fixed value to optimize the rho values
 #' @return rho list with the values optimized
 #' @examples
+#' x <- gen_polysphere(20, 2, 4)
 #' rho_optim_serial(x, 22)
 #' rho_optim_serial(x, 30)
 rho_optim_serial <- function(x, perplexity) {
@@ -203,20 +208,21 @@ rho_optim_serial <- function(x, perplexity) {
 #'
 #' @param x 3d-array that is a poly-sphere
 #' @param perplexity a fixed value to optimize the rho values
+#' @param num_cores number of cores to execute the code concurrently
 #' @return rho list with the values optimized
 #' @examples
-#' rho_optim_parallel(x, 22)
-#' rho_optim_parallel(x, 30)
-rho_optim_parallel <- function(x, perplexity) {
+#' x <- gen_polysphere(20, 2, 4)
+#' rho_optim_parallel(x, 22, 2)
+#' rho_optim_parallel(x, 30, 2)
+rho_optim_parallel <- function(x, perplexity, num_cores = parallel::detectCores() - 1) {
   # Sample size
   n <- nrow(x)
   # Setting up the characteristics of the parallelization
-  num_cores <- detectCores() - 1
   cl <- clusterFactory(num_cores)
   # Time start
   start_time <- Sys.time()
   # For each observation, calculate concurrently the optimal value based on the fixed perplexity
-  rho_opt <- parLapply(cl, 1:n, function(i) {
+  rho_opt <- parallel::parLapply(cl, 1:n, function(i) {
     stats::optim(
       par = 0.5,
       fn = function(rho) {
@@ -234,7 +240,7 @@ rho_optim_parallel <- function(x, perplexity) {
   # Simplifying the result
   rho_opt <- simplify2array(rho_opt)
   # Stop the clusters
-  stopCluster(cl)
+  parallel::stopCluster(cl)
   return(rho_opt)
 }
 
@@ -250,29 +256,26 @@ rho_optim_parallel <- function(x, perplexity) {
 #'
 #' @param x 3d-array that is a poly-sphere
 #' @param perplexity a fixed value to optimize the rho values
+#' @param num_cores number of cores to execute the code concurrently
 #' @return rho list with the values optimized
-#' @examples
-#' rho_optimParallel(x, 22)
-#' rho_optimParallel(x, 30)
-rho_optimParallel <- function(x, perplexity) {
+rho_optimParallel <- function(x, perplexity, num_cores = parallel::detectCores() - 1) {
   # Sample size
   n <- nrow(x)
   # Setting up the characteristics of the parallelization
-  num_cores <- detectCores() - 1
   cl <- clusterFactory(num_cores)
-  setDefaultCluster(cl = cl)
   # Time start
   start_time <- Sys.time()
   # For each observation, calculate the optimal value using a concurrently optimization method
   rho_opt <- sapply(1:n, FUN = function(i) {
-    optimParallel(
+    optimParallel::optimParallel(
       par = 0.5,
       fn = function(rho) {
         # Objective function: (perplexity-fixed_perplexity)^2
         res <- to_perplexity_P(x, i, rho)$perp - perplexity
         ifelse(is.finite(res), res, 1e6)
       },
-      lower = 0, upper = .9999
+      lower = 0, upper = .9999,
+      parallel = list(cl = cl, forward = FALSE)
     )$par
   })
   # Time end
@@ -280,8 +283,7 @@ rho_optimParallel <- function(x, perplexity) {
   # Print time difference
   print(end_time - start_time)
   # Stop the clusters
-  setDefaultCluster(cl = NULL)
-  stopCluster(cl)
+  parallel::stopCluster(cl)
   return(rho_opt)
 }
 
@@ -303,8 +305,9 @@ rho_optimParallel <- function(x, perplexity) {
 #' @param perplexity a fixed value to optimize the rho values
 #' @return rho list with the values optimized
 #' @examples
-#' rho_optimParallel(x, 22)
-#' rho_optimParallel(x, 30)
+#' x <- gen_polysphere(20, 2, 4)
+#' rho_optim_ineff(x, 22)
+#' rho_optim_ineff(x, 30)
 rho_optim_ineff <- function(x, perplexity) {
   # Sample size
   n <- nrow(x)
@@ -345,22 +348,23 @@ rho_optim_ineff <- function(x, perplexity) {
 #'
 #' @param x 3d-array that is a poly-sphere
 #' @param perplexity a fixed value to optimize the rho values
+#' @param num_cores number of cores to execute the code concurrently
 #' @return rho list with the values optimized
 #' @examples
-#' rho_optimize_1(x, 22)
-#' rho_optimize_1(x, 30)
-rho_optimize_1 <- function(x, perplexity) {
+#' x <- gen_polysphere(20, 2, 4)
+#' rho_optimize_1(x, 22, 2)
+#' rho_optimize_1(x, 30, 2)
+rho_optimize_1 <- function(x, perplexity, num_cores = parallel::detectCores() - 1) {
   # Sample size
   n <- nrow(x)
   # Setting up the characteristics of the parallelization
-  num_cores <- detectCores() - 1
-  cl <- makeForkCluster(num_cores)
+  cl <- parallel::makeForkCluster(num_cores)
   # Time start
   start_time <- Sys.time()
   # Calculate the cosine similarities of (S^p)^r
   cosine_polysph <- cosine_polysph(x)
   # For each observation, calculate concurrently the optimal value based on the fixed perplexity
-  rho_opt <- parLapply(cl, 1:n, function(i) {
+  rho_opt <- parallel::parLapply(cl, 1:n, function(i) {
     stats::optim(
       par = 0.5,
       fn = function(rho) {
@@ -378,7 +382,7 @@ rho_optimize_1 <- function(x, perplexity) {
   # Simplifying the result
   rho_opt <- simplify2array(rho_opt)
   # Stop the clusters
-  stopCluster(cl) # Time difference of 5.836471 mins
+  parallel::stopCluster(cl) # Time difference of 5.836471 mins
   return(rho_opt)
 }
 
@@ -427,8 +431,12 @@ bin_search <- function(perp_diff, rho, rho_min, rho_max) {
 #' @param x 3d-array that is a poly-sphere (S^p)^r
 #' @param i the i-th observation
 #' @param perp_fixed a fixed value used to optimized the rho values
+#' @param tolerance whether the difference between previous and current results is below this value (optional, default 10^-3)
+#' @param rho parameter which determines the concentration of the spherical Cauchy distribution (optional, default 0.5)
+#' @param max_tries number of maximum tries for each value of the rho list
 #' @return rho and conditional probabilities calculated for the i-th observation
 #' @examples
+#' x <- gen_polysphere(20, 2, 4)
 #' rho_optim_i_bst(x, 1, 15)
 #' rho_optim_i_bst(x, 7, 26)
 rho_optim_i_bst <- function(x, i, perp_fixed, tolerance = 1e-3, rho = 0.5,
@@ -490,20 +498,20 @@ rho_optim_i_bst <- function(x, i, perp_fixed, tolerance = 1e-3, rho = 0.5,
 #'
 #' @param x 3d-array that is a poly-sphere (S^p)^r
 #' @param perp_fixed a fixed value used to optimized the rho values
+#' @param cl defines a cluster to work with concurrently
 #' @return rho values and conditional probability matrix
 #' @examples
-#' rho_optim_bst(x, 15)
-#' rho_optim_bst(x, 26)
-rho_optim_bst <- function(x, perp_fixed) {
+#' x <- gen_polysphere(20, 2, 4)
+#' rho_optim_bst(x, perp_fixed = 15, cl = clusterFactory(2))
+#' rho_optim_bst(x, perp_fixed = 26, cl = clusterFactory(2))
+rho_optim_bst <- function(x, perp_fixed,
+                          cl = clusterFactory(parallel::detectCores() - 1)) {
   # Sample size
   n <- nrow(x)
-  # Setting up the characteristics of the parallelization
-  num_cores <- detectCores() - 1
-  cl <- clusterFactory(num_cores)
   # Time start
   start_time <- Sys.time()
   # Concurrently calculate the optimized value of each observation
-  res_opt <- parLapply(cl, 1:n, function(i) {
+  res_opt <- parallel::parLapply(cl, 1:n, function(i) {
     rho_optim_i_bst(x, i, perp_fixed)
   })
   # Time end
@@ -511,7 +519,7 @@ rho_optim_bst <- function(x, perp_fixed) {
   # Print time difference
   print(end_time - start_time)
   # Stop clusters
-  stopCluster(cl)
+  parallel::stopCluster(cl)
   # Aggregate the rho values of each observation in a list
   rho_values <- sapply(1:length(res_opt), function(i) res_opt[[i]]$rho)
   # Aggregate all the conditional probabilities given each observation in a matrix

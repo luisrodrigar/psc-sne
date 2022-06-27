@@ -1,0 +1,112 @@
+---
+title: "Spokes"
+author: "Luis Ángel Rodríguez García"
+date: '2022-05-31'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rprojroot)
+library(here)
+print(here())
+library(knitr)
+```
+
+## Spokes
+
+```{r}
+knitr::opts_knit$set(echo = TRUE, root.dir = rprojroot::find_rstudio_root_file())
+source(here('R', 'psc_sne.R'))
+source(here('R', "perplexity.R"))
+source(here('R', "low_dimension.R"))
+source(here('R', "high_dimension.R"))
+source(here('R', "prob_distribution.R"))
+```
+
+Sample on the $(\mathbb{S}^2)^{168}$ where $p=2$, $r=168$ and $n=177$.
+
+```{r}
+load("spokes.RData")
+n <- dim(dirs)[1]
+p <- dim(dirs)[3]-1
+r <- dim(dirs)[2]
+spokes <- array(0, c(n, p+1, r))
+for(i in seq_len(r)){
+  spokes[,,i] <- dirs[,i,]
+}
+
+# Plot subjects for each spok
+rgl::open3d()
+rgl::mfrow3d(nr = 12, nc = 14, sharedMouse = TRUE)
+n <- 10
+col <- rainbow(n, alpha=0.8)
+for (i in 1:ncol(dirs)) {
+  col_i <- col # ids_labs + 1
+  rgl::plot3d(dirs[1:n, i, ], xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+              col = col_i, axes = FALSE, box = FALSE, xlab = "",
+              ylab = "", zlab = "")
+  rgl::spheres3d(0, 0, 0, radius = 1, col = "lightblue", lit = FALSE,
+                 alpha = 0.5)
+}
+```
+
+Let's calculate the rho parameters based on a perplexity of 30:
+
+```{r cache=TRUE}
+#Time difference of 28.40103 mins
+rho_spokes_perp50 <- rho_optim_bst(spokes, 50)
+to_perp(spokes, rho_spokes_perp50$rho_values, cosine_polysph(spokes))
+
+#   [1] 15.99908 15.99912 15.99902 15.99814 15.99885 15.99985 16.53955 15.99998 15.99933 15.99936 15.99940 15.99927 15.99999 15.99879 15.99944 15.99883 15.99921
+#  [18] 15.99918 15.99936 15.99910 16.00000 15.99912 15.99938 15.99926 15.99985 15.99931 15.99922 15.99999 16.00000 15.99968 15.99967 15.99890 15.99895 15.99960
+#  [35] 15.99997 15.99900 15.99960 15.99927 15.99883 15.99922 15.99867 15.99950 15.99908 15.99982 25.19228 15.99977 15.99895 15.99987 15.99909 15.99903 15.99920
+#  [52] 15.99914 15.99945 15.99893 15.99891 15.99895 15.99908 15.99989 15.99956 15.99923 15.99842 15.99764 15.99872 15.99995 15.99966 15.99973 15.99907 15.99902
+#  [69] 15.99994 15.99995 15.99927 15.99914 15.99999 15.99926 15.99904 15.99920 15.99946 15.99801 15.99953 15.99903 15.99871 15.99971 15.99908 15.99995 15.99972
+#  [86] 15.99944 15.99899 15.99950 15.99899 15.99903 15.99907 15.99996 15.99946 15.99906 15.99913 15.99994 15.99999 15.99959 15.99867 16.23076 15.99950 15.99953
+# [103] 15.99951 15.99987 16.00000 15.99832 15.99945 15.99957 15.99937 15.99898 15.99976 15.99955 15.99904 15.99995 15.99923 15.99949 15.99950 15.99886 15.99888
+# [120] 15.99952 15.99959 15.99990 15.99942 15.99921 15.99996 15.99923 15.99794 15.99871 15.99791 15.99907 15.99992 15.99893 15.99938 15.99861 15.99977 15.99941
+# [137] 15.99876 15.99853 15.99899 15.99995 15.99917 15.99975 15.99847 15.99864 15.99925 15.99939 15.99918 15.99999 15.99998 15.99945 15.99858 15.99993 15.99978
+# [154] 15.99863 15.99971 15.99934 15.99838 15.99895 15.99834 15.99914 15.99998 15.99876 15.99994 15.99995 15.99913 15.99952 15.99872 15.99952 15.99995 15.99953
+# [171] 15.99897 15.99836 15.99905 16.13348 15.99902 18.53126 15.99907
+
+```
+
+First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
+
+```{r cache=TRUE}
+Y <- psc_sne(spokes, d=1, rho_psc_list = rho_spokes_perp50, 
+             colors = ifelse(ids_labs, 2, 1), num_iteration=5000,
+             visualize_prog = TRUE)
+```
+
+```{r}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <<- Y_rad
+plot(r*sin(theta),
+     r*cos(theta),
+     col=ifelse(ids_labs, 2, 1),
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
+
+```{r cache=TRUE}
+Y <- psc_sne(spokes, d=2, rho_psc_list = rho_spokes_perp30, colors = ifelse(ids_labs, 2, 1), num_iteration=1000, eta=300,
+             visualize_prog = TRUE)
+```
+
+
+```{r}
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightgray",
+             lit = FALSE)
+rgl::points3d(Y[,,1002], col = ifelse(ids_labs, 2, 1))
+scatterplot3d::scatterplot3d(Y[,,1002],xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1), 
+                             color = ifelse(ids_labs, 2, 1))
+```
+

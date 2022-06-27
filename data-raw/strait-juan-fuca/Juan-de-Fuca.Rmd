@@ -1,0 +1,194 @@
+---
+title: "San Juan de Fuca"
+author: "Luis Ángel Rodríguez García"
+date: "25-05-2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(echo = TRUE, root.dir = rprojroot::find_rstudio_root_file())
+library(rprojroot)
+library(here)
+library(knitr)
+library(rgl)
+rgl::setupKnitr()
+source(here('R', 'psc_sne.R'))
+source(here('R', 'psc_sne.R'))
+source(here('R', "perplexity.R"))
+source(here('R', "low_dimension.R"))
+source(here('R', "high_dimension.R"))
+source(here('R', "prob_distribution.R"))
+source(here('R', "utils.R"))
+library(ncdf4)
+library(lubridate)
+library(circular)
+library(dplyr)
+library(abind)
+library(tidyr)
+```
+
+```{r}
+load("~/Documents/Statistics for Data Science/TFM/psc-sne/data-raw/strait-san-juan-fuca/sanjuanfuca.rda")
+```
+
+Let's calculate some rho values for a perplexity of 12, 20, 33 and 45.
+
+```{r cache=TRUE}
+
+rho_12 <- rho_optim_bst(sanjuanfuca, 12)
+rho_20 <- rho_optim_bst(sanjuanfuca, 20)
+rho_33 <- rho_optim_bst(sanjuanfuca, 33)
+rho_45 <- rho_optim_bst(sanjuanfuca, 45)
+
+```
+
+Let's reduce the dimension using the poly-spherical Cauchy SNE. First, optimized rho for a perplexity of 12 and $d=1$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=1, 
+             rho_psc_list = rho_12, 
+             num_iteration=300)
+```
+
+```{r fig.asp=1}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <<- Y_rad
+plot(r*sin(theta),
+     r*cos(theta),
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now, optimized rho for a perplexity of 12 and $d=2$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=2, 
+             rho_psc_list = rho_12, 
+             num_iteration=300)
+```
+
+```{r}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
+                             zlim = c(-1, 1), color = rep(1, nrow(Y)))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+             lit = FALSE)
+rgl::points3d(Y, col = rep(1, nrow(Y)))
+```
+Now, optimized rho for a perplexity of 20 and $d=1$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=1, 
+             rho_psc_list = rho_20, 
+             num_iteration=300)
+```
+
+```{r fig.asp=1}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <<- Y_rad
+plot(r*sin(theta),
+     r*cos(theta),
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now, optimized rho for a perplexity of 12 and $d=2$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=2, 
+             rho_psc_list = rho_12, 
+             num_iteration=300)
+```
+
+```{r}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
+                             zlim = c(-1, 1), color = rep(1, nrow(Y)))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+             lit = FALSE)
+rgl::points3d(Y, col = rep(1, nrow(Y)))
+```
+
+Now, optimized rho for a perplexity of 33 and $d=1$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=1, 
+             rho_psc_list = rho_33, 
+             num_iteration=300)
+```
+
+```{r fig.asp=1}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <<- Y_rad
+plot(r*sin(theta),
+     r*cos(theta),
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now, optimized rho for a perplexity of 33 and $d=2$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=2, 
+             rho_psc_list = rho_33, 
+             num_iteration=300)
+```
+
+```{r}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
+                             zlim = c(-1, 1), color = rep(1, nrow(Y)))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+             lit = FALSE)
+rgl::points3d(Y, col = rep(1, nrow(Y)))
+```
+
+Lastly, optimized rho for a perplexity of 45 and $d=1$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=1, 
+             rho_psc_list = rho_45, 
+             num_iteration=300)
+```
+
+```{r fig.asp=1}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <<- Y_rad
+plot(r*sin(theta),
+     r*cos(theta),
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now, optimized rho for a perplexity of 33 and $d=2$:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=sanjuanfuca, d=2, 
+             rho_psc_list = rho_45, 
+             num_iteration=300)
+```
+
+```{r}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
+                             zlim = c(-1, 1), color = rep(1, nrow(Y)))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+             lit = FALSE)
+rgl::points3d(Y, col = rep(1, nrow(Y)))
+```
