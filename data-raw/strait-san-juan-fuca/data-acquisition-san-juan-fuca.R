@@ -3,6 +3,8 @@ library(ncdf4)
 library(lubridate)
 library(circular)
 library(dplyr)
+library(tidyverse)
+library(tidyr)
 
 # This script shows the necessary steps to obtain the data for the San Juan de Fuca
 # analysis. There are two main steps: (1) downloading the raw data;
@@ -73,13 +75,13 @@ get_data <- function() {
 }
 
 # Download data in a monthly loop to avoid surpassing 500Mb limit
-for (year in 2020:2022) {
-
+for (year in 2021:2021) {
+  
   month <- 1
   if (year == 2020) {
-    month <- 5
+    month <- 6
   }
-  while ( ( year < 2022 && month <= 12 ) || (year == 2022 && month <= 5) ) {
+  while ( ( year < 2022 && month <= 12 ) || (year == 2022 && month <= 6) ) {
 
     # Show progress
     cat("\n", year, "-", month, "\n")
@@ -129,9 +131,6 @@ for (year in 2020:2022) {
 
 ## Obtaining daily data for zones A, B, C, and D
 
-# List individual RDatas
-files <- list.files(pattern = "*.RData", full.names = TRUE, recursive = FALSE)
-
 # Function that reads over all the files in the directory containing the raw
 # data and return the records inside a given area delimited by longitude
 # and latitude
@@ -165,92 +164,87 @@ extract_data <- function(begin_lat, end_lat, begin_lon, end_lon) {
 
 # Function that calculates the speed-weighted average of the directions over
 # periods of certain number of hours of duration
-extract_theta <- function(results, hours) {
-  
-  n <- length(levels(as.factor(results$lat)))
-  m <- length(levels(as.factor(results$lon)))
-  t <- hours
-  day_ev <- n * m * t
-  total_events <- length(results$u)
-
-  ttt <- results %>% 
+extract_datetime_theta <- function(results, hours) {
+  # Order data by ascending time
+  results <- results[order(as.Date(results$time)),]
+  # Remove NA's
+  results <- results[complete.cases(results$u, results$v, results$d, results$speed),]
+  results %>% 
+    # Assigning an interval of three hours to each observation
     mutate(
-      month = lubridate::month(time), 
-      year = lubridate::year(time),
-      date = paste(year, month, sep="-"),
-      location = paste(lat, lon, sep=",")
+      interval = as.POSIXct(cut(time, breaks = paste(hours, "hours")))
     ) %>% 
-    group_by(lat, lon, year, month, .drop=T) %>% 
-    na.omit %>% 
+    # Grouping by the variable interval
+    group_by(interval) %>%
     mutate(
-      weights = speed / sum(speed), 
+      weights = speed / sum(speed),
       theta=circular:::WeightedMeanCircularRad(w = weights, x = d)
     ) %>% 
     ungroup %>% 
-    select(location, date, theta) %>% 
-    unique %>% 
-    mutate(
-      coord = DirStats::to_cir(theta)
-    ) %>% 
-    select(-theta) %>% 
+    select(interval, theta) %>% 
+    unique %>%
     data.frame
-  ttt <- ttt %>% filter(date != "2022-6")
-  sanjuanfuca <- abind(split(ttt, ttt$date), along=3)
-  rownames(sanjuanfuca) <- sanjuanfuca[,1,1]
-  sanjuanfuca <- sanjuanfuca[,3:4,]
-
-  # Apply the speed-weighted average over the non-NA observations inside the
-  # t hour period
-  time_seq <- seq(1, total_events, day_ev)
-  results <- results[order(as.Date(results$time)),]
-  day_seq <- as.character(seq(min(results$time), max(results$time), 
-                              by=paste(hours, "hours")))
-  theta <- sapply(time_seq, function(i) {
-    
-    dir_speeds <- results[i:(i + day_ev - 1), c("d", "speed")]
-    dir_speeds <- dir_speeds[complete.cases(dir_speeds), ]
-    weights <- dir_speeds$speed / sum(dir_speeds$speed)
-    list(date=day_seq[as.integer(i / day_ev) + 1],
-         theta=circular:::WeightedMeanCircularRad(w = weights, x = dir_speeds$d))
-    
-  }, simplify = 'array')
-  return(t(theta))
-  
 }
 
-results <- extract_data(begin_lat, end_lat, begin_lon, end_lon)
-results <- results[order(as.Date(results$time)),]
-ttt <- results %>% 
-  mutate(
-    month = lubridate::month(time), 
-    year = lubridate::year(time),
-    date = paste(year, month, sep="-"),
-    location = paste(lat, lon, sep=",")
-  ) %>% 
-  group_by(lat, lon, year, month, .drop=T) %>% 
-  na.omit %>% 
-  mutate(
-    weights = speed / sum(speed), 
-    theta=circular:::WeightedMeanCircularRad(w = weights, x = d)
-  ) %>% 
-  ungroup %>% 
-  select(location, date, theta) %>% 
-  unique %>% 
-  mutate(
-    coord = DirStats::to_cir(theta)
-  ) %>% 
-  select(-theta) %>% 
-  data.frame
-ttt <- ttt %>% filter(date != "2022-6")
-sanjuanfuca <- abind(split(ttt, ttt$date), along=3)
-rownames(sanjuanfuca) <- sanjuanfuca[,1,1]
-sanjuanfuca <- sanjuanfuca[,3:4,]
-for (k in dim(sanjuanfuca)[3]) {
-  sanjuanfuca[, 1:2, k] <- as.numeric(sanjuanfuca[, 1:2, k])
-}
+
+# Zone A
+begin_lat_A <- 48.1
+end_lat_A <- 48.5
+begin_lon_A <- -124.5
+end_lon_A <- -124.3125
+
+# Zone B
+begin_lat_B <- 48.1
+end_lat_B <- 48.5
+begin_lon_B <- -124.3125
+end_lon_B <- -124.25
+
+# Zone C
+begin_lat_C <- 48.1
+end_lat_C <- 48.5
+begin_lon_C <- -124.25
+end_lon_C <- -124.1875
+
+# Zone D
+begin_lat_D <- 48.1
+end_lat_D <- 48.5
+begin_lon_D <- -124.1875
+end_lon_D <- -124.125
+
+# List individual RDatas
+files <- list.files(pattern = "*.RData", full.names = TRUE, recursive = FALSE)
+
+# Obtain the results for every area and their corresponding daily directions
+results_A <- extract_data(begin_lat_A, end_lat_A, begin_lon_A, end_lon_A)
+A <- extract_datetime_theta(results_A, hours = 3)
+
+results_B <- extract_data(begin_lat_B, end_lat_B, begin_lon_B, end_lon_B)
+B <- extract_datetime_theta(results_B, hours = 3)
+
+results_C <- extract_data(begin_lat_C, end_lat_C, begin_lon_C, end_lon_C)
+C <- extract_datetime_theta(results_C, hours = 3)
+
+results_D <- extract_data(begin_lat_D, end_lat_D, begin_lon_D, end_lon_D)
+D <- extract_datetime_theta(results_D, hours = 3)
+
+df_list <- list(A, B, C, D)
+
+data <- df_list %>% 
+  reduce(full_join, by='interval') %>% 
+  rename(zone_A = theta.x,
+         zone_B = theta.y,
+         zone_C = theta.x.x,
+         zone_D = theta.y.y)
+data <- data[complete.cases(data$zone_A, data$zone_B, data$zone_C, data$zone_D),]
+
+sanjuanfuca <- array(NA, dim = c(nrow(data), 2, 4))
+sanjuanfuca[ , , 1] = DirStats::to_cir(data$zone_A)
+sanjuanfuca[ , , 2] = DirStats::to_cir(data$zone_B)
+sanjuanfuca[ , , 3] = DirStats::to_cir(data$zone_C)
+sanjuanfuca[ , , 4] = DirStats::to_cir(data$zone_D)
 
 # Save the object
-save(list = "sanjuanfuca", file = "sanjuanfuca.rda", compress = "bzip2")
+save(list = "sanjuanfuca", file = "sanjuanfuca.rda")
 
 
 

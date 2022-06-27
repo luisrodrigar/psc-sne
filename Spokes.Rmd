@@ -55,8 +55,8 @@ Let's calculate the rho parameters based on a perplexity of 30:
 
 ```{r cache=TRUE}
 #Time difference of 28.40103 mins
-rho_spokes_perp30 <- rho_optim_parallel(spokes, 30)
-to_perp(spokes, rho_spokes_perp30, cosine_polysph(spokes))
+rho_spokes_perp50 <- rho_optim_bst(spokes, 50)
+to_perp(spokes, rho_spokes_perp50$rho_values, cosine_polysph(spokes))
 
 #   [1] 15.99908 15.99912 15.99902 15.99814 15.99885 15.99985 16.53955 15.99998 15.99933 15.99936 15.99940 15.99927 15.99999 15.99879 15.99944 15.99883 15.99921
 #  [18] 15.99918 15.99936 15.99910 16.00000 15.99912 15.99938 15.99926 15.99985 15.99931 15.99922 15.99999 16.00000 15.99968 15.99967 15.99890 15.99895 15.99960
@@ -75,11 +75,13 @@ to_perp(spokes, rho_spokes_perp30, cosine_polysph(spokes))
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE}
-Y <- psc_sne(spokes, d=1, rho_psc_list = rho_spokes_perp30, colors = ifelse(ids_labs, 2, 1), num_iteration=1000, visualize_prog = TRUE, eta=250)
+Y <- psc_sne(spokes, d=1, rho_psc_list = rho_spokes_perp50, 
+             colors = ifelse(ids_labs, 2, 1), num_iteration=5000,
+             visualize_prog = TRUE)
 ```
 
 ```{r}
-Y_rad <- DirStats::to_rad(Y[,,1002])
+Y_rad <- DirStats::to_rad(Y)
 r <- 1
 theta <<- Y_rad
 plot(r*sin(theta),
