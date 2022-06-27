@@ -2,12 +2,6 @@
 ##      spherical Cauchy Perplexity      ##
 ###########################################
 
-library(parallel)
-library(doParallel)
-library(lsa)
-library(stats)
-library(optimParallel)
-
 #' Scalar version
 #' Calculate the perplexity of the i-th observation for a given a rho parameter
 #'

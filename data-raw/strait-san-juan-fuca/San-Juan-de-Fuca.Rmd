@@ -35,10 +35,10 @@ Let's calculate some rho values for a perplexity of 12, 20, 33 and 45.
 
 ```{r cache=TRUE}
 
-rho_12 <- (sanjuanfuca, 12)
-rho_20 <- rho_optim_parallel(sanjuanfuca, 20)
-rho_33 <- rho_optim_parallel(sanjuanfuca, 33)
-rho_45 <- rho_optim_parallel(sanjuanfuca, 45)
+rho_12 <- rho_optim_bst(sanjuanfuca, 12)
+rho_20 <- rho_optim_bst(sanjuanfuca, 20)
+rho_33 <- rho_optim_bst(sanjuanfuca, 33)
+rho_45 <- rho_optim_bst(sanjuanfuca, 45)
 
 ```
 

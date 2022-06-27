@@ -31,10 +31,10 @@ tim <- date("2012-01-01 00:00:00 UTC") + hours(ncvar_get(data, "time"))
 # Check (lat, lon) coordinates at https://cordc.ucsd.edu/projects/mapping/maps/
 # to focus on a given region
 loc <- "Strait_of_Juan_de_Fuca"
-begin_lat <- 48.1
-end_lat <- 48.5
-begin_lon <- -124.5
-end_lon <- -123
+begin_lat <- 48.3918
+end_lat <- 48.1761
+begin_lon <- -124.1759
+end_lon <- -123.7178
 
 # Get data function -- takes info from global environment and writes on it
 get_data <- function() {

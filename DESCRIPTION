@@ -19,6 +19,7 @@ Imports:
     doFuture,
     parallel,
     doParallel,
+    optimParallel,
     foreach,
     lsa,
     future,
@@ -30,8 +31,6 @@ Imports:
 Suggests:
     knitr,
     markdown,
-    progress,
-    progressr,
     rmarkdown,
     scatterplot3d,
     viridisLite
