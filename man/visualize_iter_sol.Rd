@@ -20,7 +20,7 @@ Visualize the iteration solution in a plot
 }
 \examples{
 Y <- array(NA, dim = c(100, 3, 15))
-Y[,,10] <- rotasym::r_unif_sphere(100, 3)
+Y[, , 10] <- rotasym::r_unif_sphere(100, 3)
 visualize_iter_sol(Y, 10, 2)
 visualize_iter_sol(Y, 10, 2, rep(c(1, 2), each = nrow(Y) / 2))
 }

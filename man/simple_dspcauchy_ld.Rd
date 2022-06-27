@@ -25,7 +25,7 @@ Calculate the low-dimension spherical Cauchy density function
 }
 \examples{
 y_1 <- rotasym::r_unif_sphere(100, 2)
-simple_dspcauchy_ld(y_1, i = 1, j = 2, rho = 0.5, d=1)
+simple_dspcauchy_ld(y_1, i = 1, j = 2, rho = 0.5, d = 1)
 y_2 <- rotasym::r_unif_sphere(100, 3)
-simple_dspcauchy_ld(y_2, i = 4, j = 3, rho = 0.9999, d=2)
+simple_dspcauchy_ld(y_2, i = 4, j = 3, rho = 0.9999, d = 2)
 }
