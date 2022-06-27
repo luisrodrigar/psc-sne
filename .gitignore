@@ -50,3 +50,4 @@ spokes.RData
 *_files/
 *.html
 *.out
+pkg-devtools.R
