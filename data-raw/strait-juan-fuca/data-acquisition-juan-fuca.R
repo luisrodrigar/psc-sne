@@ -31,7 +31,7 @@ tim <- date("2012-01-01 00:00:00 UTC") + hours(ncvar_get(data, "time"))
 # Check (lat, lon) coordinates at https://cordc.ucsd.edu/projects/mapping/maps/
 # to focus on a given region
 loc <- "Strait_of_Juan_de_Fuca"
-begin_lat <- 48.40
+begin_lat <- 48.38
 end_lat <- 48.17
 begin_lon <- -124.18
 end_lon <- -123.45
@@ -191,10 +191,12 @@ extract_theta <- function(results, hours) {
 
 # TODO
 
+# List individual RDatas
+files <- list.files(pattern = "*.RData", full.names = TRUE, recursive = FALSE)
+
 # Obtain the results for every area and their corresponding daily directions
 results <- extract_data(begin_lat, end_lat, begin_lon, end_lon)
-A <- extract_datetime_theta(results, hours = 3)
-
+A <- extract_theta(results, hours = 3)
 
 # Save the object
 save(list = "sanjuanfuca", file = "sanjuanfuca.rda")
