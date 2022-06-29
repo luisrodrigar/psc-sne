@@ -2,29 +2,20 @@
 % Please edit documentation in R/perplexity.R
 \name{rho_optim_serial}
 \alias{rho_optim_serial}
-\title{Serial scalar version
-Calculate the rho list values based on a fixed perplexity and a given data in (S^p)^r
-Optimize the value using a method L-BFGS-B, setting the boundaries from 0 to 0.9999
-Each value is calculated serially. It prints the time consumption.}
+\title{Serial optimization \eqn{\rho} concentration parameters (scalar version)}
 \usage{
 rho_optim_serial(x, perplexity)
 }
 \arguments{
-\item{x}{3d-array that is a poly-sphere}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{perplexity}{a fixed value to optimize the rho values}
+\item{perplexity}{a fixed value (between 5 and 100) to optimize the rho values.}
 }
 \value{
-rho list with the values optimized
+rho list with the values optimized.
 }
 \description{
-Serial scalar version
-Calculate the rho list values based on a fixed perplexity and a given data in (S^p)^r
-Optimize the value using a method L-BFGS-B, setting the boundaries from 0 to 0.9999
+Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
+Optimize the value using a method L-BFGS-B, setting the boundaries from 0 to 0.9999.
 Each value is calculated serially. It prints the time consumption.
-}
-\examples{
-x <- gen_polysphere(20, 2, 4)
-rho_optim_serial(x, 22)
-rho_optim_serial(x, 30)
 }

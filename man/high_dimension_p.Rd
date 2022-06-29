@@ -2,24 +2,22 @@
 % Please edit documentation in R/high_dimension.R
 \name{high_dimension_p}
 \alias{high_dimension_p}
-\title{Scalar version
-Calculates the high-dimension probabilities of a polyspherical Cauchy distribution}
+\title{Poly-spherical Cauchy conditional probability matrix (scalar version)}
 \usage{
 high_dimension_p(x, rho_list)
 }
 \arguments{
-\item{x}{array 3-dimensional}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{rho_list}{rho parameter for each \code{i}-th observation}
+\item{rho_list}{rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.}
 }
 \value{
-a 3-dimensional matrix with the high-dimension probabilities of the array \code{x}
+an array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
 }
 \description{
-Scalar version
-Calculates the high-dimension probabilities of a polyspherical Cauchy distribution
+Calculates the high-dimension conditional probabilities of a poly-spherical Cauchy distribution. Scalar version algorithm.
 }
 \examples{
-x <- gen_polysphere(100, 2, 3)
+x <- sphunif::r_unif_sph(100, 3, 3)
 high_dimension_p(x, rep(0.5, 100))
 }

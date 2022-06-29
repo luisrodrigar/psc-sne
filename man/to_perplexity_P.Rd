@@ -2,27 +2,25 @@
 % Please edit documentation in R/perplexity.R
 \name{to_perplexity_P}
 \alias{to_perplexity_P}
-\title{Scalar version
-Calculate the perplexity of the i-th observation for a given a rho parameter}
+\title{Perplexity of the \eqn{i}-th observation (scalar version)}
 \usage{
 to_perplexity_P(x, i, rho)
 }
 \arguments{
-\item{x}{3d-array that is a poly-sphere}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{i}{corresponds to the i-th observation for the perplexity is calculated}
+\item{i}{corresponds to the i-th observation for the perplexity is calculated.}
 
-\item{rho}{param between 0 and 1 (not included)}
+\item{rho}{concentration parameter between 0 and 1 (not included).}
 }
 \value{
-perplexity and probabilities of the i-th observation for all the j-th's
+perplexity and probabilities of the \eqn{i}-th observation for all the remainder observations.
 }
 \description{
-Scalar version
-Calculate the perplexity of the i-th observation for a given a rho parameter
+Calculate the perplexity of the \eqn{i}-th observation for a given a rho parameter.
 }
 \examples{
-x <- gen_polysphere(25, 2, 3)
+x <- sphunif::r_unif_sph(25, 3, 3)
 to_perplexity_P(x, 1, 0.5)
-to_perplexity_P(x, 4, 0.9999)
+to_perplexity_P(x, 4, 1 - 1e-4)
 }

@@ -2,14 +2,12 @@
 % Please edit documentation in R/perplexity.R
 \name{rho_optim_bst}
 \alias{rho_optim_bst}
-\title{Binary search rho optimization for each observation
-Calculate the rho list values based on a fixed perplexity and a given data in (S^p)^r
-The boundaries are set from 0 to 0.9999 for each value. It prints the time consumption.}
+\title{Binary search rho optimization for each observation}
 \usage{
 rho_optim_bst(x, perp_fixed, cl = clusterFactory(parallel::detectCores() - 1))
 }
 \arguments{
-\item{x}{3d-array that is a poly-sphere (S^p)^r}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
 \item{perp_fixed}{a fixed value used to optimized the rho values}
 
@@ -19,12 +17,11 @@ rho_optim_bst(x, perp_fixed, cl = clusterFactory(parallel::detectCores() - 1))
 rho values and conditional probability matrix
 }
 \description{
-Binary search rho optimization for each observation
-Calculate the rho list values based on a fixed perplexity and a given data in (S^p)^r
+Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
 The boundaries are set from 0 to 0.9999 for each value. It prints the time consumption.
 }
 \examples{
-x <- gen_polysphere(20, 2, 4)
+x <- sphunif::r_unif_sph(20, 3, 4)
 rho_optim_bst(x, perp_fixed = 15, cl = clusterFactory(2))
 rho_optim_bst(x, perp_fixed = 26, cl = clusterFactory(2))
 }

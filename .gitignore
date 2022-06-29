@@ -51,3 +51,6 @@ spokes.RData
 *.html
 *.out
 pkg-devtools.R
+src/*.o
+src/*.so
+src/*.dll

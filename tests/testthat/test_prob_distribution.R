@@ -8,51 +8,52 @@ rho <- 0.5
 rho_list <- rep(rho, n)
 k <- 1
 set.seed(100469000)
-x <- gen_polysphere(n, p, r)
+x <- sphunif::r_unif_sph(n, p + 1, r)
 
-test_that("HD: Checking method 'simple_dspcauchy_hd' for a given i, j and k", {
-  expected_value <- 0.241892
-  expect_equal(simple_dspcauchy_hd(x, i, j, rho, k, p),
+test_that("HD: Checking method 'd_sph_cauchy' for a given i, j and k", {
+  expected_value <- 2.58103
+  expect_equal(d_sph_cauchy(x, i, j, rho, k, p),
     expected_value,
     tolerance = 1e-6
   )
 })
 
-test_that("HD: Checking method 'P_ij_psc' for a given i and j", {
-  expected_value <- 0.03305185
-  expect_equal(P_ij_psc(x, i, j, rho),
+test_that("HD: Checking method 'd_psph_cauchy' for a given i and j", {
+  expected_value <- 0.5543813
+  expect_equal(d_psph_cauchy(x, i, j, rho),
     expected_value,
     tolerance = 1e-6
   )
 })
 
-test_that("HD: Checking method 'P_i_psc' for a given i", {
-  expected_value <- 0.07566693
-  expect_equal(sum(P_i_psc(x, i, rho_list)),
+test_that("HD: Checking method 'd_i_psph_cauchy' for a given i", {
+  expected_value <- 24.88156
+  expect_equal(sum(d_i_psph_cauchy(x, i, rho_list)),
     expected_value,
     tolerance = 1e-6
   )
 })
 
-test_that("HD: Checking method 'P_total_psc' for each i-th observation", {
-  expected_value <- c(0.07566693, 0.9713986, 0.9809618)
-  expect_equal(P_total_psc(x, rho_list),
+test_that("HD: Checking method 'd_total_psph_cauchy' for each i-th observation", {
+  expected_value <- c(24.8815586,  0.8615519, 24.6343479)
+  expect_equal(d_total_psph_cauchy(x, rho_list),
     expected_value,
     tolerance = 1e-6, ignore_attr = TRUE
   )
 })
 
-test_that("HD: Checking method 'jcondi_psc', calculate prob for a given i to choose a given j observation as neighbor", {
-  expected_value <- 0.03305185 / 0.07566693
-  expect_equal(jcondi_psc(x, i, j, rho_list, 0.07566693),
+test_that("HD: Checking method 'jcondi_psph', calculate the density function value for a given i to choose a given j observation as neighbor", {
+  expected_value <- 0.02228081
+  d_total_i_psph <- d_total_psph_cauchy(x, rho_list)[i]
+  expect_equal(jcondi_psph(x, i, j, rho_list, d_total_i_psph),
     expected_value,
     tolerance = 1e-6
   )
 })
 
-test_that("HD: Checking method 'psc_cond_given_i', calculate probs for a given i to choose the j-th observation as neighbor", {
-  expected_value <- c(0, 0.03305185 / 0.07566693, 0.04261508 / 0.07566693)
-  expect_equal(psc_cond_given_i(x, i, rho_list, 0.07566693),
+test_that("HD: Checking method 'prob_cond_i_psph', calculate probs for a given i to choose the j-th observation as neighbor", {
+  expected_value <- c(0, 0.02228081, 0.97771919)
+  expect_equal(prob_cond_i_psph(x, i, rho_list),
     expected_value,
     tolerance = 1e-6
   )
@@ -62,33 +63,33 @@ d <- 2
 set.seed(100469000)
 y <- sphunif::r_unif_sph(n, d + 1)[, , 1]
 
-test_that("LD: Checking method 'simple_dspcauchy_ld' for a given i and j observations", {
+test_that("LD: Checking method 'd_sph_cauchy' for a given i and j observations", {
   expected_value <- 2.58103
-  expect_equal(simple_dspcauchy_ld(y, i, j, rho, d),
+  expect_equal(d_sph_cauchy(array(y, dim = c(nrow(y), ncol(y), 1)), i, j, rho, 1, d),
     expected_value,
     tolerance = 1e-6
   )
 })
 
-test_that("LD: Checking method 'Q_i_sc' for a given i observation", {
+test_that("LD: Checking method 'd_i_sph_cauchy' for a given i observation", {
   expected_value <- 18.06179
-  expect_equal(Q_i_sc(y, i, rho),
+  expect_equal(d_i_sph_cauchy(y, i, rho),
     expected_value,
     tolerance = 1e-6
   )
 })
 
-test_that("LD: Checking method 'jcondi_sc' for a given i and j observations", {
+test_that("LD: Checking method 'jcondi_sph' for a given i and j observations", {
   expected_value <- 2.58103 / 18.06179
-  expect_equal(jcondi_sc(y, i, j, rho),
+  expect_equal(jcondi_sph(y, i, j, rho),
     expected_value,
     tolerance = 1e-6
   )
 })
 
-test_that("LD: Checking method 'jcondi_sc' for a given i and j observations", {
+test_that("LD: Checking method 'prob_cond_i_sph' for a given i and j observations", {
   expected_value <- c(0, 2.58103 / 18.06179, 15.48076 / 18.06179)
-  expect_equal(sc_cond_given_i(y, i, rho),
+  expect_equal(prob_cond_i_sph(y, i, rho),
     expected_value,
     tolerance = 1e-6, ignore_attr = TRUE
   )

@@ -2,25 +2,18 @@
 % Please edit documentation in R/perplexity.R
 \name{to_perp_scalar}
 \alias{to_perp_scalar}
-\title{Scalar version
-Calculate the perplexity of all the observations for a given rho list parameter}
+\title{Perplexity matrix (scalar version)}
 \usage{
 to_perp_scalar(x, rho_list)
 }
 \arguments{
-\item{x}{3d-array that is a poly-sphere}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{rho_list}{list param between 0 and 1 (not included) each element}
+\item{rho_list}{rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.}
 }
 \value{
-perplexity list for each observation
+perplexity vector for each observation
 }
 \description{
-Scalar version
-Calculate the perplexity of all the observations for a given rho list parameter
-}
-\examples{
-x <- gen_polysphere(25, 2, 3)
-to_perp_scalar(x, rep(0.5, 25))
-to_perp_scalar(x, rep(0.9999, 25))
+Calculate the perplexity of each observations for a given rho parameters list.
 }

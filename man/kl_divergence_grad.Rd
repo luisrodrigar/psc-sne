@@ -2,35 +2,29 @@
 % Please edit documentation in R/psc_sne.R
 \name{kl_divergence_grad}
 \alias{kl_divergence_grad}
-\title{Calculates analytically the gradient of the Kullback-Leibler divergence function}
+\title{Kullback-Leibler divergence gradient}
 \usage{
 kl_divergence_grad(Y, i, rho, d, P, cos_sim = NULL, Q = NULL)
 }
 \arguments{
-\item{Y}{data point onto the low-dimension (S^d)}
+\item{Y}{data point onto the low-dimension (\eqn{\mathcal{S}^d}).}
 
-\item{i}{the index of the i-th observation where the gradient is calculated}
+\item{i}{the index of the i-th observation where the gradient is calculated.}
 
-\item{rho}{parameter between 0 and 0.9999 (not included)}
+\item{rho}{parameter between 0 and 0.9999 (not included).}
 
-\item{d}{target dimension to reduced the data}
+\item{d}{target dimension to reduced the data.}
 
-\item{P}{high-dimensional poly-spherical Cauchy probabilities}
+\item{P}{high-dimensional poly-spherical Cauchy probabilities.}
 
-\item{cos_sim}{cosine similarities of the high-dimension probabilities}
+\item{cos_sim}{cosine similarities of the high-dimension probabilities.}
 
-\item{Q}{low-dimension spherical Cauchy probabilities}
+\item{Q}{low-dimension spherical Cauchy probabilities.}
 }
 \value{
-data onto the sphere
+data onto the sphere \eqn{\mathcal{S}^d}
 }
 \description{
-Calculates analytically the gradient of the Kullback-Leibler divergence function
-}
-\examples{
-X <- gen_polysphere(40, 2, 3)
-rho_opt <- rho_optim_bst(X, 20, clusterFactory(2))
-Y <- rotasym::r_unif_sphere(40, 2)
-kl_divergence_grad(Y, 2, 0.5, 1, rho_opt$P)
-kl_divergence_grad(Y, 2, 0.5, 1, rho_opt$P, lsa::cosine(t(Y)), low_dimension_Q(Y, 0.5))
+Calculates analytically the gradient of the Kullback-Leibler divergence function.
+Defaults values for the optional parameters to NULL.
 }

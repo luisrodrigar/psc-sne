@@ -527,7 +527,7 @@ print(round(diff_Z, 6) == round(diff_Z_analytically, 6))
 
 # some random value for p_kl
 r <- 4
-polysphere <- gen_polysphere(n, d, r)
+polysphere <- sphunif::r_unif_sph(n, d + 1, r)
 perp_value <- 15
 rho_list <- rho_optimize(polysphere, perp_value)
 P <- high_dimension(polysphere, rho_list)

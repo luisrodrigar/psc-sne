@@ -2,25 +2,19 @@
 % Please edit documentation in R/psc_sne.R
 \name{visualize_iter_sol}
 \alias{visualize_iter_sol}
-\title{Visualize the iteration solution in a plot}
+\title{Visualize the reduction status}
 \usage{
 visualize_iter_sol(Y, i, d, colors = NULL)
 }
 \arguments{
-\item{Y}{data point onto the low-dimension S^d}
+\item{Y}{data point onto the low-dimension \eqn{\mathcal{S}^d}.}
 
-\item{i}{the i-th iteration}
+\item{i}{the \eqn{i}-th iteration.}
 
-\item{d}{the dimension to reduce the original data}
+\item{d}{the dimension to reduce the original data.}
 
-\item{colors}{optional value to represent the group colors in the plot}
+\item{colors}{optional value to represent the group colors in the plot.}
 }
 \description{
-Visualize the iteration solution in a plot
-}
-\examples{
-Y <- array(NA, dim = c(100, 3, 15))
-Y[, , 10] <- rotasym::r_unif_sphere(100, 3)
-visualize_iter_sol(Y, 10, 2)
-visualize_iter_sol(Y, 10, 2, rep(c(1, 2), each = nrow(Y) / 2))
+Visualize the iteration solution in a plot for the \eqn{i}-th iteration.
 }
