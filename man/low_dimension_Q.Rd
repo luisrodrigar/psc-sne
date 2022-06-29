@@ -2,22 +2,20 @@
 % Please edit documentation in R/low_dimension.R
 \name{low_dimension_Q}
 \alias{low_dimension_Q}
-\title{Calculate the low-dimension probabilities of a reduced matrix Y
-Using}
+\title{Low-dimension probabilities}
 \usage{
 low_dimension_Q(Y, rho)
 }
 \arguments{
-\item{Y}{matrix with the points in the sphere}
+\item{Y}{matrix with the points in the sphere.}
 
-\item{rho}{parameter between 0 and 1 (not included)}
+\item{rho}{parameter between 0 and 1 (not included).}
 }
 \value{
-a matrix with the values of x projected onto the sphere of radius 1
+a matrix with the values of x projected onto the sphere of radius 1.
 }
 \description{
-Calculate the low-dimension probabilities of a reduced matrix Y
-Using
+Calculate the low-dimension probabilities of a reduced matrix Y.
 }
 \examples{
 Y <- rotasym::r_unif_sphere(100, 2)

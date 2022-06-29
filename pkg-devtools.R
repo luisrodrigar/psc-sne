@@ -3,22 +3,24 @@ library(devtools)
 library(covr)
 library(lintr)
 library(rcmdcheck)
+library(here)
 
 # Package name
 pkg <- "pscsne"
 
 # Install from GitHub
-# remove.packages(pkg)
-# devtools::install_github("https://github.com/luisrodrigar/psc-sne/",
-#                          auth_token = paste0("pon_tu_auth_token",
-#                                              "separandolo_en_dos"))
-# packageVersion("pscsne")
+remove.packages(pkg)
+devtools::install_github("https://github.com/luisrodrigar/psc-sne/",
+                          auth_token = paste0("ghp_GmbcUYxjKPJaDez5e",
+                                              "5hTf8TC0BdTzO0qZJJX"),
+                         ref = "create-package")
+packageVersion(pkg)
 
 # Set wd
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(here())
 
 # Load package
-load_all(path = pkg)
+devtools::load_all(path = ".")
 
 # Documentation
 document(pkg = pkg)

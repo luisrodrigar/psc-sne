@@ -88,3 +88,58 @@ scatterplot3d::scatterplot3d(rbind(samp, samp[, c(3, 1, 2)]),
 
 # Other generators:
 # ?rotasym::r_ACG(), ?sphunif::r_alt()
+
+rotate_matrix_z_axis <- function(alpha) {
+  deg2rad <- function(deg) {(deg * pi) / (180)}
+  rads <- deg2rad(alpha)
+  matrix(c(cos(rads), -sin(rads), 0,
+           sin(rads),  cos(rads), 0,
+           0,                  0, 1),
+         byrow = T, nrow = 3)
+}
+
+p = 2
+A <- matrix(runif((p + 1)^2)*2-0.5, ncol = p + 1)
+sigma <- t(A) %*% A
+n <- 200
+x_1_belt1 <- rotasym::r_ACG(n, sigma)
+rotate_mat_90 <- rotate_matrix(90)
+x_2_belt1 <- x_1_belt1 %*% rotate_mat_90
+rotate_mat_45 <- rotate_matrix(45)
+x_3_belt1 <- x_1_belt1 %*% rotate_mat_45
+x_belt1 <- rbind(x_1_belt1, x_2_belt1, x_3_belt1)
+scatterplot3d::scatterplot3d(x_belt1, xlim = c(-1, 1),
+                             ylim = c(-1, 1), zlim = c(-1, 1),
+                             color = rep(c(1,2,3), each=n))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+            radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+            lit = FALSE)
+rgl::points3d(x_belt1, col = rep(c(1,2,3), each=n))
+
+x_1_belt2 <- rotasym::r_ACG(n, sigma)
+x_2_belt2 <- x_1_belt2 %*% rotate_mat_90
+x_3_belt2 <- x_1_belt1 %*% rotate_mat_45
+x_belt2 <- rbind(x_1_belt2, x_2_belt2, x_3_belt2)
+scatterplot3d::scatterplot3d(x_belt2, xlim = c(-1, 1),
+                             ylim = c(-1, 1), zlim = c(-1, 1),
+                             color = rep(c(1,2,3), each=n))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+            radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+            lit = FALSE)
+rgl::points3d(x_belt2, col = rep(c(1,2,3), each=n))
+
+x_1_belt3 <- rotasym::r_ACG(n, sigma)
+x_2_belt3 <- x_1_belt3 %*% rotate_mat_90
+x_3_belt3 <- x_1_belt1 %*% rotate_mat_45
+x_belt3 <- rbind(x_1_belt3, x_2_belt3, x_3_belt3)
+scatterplot3d::scatterplot3d(x_belt3, xlim = c(-1, 1),
+                             ylim = c(-1, 1), zlim = c(-1, 1),
+                             color = rep(c(1,2,3), each=n))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+            radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+            lit = FALSE)
+rgl::points3d(x_belt3, col = rep(c(1,2,3), each=n))
+

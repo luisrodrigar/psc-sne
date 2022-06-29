@@ -2,29 +2,22 @@
 % Please edit documentation in R/perplexity.R
 \name{to_perplexity}
 \alias{to_perplexity}
-\title{Matrix version
-Calculate the perplexity of the i-th observation for a given a rho parameter}
+\title{Perplexity of the \eqn{i}-th observation (semi-scalar version)}
 \usage{
 to_perplexity(x, i, rho, cos_sim_ps = NULL)
 }
 \arguments{
-\item{x}{3d-array that is a poly-sphere}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{i}{corresponds to the i-th observation for the perplexity is calculated}
+\item{i}{corresponds to the \eqn{i}-th observation for the perplexity is calculated.}
 
-\item{rho}{param between 0 and 1 (not included)}
+\item{rho}{param between 0 and 1 (not included).}
 
-\item{cos_sim_ps}{cosine similarities of the poly-sphere}
+\item{cos_sim_ps}{cosine similarities matrix of each sphere \eqn{\mathcal{S}^p} (optional parameter).}
 }
 \value{
-perplexity of the i-th observation for all the j-th's
+perplexity of the \eqn{i}-th observation for all the remainder observations.
 }
 \description{
-Matrix version
-Calculate the perplexity of the i-th observation for a given a rho parameter
-}
-\examples{
-x <- gen_polysphere(25, 2, 3)
-to_perplexity(x, 1, 0.5)
-to_perplexity(x, 4, 0.9999)
+Calculate the perplexity of the \eqn{i}-th observation for a given a rho \eqn{\rho} concentration parameter.
 }

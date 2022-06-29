@@ -2,9 +2,7 @@
 % Please edit documentation in R/perplexity.R
 \name{bin_search}
 \alias{bin_search}
-\title{Binary search tree algorithm
-Calculate the rho value based on a perplexity difference
-and current values of rho, rho min and rho max.}
+\title{Binary search tree algorithm}
 \usage{
 bin_search(perp_diff, rho, rho_min, rho_max)
 }
@@ -18,10 +16,9 @@ bin_search(perp_diff, rho, rho_min, rho_max)
 \item{rho_max}{max value for the current rho}
 }
 \value{
-rho found in this step, currently min and max rho
+rho concentration parameter found in this step, currently min and max rho
 }
 \description{
-Binary search tree algorithm
 Calculate the rho value based on a perplexity difference
 and current values of rho, rho min and rho max.
 }

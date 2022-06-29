@@ -2,18 +2,18 @@
 % Please edit documentation in R/utils.R
 \name{fibonacci_lattice}
 \alias{fibonacci_lattice}
-\title{Generated optimal evenly separated points onto the sphere S^2}
+\title{Fibonacci lattice algorithm to generate evenly separated points}
 \usage{
 fibonacci_lattice(n)
 }
 \arguments{
-\item{n}{number of points to be generated}
+\item{n}{positive integer that defines the size of the sample to generate.}
 }
 \value{
-evenly optimal separated points onto the low-dimension sphere S^2
+evenly optimal separated points onto the low-dimension sphere \eqn{\mathcal{S}^2}.
 }
 \description{
-Generated optimal evenly separated points onto the sphere S^2
+Generated optimal evenly separated points onto the sphere \eqn{\mathcal{S}^2}.
 }
 \examples{
 fibonacci_lattice(100)

@@ -2,26 +2,22 @@
 % Please edit documentation in R/perplexity.R
 \name{rho_optimParallel}
 \alias{rho_optimParallel}
-\title{Parallel scalar version
-Calculate the rho list values based on a fixed perplexity and a given data in (S^p)^r
-Optimize the value using the concurrently method L-BFGS-B (optimParallel).
-The boundaries are set from 0 to 0.9999. It prints the time consumption.}
+\title{Concurrent optim to calculate \eqn{\rho} concentration parameters (scalar version)}
 \usage{
 rho_optimParallel(x, perplexity, num_cores = parallel::detectCores() - 1)
 }
 \arguments{
-\item{x}{3d-array that is a poly-sphere}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{perplexity}{a fixed value to optimize the rho values}
+\item{perplexity}{a fixed value (between 5 and 100) to optimize the rho values.}
 
-\item{num_cores}{number of cores to execute the code concurrently}
+\item{num_cores}{number of cores to execute the code concurrently.}
 }
 \value{
-rho list with the values optimized
+rho list with the values optimized.
 }
 \description{
-Parallel scalar version
-Calculate the rho list values based on a fixed perplexity and a given data in (S^p)^r
+Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
 Optimize the value using the concurrently method L-BFGS-B (optimParallel).
 The boundaries are set from 0 to 0.9999. It prints the time consumption.
 }

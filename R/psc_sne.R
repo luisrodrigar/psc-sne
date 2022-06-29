@@ -1,46 +1,40 @@
-#' Calculates analytically the gradient of the Kullback-Leibler divergence function
+
+#' @title Kullback-Leibler divergence gradient
+#' @description Calculates analytically the gradient of the Kullback-Leibler divergence function.
+#' Defaults values for the optional parameters to NULL.
 #'
-#' @param Y data point onto the low-dimension (S^d)
-#' @param i the index of the i-th observation where the gradient is calculated
-#' @param rho parameter between 0 and 0.9999 (not included)
-#' @param d target dimension to reduced the data
-#' @param P high-dimensional poly-spherical Cauchy probabilities
-#' @param cos_sim cosine similarities of the high-dimension probabilities
-#' @param Q low-dimension spherical Cauchy probabilities
-#' @return data onto the sphere
-#' @examples
-#' X <- gen_polysphere(40, 2, 3)
-#' rho_opt <- rho_optim_bst(X, 20, clusterFactory(2))
-#' Y <- rotasym::r_unif_sphere(40, 2)
-#' kl_divergence_grad(Y, 2, 0.5, 1, rho_opt$P)
-#' kl_divergence_grad(Y, 2, 0.5, 1, rho_opt$P, lsa::cosine(t(Y)), low_dimension_Q(Y, 0.5))
+#' @param Y data point onto the low-dimension (\eqn{\mathcal{S}^d}).
+#' @param i the index of the i-th observation where the gradient is calculated.
+#' @param rho parameter between 0 and 0.9999 (not included).
+#' @param d target dimension to reduced the data.
+#' @param P high-dimensional poly-spherical Cauchy probabilities.
+#' @param cos_sim cosine similarities of the high-dimension probabilities.
+#' @param Q low-dimension spherical Cauchy probabilities.
+#' @return data onto the sphere \eqn{\mathcal{S}^d}
 kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   if (i < 1 || i > nrow(Y)) {
-    stop(paste(
-      "Error, i value not allowed. Positive values greater tha 0 and",
-      "smaller or equal than the total number of observations."
-    ))
+    stop("i value not allowed. Values > 0 and <= nrow(Y)")
   }
   if (d < 1) {
-    stop("Error, d value not allowed. Positive values greater or equal than 1.")
+    stop("d value not allowed, d >= 1")
   }
   if (rho < 0 || rho >= 1) {
-    stop(paste(
-      "Error, rho value not allowed, values in between 0 and 1,",
-      "the last one not included."
-    ))
+    stop("rho value not allowed, d in [0, 1)")
   }
   if (nrow(Y) != nrow(P)) {
-    stop("Error, the num of observations does not match with the matrix P")
+    stop("P size does not match with the num of observations")
   }
   if (d + 1 != ncol(Y)) {
-    stop("Error, the columns of Y does not match with the value of d")
+    stop("d does not match with ncol(Y) - 1")
   }
   # Calculate the radial projection in case it is not in the sphere or radius 1
   Z <- radial_projection(Y)
   # Calculate the cosine similarities in case it is not passing as a parameter
   if (is.null(cos_sim)) {
-    cos_sim <- lsa::cosine(t(Z))
+    cos_sim <- reconstruct_cos_sim_mat(
+      cos_sim_vec = sphunif::Psi_mat(array(Z, dim = c(nrow(Z), ncol(Z), 1)), scalar_prod = TRUE),
+      n = nrow(Z)
+    )
   }
   # Calculate the low dimension probabilities based on the data Z
   if (is.null(Q)) {
@@ -55,26 +49,28 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   )))
 }
 
-#' Calculates the poly-spherical-Cauchy-SNE given a data onto the poly-sphere and the reduced dimension
+#' @title Poly-spherical Cauchy SNE
+#' @description Calculates the poly-spherical-Cauchy-SNE given a data onto the poly-sphere and the reduced dimension.
 #'
-#' @param X data point onto the high-dimension (S^p)^r
-#' @param d reduced dimension
-#' @param rho_psc_list rho parameters of the high-dimensional poly-spherical Cauchy probabilities (optional, default NULL)
-#' @param rho rho parameter of the low-dimensional spherical Cauchy probabilities (optional, default 0.5)
-#' @param perplexity parameter which says what is more important: local or global aspects (optional, default 30)
-#' @param num_iteration maximum number of iterations (optional, default 200)
-#' @param initial_momentum first value of the momentum of the first 250 iterations
-#' @param final_momentum momentum to take into account after the 250 iteration
-#' @param eta is the learning rate of the optimization algorithm (optional, default 200)
-#' @param early_exaggeration the first 100 iterations results are exagerated, k times (optional, default 4.0)
-#' @param colors list with as many elements as observations are, only valid when visualization is true (optional, default NULL)
-#' @param visualize_prog defines whether the progression plots are shown or not (optional, default FALSE)
-#' @param tol is the tolerance, when is below this value it is considered that a good solution has been obtained (optional, default 10^-9)
-#' @param check whether to check or not the tolerance
-#' @param parallel_cores number of cores to use concurrently for the calculation of the gradient
-#' @return reduced dimensional data (in low-dimension)
+#' @param X an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.
+#' @param d the target dimension to use for reduce the dimension of the data \code{X}.
+#' @param rho_psc_list rho parameters of the high-dimensional poly-spherical Cauchy probabilities (optional, default NULL).
+#' @param rho rho parameter of the low-dimensional spherical Cauchy probabilities (optional, default 0.5).
+#' @param perplexity parameter which says what is more important: local or global aspects (optional, default 30).
+#' @param num_iteration maximum number of iterations (optional, default 200).
+#' @param initial_momentum first value of the momentum of the first 250 iterations.
+#' @param final_momentum momentum to take into account after the 250 iteration.
+#' @param eta is the learning rate of the optimization algorithm (optional, default 200).
+#' @param early_exaggeration the first 100 iterations results are exagerated, k times (optional, default 4.0).
+#' @param colors list with as many elements as observations are, only valid when visualization is true (optional, default NULL).
+#' @param visualize_prog defines whether the progression plots are shown or not (optional, default FALSE).
+#' @param tol is the tolerance, when is below this value it is considered that a good solution has been obtained (optional, default 10^-9).
+#' @param check whether to check or not the tolerance.
+#' @param parallel_cores number of cores to use concurrently for the calculation of the gradient.
+#' @return data reduced to \eqn{\mathcal{S}^d}.
+#' @export
 #' @examples
-#' X <- gen_polysphere(40, 2, 3)
+#' X <- sphunif::r_unif_sph(40, 3, 3)
 #' psc_sne(X, d = 1, parallel_cores = 2)
 #' psc_sne(X, d = 2, parallel_cores = 2)
 psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_iteration = 200,
@@ -108,14 +104,14 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
     res_opt <- rho_optim_bst(X, perplexity, clusterFactory(parallel_cores))
     P_cond <- res_opt$P
     rho_psc_list <- res_opt$rho_values
-  } else if (methods::is(rho_psc_list, "list")) {
+  } else if (is.list(rho_psc_list)) {
     # Obtaining the values from the object of the parameter
     P_cond <- rho_psc_list$P
     rho_psc_list <- rho_psc_list$rho_values
   } else {
     # Calculating the probabilities based on the rho values
-    cosine_sim_polysphere <- cosine_polysph(X)
-    P_cond <- high_dimension(x = X, rho_list = rho_psc_list, cos_sim_pol = cosine_sim_polysphere)
+    cos_sim_psh <- cosine_polysph(X)
+    P_cond <- high_dimension(x = X, rho_list = rho_psc_list, cos_sim_psh = cos_sim_psh)
   }
 
   # Generating the high-dimension symmetric P matrix, (P_j|i + P_i|j) / 2n
@@ -137,9 +133,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
   momentum <- initial_momentum
 
   # Visualizing the plots in a 4x4 grid
-  if (visualize_prog) {
-    graphics::par(mfrow = c(4, 4))
-  }
+  old_par <- par(mfrow = c(4, 4))
 
   # Interval from 2 to number of iterations + 2
   range_iterations <- seq_len(num_iteration) + 2
@@ -150,11 +144,17 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
       momentum <- final_momentum
     }
 
+    # Calculate the cosine similarities for the current Y solution
+    Y_cos_sim <- reconstruct_cos_sim_mat(
+      sphunif::Psi_mat(array(Y[, , i - 1], dim = c(nrow(Y), ncol(Y), 1)), scalar_prod = TRUE),
+      nrow(Y)
+    )
+
     # gradient of the objective function for all the observations
     grad <- t(simplify2array(parallel::mclapply(
       mc.cores = parallel_cores, 1:n,
       kl_divergence_grad, Y = Y[, , i - 1], rho = rho, d = d, P = P,
-      cos_sim = lsa::cosine(t(Y[, , i - 1])),
+      cos_sim = Y_cos_sim,
       Q = Qs[, , i - 1]
     )))
 
@@ -199,24 +199,19 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
     }
   }
   # Undo the par configuration (grid 4x4)
-  if (visualize_prog) {
-    graphics::par(mfrow = c(1, 1))
-    visualize_iter_sol(Y, i, d, colors)
-  }
+  par(old_par)
+  # Visualize the solution
+  visualize_iter_sol(Y, i, d, colors)
   return(Y_i)
 }
 
-#' Visualize the iteration solution in a plot
+#' @title Visualize the reduction status
+#' @description Visualize the iteration solution in a plot for the \eqn{i}-th iteration.
 #'
-#' @param Y data point onto the low-dimension S^d
-#' @param i the i-th iteration
-#' @param d the dimension to reduce the original data
-#' @param colors optional value to represent the group colors in the plot
-#' @examples
-#' Y <- array(NA, dim = c(100, 3, 15))
-#' Y[, , 10] <- rotasym::r_unif_sphere(100, 3)
-#' visualize_iter_sol(Y, 10, 2)
-#' visualize_iter_sol(Y, 10, 2, rep(c(1, 2), each = nrow(Y) / 2))
+#' @param Y data point onto the low-dimension \eqn{\mathcal{S}^d}.
+#' @param i the \eqn{i}-th iteration.
+#' @param d the dimension to reduce the original data.
+#' @param colors optional value to represent the group colors in the plot.
 visualize_iter_sol <- function(Y, i, d, colors = NULL) {
   # If colors is null, set all of them to black
   if (is.null(colors)) {

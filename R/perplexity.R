@@ -2,30 +2,31 @@
 ##      spherical Cauchy Perplexity      ##
 ###########################################
 
-#' Scalar version
-#' Calculate the perplexity of the i-th observation for a given a rho parameter
+#' @title Perplexity of the \eqn{i}-th observation (scalar version)
+#' @description Calculate the perplexity of the \eqn{i}-th observation for a given a rho parameter.
 #'
-#' @param x 3d-array that is a poly-sphere
-#' @param i corresponds to the i-th observation for the perplexity is calculated
-#' @param rho param between 0 and 1 (not included)
-#' @return perplexity and probabilities of the i-th observation for all the j-th's
+#' @inheritParams high_dimension
+#' @param i corresponds to the i-th observation for the perplexity is calculated.
+#' @param rho concentration parameter between 0 and 1 (not included).
+#' @return perplexity and probabilities of the \eqn{i}-th observation for all the remainder observations.
+#' @export
 #' @examples
-#' x <- gen_polysphere(25, 2, 3)
+#' x <- sphunif::r_unif_sph(25, 3, 3)
 #' to_perplexity_P(x, 1, 0.5)
-#' to_perplexity_P(x, 4, 0.9999)
+#' to_perplexity_P(x, 4, 1 - 1e-4)
 to_perplexity_P <- function(x, i, rho) {
   if (i < 1 || i > nrow(x)) {
-    stop("The indexes i not valid, must be >= 1 and <= nrow(x)")
+    stop("i not valid, must be in [1, nrow(x)]")
   }
   if (!rlang::is_scalar_atomic(rho)) {
-    stop("Parameter rho must be an scalar")
+    stop("rho must be an scalar")
   }
   # Calculate the total marginal probability for the i-th observation
-  total_P_i <- sum(P_i_psc(x = x, i = i, rho_list = rep(rho, nrow(x))))
+  d_total_i_psph <- sum(d_i_psph_cauchy(x = x, i = i, rho_list = rep(rho, nrow(x))))
   # Calculate the probability of the j-th given the i-th observation
-  Pjcondi <- psc_cond_given_i(
+  Pjcondi <- prob_cond_i_psph(
     x = x, i = i, rho_list = rep(rho, nrow(x)),
-    total_P_i = total_P_i
+    d_total_i_psph_cauchy = d_total_i_psph
   )
   # Entropy formula for the j-th observation given the i-th one
   entropy <- function(j) {
@@ -36,27 +37,23 @@ to_perplexity_P <- function(x, i, rho) {
   return(list(perp = perp, Pjcondi = Pjcondi))
 }
 
-#' Matrix version
-#' Calculate the perplexity of the i-th observation for a given a rho parameter
+#' @title Perplexity of the \eqn{i}-th observation (semi-scalar version)
+#' @description Calculate the perplexity of the \eqn{i}-th observation for a given a rho \eqn{\rho} concentration parameter.
 #'
-#' @param x 3d-array that is a poly-sphere
-#' @param i corresponds to the i-th observation for the perplexity is calculated
-#' @param rho param between 0 and 1 (not included)
-#' @param cos_sim_ps cosine similarities of the poly-sphere
-#' @return perplexity of the i-th observation for all the j-th's
-#' @examples
-#' x <- gen_polysphere(25, 2, 3)
-#' to_perplexity(x, 1, 0.5)
-#' to_perplexity(x, 4, 0.9999)
+#' @inheritParams high_dimension
+#' @param i corresponds to the \eqn{i}-th observation for the perplexity is calculated.
+#' @param rho param between 0 and 1 (not included).
+#' @param cos_sim_ps cosine similarities matrix of each sphere \eqn{\mathcal{S}^p} (optional parameter).
+#' @return perplexity of the \eqn{i}-th observation for all the remainder observations.
 to_perplexity <- function(x, i, rho, cos_sim_ps = NULL) {
   if (i < 1 || i > nrow(x)) {
-    stop("The indexes i not valid, must be >= 1 and <= nrow(x)")
+    stop("i not valid, must be in [1, nrow(x)]")
   }
   if (!rlang::is_scalar_atomic(rho)) {
-    stop("Parameter rho must be an scalar")
+    stop("rho must be an scalar")
   }
   if (!is.null(cos_sim_ps) && length(dim(cosine_polysph(x))) != 3) {
-    stop("Parameter cos_sim_ps must be a 3d-array")
+    stop("cos_sim_ps has to be an array of size c(n, p + 1, r), from (S^p)^r")
   }
   # Calculate the cosine similarities of 'x' if 'cos_sim_ps' param is null
   if (is.null(cos_sim_ps)) {
@@ -83,22 +80,17 @@ to_perplexity <- function(x, i, rho, cos_sim_ps = NULL) {
 # to_perplexity_P(x, 1, 0.5)  16.69372  17.88449  24.63309  18.65393  27.29528  234.1621   100
 # to_perplexity(x, 1, 0.5) 517.03870 583.15446 625.63860 613.75799 638.68714 1649.2364   100
 
-#' Scalar version
-#' Calculate the perplexity of all the observations for a given rho list parameter
+#' @title Perplexity matrix (scalar version)
+#' @description Calculate the perplexity of each observations for a given rho parameters list.
 #'
-#' @param x 3d-array that is a poly-sphere
-#' @param rho_list list param between 0 and 1 (not included) each element
-#' @return perplexity list for each observation
-#' @examples
-#' x <- gen_polysphere(25, 2, 3)
-#' to_perp_scalar(x, rep(0.5, 25))
-#' to_perp_scalar(x, rep(0.9999, 25))
+#' @inheritParams high_dimension
+#' @return perplexity vector for each observation
 to_perp_scalar <- function(x, rho_list) {
   if (length(dim(x)) != 3) {
-    stop("Dataset 'x' must be a 3d-array")
+    stop("x must be an array of dimension c(n, p + 1, r), from (S^p)^r")
   }
   if (rlang::is_scalar_atomic(rho_list)) {
-    stop("Parameter 'rho_list' must be a vector")
+    stop("rho_list must be a vector")
   }
   # Call to_perplexity_P (scalar way) for all the observations
   return(sapply(
@@ -108,26 +100,26 @@ to_perp_scalar <- function(x, rho_list) {
   ))
 }
 
-#' Matrix version
-#' Calculate the perplexity of all the observations for a given rho list parameter
+#' @title Perplexity matrix (matrix version)
+#' @description Calculate the perplexity of each observations for a given \eqn{\mathbf{\rho}} parameters list. Matrix version algorithm.
 #'
-#' @param x 3d-array that is a poly-sphere
-#' @param rho_list param between 0 and 1 (not included)
-#' @param cos_sim_ps optional parameter with the cosine similarities of each sphere
-#' @return perplexity list for each observation
+#' @inheritParams high_dimension
+#' @inheritParams to_perplexity
+#' @return perplexity list for each observation.
+#' @export
 #' @examples
-#' x <- gen_polysphere(25, 2, 3)
+#' x <- sphunif::r_unif_sph(25, 3, 3)
 #' to_perp(x, rep(0.5, 25))
-#' to_perp(x, rep(0.9999, 25), cosine_polysph(x))
+#' to_perp(x, rep(1 - 1e-4, 25), cosine_polysph(x))
 to_perp <- function(x, rho_list, cos_sim_ps = NULL) {
   if (length(dim(x)) != 3) {
-    stop("Dataset 'x' must be a 3d-array")
+    stop("x must be an array of dimension c(n, p + 1, r), from (S^p)^r")
   }
   if (rlang::is_scalar_atomic(rho_list)) {
-    stop("Parameter rho_list must be a vector")
+    stop("rho_list must be a vector")
   }
   if (!is.null(cos_sim_ps) && length(dim(cos_sim_ps)) != 3) {
-    stop("Parameter cos_sim_ps must be a 3d-array")
+    stop("cos_sim_ps must be an array of dimension c(n, n, r) where (S^p)^r")
   }
   # Calculate the cosine similarities of 'x' if 'cos_sim_ps' param is null
   if (is.null(cos_sim_ps)) {
@@ -161,18 +153,14 @@ to_perp <- function(x, rho_list, cos_sim_ps = NULL) {
 
 # Time difference of 10.21872 mins
 
-#' Serial scalar version
-#' Calculate the rho list values based on a fixed perplexity and a given data in (S^p)^r
-#' Optimize the value using a method L-BFGS-B, setting the boundaries from 0 to 0.9999
+#' @title Serial optimization \eqn{\rho} concentration parameters (scalar version)
+#' @description Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
+#' Optimize the value using a method L-BFGS-B, setting the boundaries from 0 to 0.9999.
 #' Each value is calculated serially. It prints the time consumption.
 #'
-#' @param x 3d-array that is a poly-sphere
-#' @param perplexity a fixed value to optimize the rho values
-#' @return rho list with the values optimized
-#' @examples
-#' x <- gen_polysphere(20, 2, 4)
-#' rho_optim_serial(x, 22)
-#' rho_optim_serial(x, 30)
+#' @inheritParams high_dimension
+#' @param perplexity a fixed value (between 5 and 100) to optimize the rho values.
+#' @return rho list with the values optimized.
 rho_optim_serial <- function(x, perplexity) {
   # Sample size
   n <- nrow(x)
@@ -187,7 +175,7 @@ rho_optim_serial <- function(x, perplexity) {
         res <- (to_perplexity_P(x, i, rho)$perp - perplexity)^2
         ifelse(is.finite(res), res, 1e6)
       },
-      method = "L-BFGS-B", lower = 0, upper = .9999
+      method = "L-BFGS-B", lower = 0, upper = 1 - 1e-4
     )$par
   })
   # Time end
@@ -201,20 +189,21 @@ rho_optim_serial <- function(x, perplexity) {
 
 # Time difference of 18.12201 mins
 
-#' Parallel scalar version
-#' Calculate the rho list values based on a fixed perplexity and a given data in (S^p)^r
-#' Optimize the value using the method L-BFGS-B, setting the boundaries from 0 to 0.9999
+#' @title Concurrent optimization of the \eqn{\rho} concentration parameters (scalar version)
+#' @description Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
+#' Optimize the value using the method L-BFGS-B, setting the boundaries from 0 to 0.9999.
 #' Each value is calculated concurrently. It prints the time consumption.
 #'
-#' @param x 3d-array that is a poly-sphere
-#' @param perplexity a fixed value to optimize the rho values
-#' @param num_cores number of cores to execute the code concurrently
-#' @return rho list with the values optimized
+#' @inheritParams high_dimension
+#' @inheritParams rho_optim_serial
+#' @param num_cores number of cores to execute the code concurrently.
+#' @return rho list with the values optimized.
+#' @export
 #' @examples
-#' x <- gen_polysphere(20, 2, 4)
-#' rho_optim_parallel(x, 22, 2)
-#' rho_optim_parallel(x, 30, 2)
-rho_optim_parallel <- function(x, perplexity, num_cores = parallel::detectCores() - 1) {
+#' x <- sphunif::r_unif_sph(20, 3, 4)
+#' rho_optim_par(x, 22, 2)
+#' rho_optim_par(x, 30, 2)
+rho_optim_par <- function(x, perplexity, num_cores = parallel::detectCores() - 1) {
   # Sample size
   n <- nrow(x)
   # Setting up the characteristics of the parallelization
@@ -230,7 +219,7 @@ rho_optim_parallel <- function(x, perplexity, num_cores = parallel::detectCores(
         res <- (to_perplexity_P(x, i, rho)$perp - perplexity)^2
         ifelse(is.finite(res), res, 1e6)
       },
-      method = "L-BFGS-B", lower = 0, upper = .9999
+      method = "L-BFGS-B", lower = 0, upper = 1 - 1e-4
     )$par
   })
   # Time end
@@ -244,20 +233,20 @@ rho_optim_parallel <- function(x, perplexity, num_cores = parallel::detectCores(
   return(rho_opt)
 }
 
-# > system.time(rho_optim_parallel(spokes, 22))
+# > system.time(rho_optim_par(spokes, 22))
 # Time difference of 29.04886 mins
 # user   system  elapsed
 # 3.812    5.742 1743.000
 
-#' Parallel scalar version
-#' Calculate the rho list values based on a fixed perplexity and a given data in (S^p)^r
+#' @title Concurrent optim to calculate \eqn{\rho} concentration parameters (scalar version)
+#' @description Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
 #' Optimize the value using the concurrently method L-BFGS-B (optimParallel).
 #' The boundaries are set from 0 to 0.9999. It prints the time consumption.
 #'
-#' @param x 3d-array that is a poly-sphere
-#' @param perplexity a fixed value to optimize the rho values
-#' @param num_cores number of cores to execute the code concurrently
-#' @return rho list with the values optimized
+#' @inheritParams high_dimension
+#' @inheritParams rho_optim_serial
+#' @inheritParams rho_optim_par
+#' @return rho list with the values optimized.
 rho_optimParallel <- function(x, perplexity, num_cores = parallel::detectCores() - 1) {
   # Sample size
   n <- nrow(x)
@@ -274,7 +263,7 @@ rho_optimParallel <- function(x, perplexity, num_cores = parallel::detectCores()
         res <- to_perplexity_P(x, i, rho)$perp - perplexity
         ifelse(is.finite(res), res, 1e6)
       },
-      lower = 0, upper = .9999,
+      lower = 0, upper = 1 - 1e-4,
       parallel = list(cl = cl, forward = FALSE)
     )$par
   })
@@ -296,18 +285,14 @@ rho_optimParallel <- function(x, perplexity, num_cores = parallel::detectCores()
 ## Time difference of 14.22428 mins
 ## 50 rows 25 spheres
 
-#' Serial matrix version
-#' Calculate the rho list values based on a fixed perplexity and a given data in (S^p)^r
+#' @title Serial optimization of the \eqn{\rho} concentration parameters (matrix version)
+#' Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
 #' Optimize the value using the method L-BFGS-B.
 #' The boundaries are set from 0 to 0.9999. It prints the time consumption.
 #'
-#' @param x 3d-array that is a poly-sphere
-#' @param perplexity a fixed value to optimize the rho values
-#' @return rho list with the values optimized
-#' @examples
-#' x <- gen_polysphere(20, 2, 4)
-#' rho_optim_ineff(x, 22)
-#' rho_optim_ineff(x, 30)
+#' @inheritParams high_dimension
+#' @inheritParams rho_optim_serial
+#' @return rho list with the values optimized.
 rho_optim_ineff <- function(x, perplexity) {
   # Sample size
   n <- nrow(x)
@@ -325,7 +310,7 @@ rho_optim_ineff <- function(x, perplexity) {
         res <- t(dif) %*% dif
         ifelse(is.finite(res), res, 1e6)
       },
-      method = "L-BFGS-B", lower = rep(0, n), upper = rep(.9999, n)
+      method = "L-BFGS-B", lower = rep(0, n), upper = rep(1 - 1e-4, n)
     )$par
   })
   # Time end
@@ -341,19 +326,15 @@ rho_optim_ineff <- function(x, perplexity) {
 ## Time difference of 14.56007 mins
 ## 50 rows 25 spheres
 
-#' Parallel matrix version
-#' Calculate the rho list values based on a fixed perplexity and a given data in (S^p)^r
+#' @title Concurrent optimization of the \eqn{\rho} concentration parameters (matrix version)
+#' @description Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
 #' Optimize the value using the method L-BFGS-B.
 #' The boundaries are set from 0 to 0.9999. It prints the time consumption.
 #'
-#' @param x 3d-array that is a poly-sphere
-#' @param perplexity a fixed value to optimize the rho values
-#' @param num_cores number of cores to execute the code concurrently
-#' @return rho list with the values optimized
-#' @examples
-#' x <- gen_polysphere(20, 2, 4)
-#' rho_optimize_1(x, 22, 2)
-#' rho_optimize_1(x, 30, 2)
+#' @inheritParams high_dimension
+#' @inheritParams rho_optim_serial
+#' @inheritParams rho_optim_par
+#' @return rho list with the values optimized.
 rho_optimize_1 <- function(x, perplexity, num_cores = parallel::detectCores() - 1) {
   # Sample size
   n <- nrow(x)
@@ -372,7 +353,7 @@ rho_optimize_1 <- function(x, perplexity, num_cores = parallel::detectCores() - 
         res <- (to_perplexity(x = x, i = i, rho = rho, cosine_polysph) - perplexity)^2
         ifelse(is.finite(res), res, 1e6)
       },
-      method = "L-BFGS-B", lower = 0, upper = .9999
+      method = "L-BFGS-B", lower = 0, upper = 1 - 1e-4
     )$par
   })
   # Time end
@@ -405,15 +386,15 @@ rho_optimize_1 <- function(x, perplexity, num_cores = parallel::detectCores() - 
 #  check = check
 # )
 
-#' Binary search tree algorithm
-#' Calculate the rho value based on a perplexity difference
+#' @title  Binary search tree algorithm
+#' @description Calculate the rho value based on a perplexity difference
 #' and current values of rho, rho min and rho max.
 #'
 #' @param perp_diff difference between the value obtained and the fixed perplexity
 #' @param rho the current value optimized
 #' @param rho_min min value for the current rho
 #' @param rho_max max value for the current rho
-#' @return rho found in this step, currently min and max rho
+#' @return rho concentration parameter found in this step, currently min and max rho
 bin_search <- function(perp_diff, rho, rho_min, rho_max) {
   if (perp_diff > 0 || is.na(perp_diff)) {
     rho_min <- rho
@@ -424,27 +405,23 @@ bin_search <- function(perp_diff, rho, rho_min, rho_max) {
   return(list(rho = rho, min = rho_min, max = rho_max))
 }
 
-#' Binary search rho optimization for the i-th observation
-#' Calculate the rho based on a fixed perplexity and a given data in (S^p)^r
+#' @title Binary search rho optimization for the \eqn{i}-th observation
+#' @description  Calculate the rho based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
 #' The boundaries are set from 0 to 0.9999.
 #'
-#' @param x 3d-array that is a poly-sphere (S^p)^r
-#' @param i the i-th observation
-#' @param perp_fixed a fixed value used to optimized the rho values
-#' @param tolerance whether the difference between previous and current results is below this value (optional, default 10^-3)
-#' @param rho parameter which determines the concentration of the spherical Cauchy distribution (optional, default 0.5)
-#' @param max_tries number of maximum tries for each value of the rho list
-#' @return rho and conditional probabilities calculated for the i-th observation
-#' @examples
-#' x <- gen_polysphere(20, 2, 4)
-#' rho_optim_i_bst(x, 1, 15)
-#' rho_optim_i_bst(x, 7, 26)
+#' @inheritParams high_dimension
+#' @param i the \eqn{i}-th observation.
+#' @param perp_fixed a fixed value used to optimized the rho values.
+#' @param tolerance whether the difference between previous and current results is below this value (optional, default 10^-3).
+#' @param rho parameter which determines the concentration of the spherical Cauchy distribution (optional, default 0.5).
+#' @param max_tries number of maximum tries for each value of the rho list.
+#' @return rho concentration parameter and conditional probabilities calculated for the \eqn{i}-th observation.
 rho_optim_i_bst <- function(x, i, perp_fixed, tolerance = 1e-3, rho = 0.5,
                             max_tries = 20) {
   # Min value of rho
   rho_min <- 0
   # Max value of rho
-  rho_max <- 0.9999
+  rho_max <- 1 - 1e-4
   # Number of tries
   tries <- 0
   # Difference of perplexity, initially set to NA
@@ -492,16 +469,17 @@ rho_optim_i_bst <- function(x, i, perp_fixed, tolerance = 1e-3, rho = 0.5,
   return(list(rho = rho, prob_i = prob_star))
 }
 
-#' Binary search rho optimization for each observation
-#' Calculate the rho list values based on a fixed perplexity and a given data in (S^p)^r
+#' @title Binary search rho optimization for each observation
+#' @description Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
 #' The boundaries are set from 0 to 0.9999 for each value. It prints the time consumption.
 #'
-#' @param x 3d-array that is a poly-sphere (S^p)^r
+#' @inheritParams high_dimension
 #' @param perp_fixed a fixed value used to optimized the rho values
 #' @param cl defines a cluster to work with concurrently
 #' @return rho values and conditional probability matrix
+#' @export
 #' @examples
-#' x <- gen_polysphere(20, 2, 4)
+#' x <- sphunif::r_unif_sph(20, 3, 4)
 #' rho_optim_bst(x, perp_fixed = 15, cl = clusterFactory(2))
 #' rho_optim_bst(x, perp_fixed = 26, cl = clusterFactory(2))
 rho_optim_bst <- function(x, perp_fixed,

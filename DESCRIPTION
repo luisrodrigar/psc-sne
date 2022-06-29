@@ -2,6 +2,7 @@ Package: pscsne
 Type: Package
 Title: Poly-Spherical Cauchy SNE
 Version: 0.0.1
+Date: 2022-05-14
 Authors@R: c(
      person(given = "Eduardo", family = "García-Portugués",
             role = c("aut", "cre"), email = "edgarcia@est-econ.uc3m.es",
@@ -10,17 +11,16 @@ Authors@R: c(
      )
 Description: Implementation the poly-spherical cauchy SNE, a nonlinear dimensionality reduction technique.
 License: GPL-3
+LazyData: true
 Encoding: UTF-8
 Depends:
     R (>= 3.5.0)
 Imports:
-    lsa,
     DirStats,
     optimParallel,
     parallel,
     rlang,
-    rotasym,
-    methods
+    sphunif
 Suggests:
     knitr,
     markdown,
@@ -30,7 +30,7 @@ Suggests:
     Directional,
     mvtnorm,
     numDeriv,
-    sphunif,
+    rotasym,
     testthat
 URL: https://github.com/luisrodrigar/psc-sne
 BugReports: https://github.com/luisrodrigar/psc-sne

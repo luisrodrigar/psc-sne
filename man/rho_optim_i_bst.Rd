@@ -2,35 +2,27 @@
 % Please edit documentation in R/perplexity.R
 \name{rho_optim_i_bst}
 \alias{rho_optim_i_bst}
-\title{Binary search rho optimization for the i-th observation
-Calculate the rho based on a fixed perplexity and a given data in (S^p)^r
-The boundaries are set from 0 to 0.9999.}
+\title{Binary search rho optimization for the \eqn{i}-th observation}
 \usage{
 rho_optim_i_bst(x, i, perp_fixed, tolerance = 0.001, rho = 0.5, max_tries = 20)
 }
 \arguments{
-\item{x}{3d-array that is a poly-sphere (S^p)^r}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{i}{the i-th observation}
+\item{i}{the \eqn{i}-th observation.}
 
-\item{perp_fixed}{a fixed value used to optimized the rho values}
+\item{perp_fixed}{a fixed value used to optimized the rho values.}
 
-\item{tolerance}{whether the difference between previous and current results is below this value (optional, default 10^-3)}
+\item{tolerance}{whether the difference between previous and current results is below this value (optional, default 10^-3).}
 
-\item{rho}{parameter which determines the concentration of the spherical Cauchy distribution (optional, default 0.5)}
+\item{rho}{parameter which determines the concentration of the spherical Cauchy distribution (optional, default 0.5).}
 
-\item{max_tries}{number of maximum tries for each value of the rho list}
+\item{max_tries}{number of maximum tries for each value of the rho list.}
 }
 \value{
-rho and conditional probabilities calculated for the i-th observation
+rho concentration parameter and conditional probabilities calculated for the \eqn{i}-th observation.
 }
 \description{
-Binary search rho optimization for the i-th observation
-Calculate the rho based on a fixed perplexity and a given data in (S^p)^r
+Calculate the rho based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
 The boundaries are set from 0 to 0.9999.
-}
-\examples{
-x <- gen_polysphere(20, 2, 4)
-rho_optim_i_bst(x, 1, 15)
-rho_optim_i_bst(x, 7, 26)
 }

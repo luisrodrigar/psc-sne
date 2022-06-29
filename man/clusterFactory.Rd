@@ -7,17 +7,18 @@
 clusterFactory(num_cores, outfile = "")
 }
 \arguments{
-\item{num_cores}{number of cores}
+\item{num_cores}{number of cores to be available in the cluster.}
 
-\item{outfile}{text file where print the output, empty means no output}
+\item{outfile}{text file where print the output, empty means no output.}
 }
 \value{
-the cluster created
+the cluster created.
 }
 \description{
-Cluster factory
+Cluster factory for concurrent tasks.
 }
 \examples{
 clusterFactory(2)
 clusterFactory(2, "log.txt")
+file.remove("log.txt")
 }

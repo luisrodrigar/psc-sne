@@ -2,27 +2,25 @@
 % Please edit documentation in R/perplexity.R
 \name{to_perp}
 \alias{to_perp}
-\title{Matrix version
-Calculate the perplexity of all the observations for a given rho list parameter}
+\title{Perplexity matrix (matrix version)}
 \usage{
 to_perp(x, rho_list, cos_sim_ps = NULL)
 }
 \arguments{
-\item{x}{3d-array that is a poly-sphere}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{rho_list}{param between 0 and 1 (not included)}
+\item{rho_list}{rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.}
 
-\item{cos_sim_ps}{optional parameter with the cosine similarities of each sphere}
+\item{cos_sim_ps}{cosine similarities matrix of each sphere \eqn{\mathcal{S}^p} (optional parameter).}
 }
 \value{
-perplexity list for each observation
+perplexity list for each observation.
 }
 \description{
-Matrix version
-Calculate the perplexity of all the observations for a given rho list parameter
+Calculate the perplexity of each observations for a given \eqn{\mathbf{\rho}} parameters list. Matrix version algorithm.
 }
 \examples{
-x <- gen_polysphere(25, 2, 3)
+x <- sphunif::r_unif_sph(25, 3, 3)
 to_perp(x, rep(0.5, 25))
-to_perp(x, rep(0.9999, 25), cosine_polysph(x))
+to_perp(x, rep(1 - 1e-4, 25), cosine_polysph(x))
 }

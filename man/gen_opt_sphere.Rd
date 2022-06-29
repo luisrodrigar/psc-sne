@@ -2,20 +2,20 @@
 % Please edit documentation in R/utils.R
 \name{gen_opt_sphere}
 \alias{gen_opt_sphere}
-\title{Generated optimal evenly separated points onto the sphere S^d}
+\title{Generate optimum evenly separated points}
 \usage{
 gen_opt_sphere(n, d)
 }
 \arguments{
-\item{n}{number of points to be generated}
+\item{n}{positive integer that defines the size of the sample to generate.}
 
-\item{d}{reduced dimension}
+\item{d}{size of the low-dimension which defines the sphere \eqn{\mathcal{S}^d}.}
 }
 \value{
-evenly optimal separated points onto the low-dimension sphere S^d
+evenly optimal separated points onto the low-dimension sphere \eqn{\mathcal{S}^d}.
 }
 \description{
-Generated optimal evenly separated points onto the sphere S^d
+Generated optimal evenly separated points onto the sphere \eqn{\mathcal{S}^d}.
 }
 \examples{
 gen_opt_sphere(100, 1)

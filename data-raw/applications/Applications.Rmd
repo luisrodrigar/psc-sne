@@ -341,3 +341,133 @@ Y <- psc_sne(X=x_4, d=2, rho_psc_list = rho_four_perp20, num_iteration=200,
 ```{r fig.asp=1}
 scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1))
 ```
+
+
+# Case 4
+
+Playing with belts of points onto the sphere. First, let's generate the data
+
+```{r}
+rotate_matrix_z_axis <- function(alpha) {
+  deg2rad <- function(deg) {(deg * pi) / (180)}
+  rads <- deg2rad(alpha)
+  matrix(c(cos(rads), -sin(rads), 0,
+           sin(rads),  cos(rads), 0,
+           0,                  0, 1),
+         byrow = T, nrow = 3)
+}
+
+rotate_matrix_x_axis <- function(alpha) {
+  deg2rad <- function(deg) {(deg * pi) / (180)}
+  rads <- deg2rad(alpha)
+  matrix(c(1,                 0 , 0,
+           0, cos(rads), -sin(rads),
+           0, sin(rads),  cos(rads)),
+         byrow = T, nrow = 3)
+}
+
+rotate_matrix_y_axis <- function(alpha) {
+  deg2rad <- function(deg) {(deg * pi) / (180)}
+  rads <- deg2rad(alpha)
+  matrix(c(cos(rads), 0, sin(rads),
+           0,         1,         0,
+          -sin(rads), 0, cos(rads)),
+         byrow = T, nrow = 3)
+}
+
+p = 2
+set.seed(2)
+# A <- matrix(runif((p + 1)^2)*2-0.5, ncol = p + 1)
+# sigma <- t(A) %*% A
+sigma <- diag(c(10, 2, .5))
+n <- 200
+x_1_belt1 <- rotasym::r_ACG(n, sigma)
+# TODO: sphunif::r_alt(n, alt = "SC", )
+rotate_mat_90 <- rotate_matrix_z_axis(90)
+x_2_belt1 <- x_1_belt1 %*% rotate_mat_90
+rotate_mat_45 <- rotate_matrix_z_axis(45)
+x_3_belt1 <- x_1_belt1 %*% rotate_mat_45
+x_belt1 <- rbind(x_1_belt1, x_2_belt1, x_3_belt1)
+scatterplot3d::scatterplot3d(x_belt1, xlim = c(-1, 1),
+                             ylim = c(-1, 1), zlim = c(-1, 1),
+                             color = rep(c(1,2,3), each=n))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+            radius = 1, type = "s", col = "lightblue",
+            lit = FALSE)
+rgl::points3d(x_belt1, col = rep(c(1,2,3), each=n))
+
+x_1_belt2 <- rotasym::r_ACG(n, sigma)
+x_2_belt2 <- x_1_belt2 %*% rotate_mat_90
+x_3_belt2 <- x_1_belt1 %*% rotate_mat_45
+x_belt2 <- rbind(x_1_belt2, x_2_belt2, x_3_belt2)
+scatterplot3d::scatterplot3d(x_belt2, xlim = c(-1, 1),
+                             ylim = c(-1, 1), zlim = c(-1, 1),
+                             color = rep(c(1,2,3), each=n))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+            radius = 1, type = "s", col = "lightblue",
+            lit = FALSE)
+rgl::points3d(x_belt2, col = rep(c(1,2,3), each=n))
+
+x_1_belt3 <- rotasym::r_ACG(n, sigma)
+x_2_belt3 <- x_1_belt3 %*% rotate_mat_90
+x_3_belt3 <- x_1_belt1 %*% rotate_mat_45
+x_belt3 <- rbind(x_1_belt3, x_2_belt3, x_3_belt3)
+scatterplot3d::scatterplot3d(x_belt3, xlim = c(-1, 1),
+                             ylim = c(-1, 1), zlim = c(-1, 1),
+                             color = rep(c(1,2,3), each=n))
+
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+            radius = 1, type = "s", col = "lightblue",
+            lit = FALSE)
+rgl::points3d(x_belt3, col = rep(c(1,2,3), each=n))
+
+n <- n * 3
+x_5 <- array(dim = c(n, 3, 3))
+x_5[, , 1] <- x_belt1
+x_5[, , 2] <- x_belt2
+x_5[, , 3] <- x_belt3
+
+indexes <- sample(1:n)
+x_5 <- x_5[indexes,,]
+colors <- rep(c(1, 2, 3), each = n / 3)[indexes]
+```
+
+Let's calculate the rho parameters based on a perplexity of 25:
+
+```{r}
+rho_five_perp20 <- rho_optim_bst(x_5, 20)
+```
+
+First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
+
+```{r fig.height=10, fig.width=10}
+Y <- psc_sne(X=x_5, d=1, rho_psc_list = rho_five_perp20, num_iteration=200, 
+             visualize_prog = TRUE, colors = colors)
+```
+
+```{r fig.asp=1}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <<- Y_rad
+plot(r*sin(theta),
+     r*cos(theta),
+     col=colors, 
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
+
+```{r fig.height=10, fig.width=10}
+Y <- psc_sne(X=x_5, d=2, rho_psc_list = rho_five_perp20, num_iteration=200,
+             visualize_prog = TRUE, colors = colors)
+```
+
+```{r fig.asp=1}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+                             color = colors)
+```

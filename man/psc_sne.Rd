@@ -2,7 +2,7 @@
 % Please edit documentation in R/psc_sne.R
 \name{psc_sne}
 \alias{psc_sne}
-\title{Calculates the poly-spherical-Cauchy-SNE given a data onto the poly-sphere and the reduced dimension}
+\title{Poly-spherical Cauchy SNE}
 \usage{
 psc_sne(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   num_iteration = 200, initial_momentum = 0.5, final_momentum = 0.8,
@@ -11,44 +11,44 @@ psc_sne(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   parallel_cores = parallel::detectCores() - 1)
 }
 \arguments{
-\item{X}{data point onto the high-dimension (S^p)^r}
+\item{X}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{d}{reduced dimension}
+\item{d}{the target dimension to use for reduce the dimension of the data \code{X}.}
 
-\item{rho_psc_list}{rho parameters of the high-dimensional poly-spherical Cauchy probabilities (optional, default NULL)}
+\item{rho_psc_list}{rho parameters of the high-dimensional poly-spherical Cauchy probabilities (optional, default NULL).}
 
-\item{rho}{rho parameter of the low-dimensional spherical Cauchy probabilities (optional, default 0.5)}
+\item{rho}{rho parameter of the low-dimensional spherical Cauchy probabilities (optional, default 0.5).}
 
-\item{perplexity}{parameter which says what is more important: local or global aspects (optional, default 30)}
+\item{perplexity}{parameter which says what is more important: local or global aspects (optional, default 30).}
 
-\item{num_iteration}{maximum number of iterations (optional, default 200)}
+\item{num_iteration}{maximum number of iterations (optional, default 200).}
 
-\item{initial_momentum}{first value of the momentum of the first 250 iterations}
+\item{initial_momentum}{first value of the momentum of the first 250 iterations.}
 
-\item{final_momentum}{momentum to take into account after the 250 iteration}
+\item{final_momentum}{momentum to take into account after the 250 iteration.}
 
-\item{eta}{is the learning rate of the optimization algorithm (optional, default 200)}
+\item{eta}{is the learning rate of the optimization algorithm (optional, default 200).}
 
-\item{early_exaggeration}{the first 100 iterations results are exagerated, k times (optional, default 4.0)}
+\item{early_exaggeration}{the first 100 iterations results are exagerated, k times (optional, default 4.0).}
 
-\item{colors}{list with as many elements as observations are, only valid when visualization is true (optional, default NULL)}
+\item{colors}{list with as many elements as observations are, only valid when visualization is true (optional, default NULL).}
 
-\item{visualize_prog}{defines whether the progression plots are shown or not (optional, default FALSE)}
+\item{visualize_prog}{defines whether the progression plots are shown or not (optional, default FALSE).}
 
-\item{tol}{is the tolerance, when is below this value it is considered that a good solution has been obtained (optional, default 10^-9)}
+\item{tol}{is the tolerance, when is below this value it is considered that a good solution has been obtained (optional, default 10^-9).}
 
-\item{check}{whether to check or not the tolerance}
+\item{check}{whether to check or not the tolerance.}
 
-\item{parallel_cores}{number of cores to use concurrently for the calculation of the gradient}
+\item{parallel_cores}{number of cores to use concurrently for the calculation of the gradient.}
 }
 \value{
-reduced dimensional data (in low-dimension)
+data reduced to \eqn{\mathcal{S}^d}.
 }
 \description{
-Calculates the poly-spherical-Cauchy-SNE given a data onto the poly-sphere and the reduced dimension
+Calculates the poly-spherical-Cauchy-SNE given a data onto the poly-sphere and the reduced dimension.
 }
 \examples{
-X <- gen_polysphere(40, 2, 3)
+X <- sphunif::r_unif_sph(40, 3, 3)
 psc_sne(X, d = 1, parallel_cores = 2)
 psc_sne(X, d = 2, parallel_cores = 2)
 }
