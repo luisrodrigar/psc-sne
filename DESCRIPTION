@@ -1,6 +1,6 @@
 Package: pscsne
 Type: Package
-Title: Poly-Spherical Cauchy SNE
+Title: Polyspherical Cauchy SNE
 Version: 0.0.1
 Date: 2022-05-14
 Authors@R: c(
@@ -9,7 +9,7 @@ Authors@R: c(
             comment = c(ORCID = "0000-0002-9224-4111")),
      person(given = "Luis Angel", family = "Rodríguez García", role = "aut")
      )
-Description: Implementation the poly-spherical cauchy SNE, a nonlinear dimensionality reduction technique.
+Description: Implementation the polyspherical cauchy SNE, a nonlinear dimensionality reduction technique.
 License: GPL-3
 LazyData: true
 Encoding: UTF-8

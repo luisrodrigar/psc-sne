@@ -42,7 +42,7 @@ rho_45 <- rho_optim_bst(sanjuanfuca, 45)
 
 ```
 
-Let's reduce the dimension using the poly-spherical Cauchy SNE. First, optimized rho for a perplexity of 12 and $d=1$:
+Let's reduce the dimension using the polyspherical Cauchy SNE. First, optimized rho for a perplexity of 12 and $d=1$:
 
 ```{r cache=TRUE}
 Y <- psc_sne(X=sanjuanfuca, d=1, 
