@@ -18,9 +18,9 @@ test_that("HD: Checking method 'd_sph_cauchy' for a given i, j and k", {
   )
 })
 
-test_that("HD: Checking method 'd_psph_cauchy' for a given i and j", {
+test_that("HD: Checking method 'd_ij_psph_cauchy' for a given i and j", {
   expected_value <- 0.5543813
-  expect_equal(d_psph_cauchy(x, i, j, rho),
+  expect_equal(d_ij_psph_cauchy(x, i, j, rho),
     expected_value,
     tolerance = 1e-6
   )

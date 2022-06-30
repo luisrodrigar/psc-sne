@@ -10,7 +10,7 @@ fibonacci_lattice(n)
 \item{n}{positive integer that defines the size of the sample to generate.}
 }
 \value{
-evenly optimal separated points onto the low-dimension sphere \eqn{\mathcal{S}^2}.
+Evenly optimal separated points onto the low-dimension sphere \eqn{\mathcal{S}^2}.
 }
 \description{
 Generated optimal evenly separated points onto the sphere \eqn{\mathcal{S}^2}.

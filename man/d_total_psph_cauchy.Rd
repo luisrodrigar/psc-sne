@@ -2,20 +2,20 @@
 % Please edit documentation in R/prob_distribution.R
 \name{d_total_psph_cauchy}
 \alias{d_total_psph_cauchy}
-\title{Poly-spherical marginal density function values for all the observations}
+\title{Polyspherical marginal density function values for all the observations}
 \usage{
 d_total_psph_cauchy(x, rho_list)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
 \item{rho_list}{rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.}
 }
 \value{
-marginal poly-spherical Cauchy probabilities vector given the \eqn{\boldsymbold{\rho}} parameters.
+Marginal polyspherical Cauchy probabilities vector given the \eqn{\boldsymbold{\rho}} parameters.
 }
 \description{
-Calculate the marginal high-dimension poly-spherical Cauchy probabilities for the \eqn{i}-th observation.
+Calculate the marginal high-dimension polyspherical Cauchy probabilities for the \eqn{i}-th observation.
 }
 \examples{
 x <- sphunif::r_unif_sph(20, 3, 4)

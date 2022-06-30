@@ -16,7 +16,7 @@ bin_search(perp_diff, rho, rho_min, rho_max)
 \item{rho_max}{max value for the current rho}
 }
 \value{
-rho concentration parameter found in this step, currently min and max rho
+Rho concentration parameter found in this step, currently min and max rho
 }
 \description{
 Calculate the rho value based on a perplexity difference

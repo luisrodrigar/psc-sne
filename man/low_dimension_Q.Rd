@@ -7,12 +7,12 @@
 low_dimension_Q(Y, rho)
 }
 \arguments{
-\item{Y}{matrix with the points in the sphere.}
+\item{Y}{matrix of size \code{c(n, d)}, where \code{n} is the number of observation, with the points onto the sphere \eqn{\mathcal{S}^d}.}
 
-\item{rho}{parameter between 0 and 1 (not included).}
+\item{rho}{concentration parameter must be in [0, 1).}
 }
 \value{
-a matrix with the values of x projected onto the sphere of radius 1.
+A matrix with the values of x projected onto the sphere of radius 1.
 }
 \description{
 Calculate the low-dimension probabilities of a reduced matrix Y.

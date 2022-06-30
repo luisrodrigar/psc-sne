@@ -7,14 +7,14 @@
 rho_optimize_1(x, perplexity, num_cores = parallel::detectCores() - 1)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{perplexity}{a fixed value (between 5 and 100) to optimize the rho values.}
+\item{perplexity}{a fixed value (between 5 and 100) to optimize the rho parameters.}
 
-\item{num_cores}{number of cores to execute the code concurrently.}
+\item{num_cores}{number of cores to execute the code concurrently. This value must be below the total number of the CPU has available.}
 }
 \value{
-rho list with the values optimized.
+Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized for the given perplexity.
 }
 \description{
 Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.

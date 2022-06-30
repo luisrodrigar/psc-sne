@@ -7,13 +7,13 @@
 visualize_iter_sol(Y, i, d, colors = NULL)
 }
 \arguments{
-\item{Y}{data point onto the low-dimension \eqn{\mathcal{S}^d}.}
+\item{Y}{matrix of size \code{c(n, d)}, where \code{n} is the number of observation, with the points onto the sphere \eqn{\mathcal{S}^d}.}
 
 \item{i}{the \eqn{i}-th iteration.}
 
 \item{d}{the dimension to reduce the original data.}
 
-\item{colors}{optional value to represent the group colors in the plot.}
+\item{colors}{defines the group colors in the plot. Optional parameter, default value set to \code{NULL}.}
 }
 \description{
 Visualize the iteration solution in a plot for the \eqn{i}-th iteration.

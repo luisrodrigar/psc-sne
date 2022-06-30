@@ -2,22 +2,22 @@
 % Please edit documentation in R/prob_distribution.R
 \name{d_i_psph_cauchy}
 \alias{d_i_psph_cauchy}
-\title{Marginal poly-spherical Cauchy density for the \eqn{i}-th observation}
+\title{Marginal polyspherical Cauchy density for the \eqn{i}-th observation}
 \usage{
 d_i_psph_cauchy(x, i, rho_list)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{i}{corresponds to the \eqn{i}-th observation index}
+\item{i}{corresponds to the \eqn{i}-th observation index.}
 
 \item{rho_list}{rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.}
 }
 \value{
-poly-spherical Cauchy density value given the parameters
+Polyspherical Cauchy density value given the parameters.
 }
 \description{
-Calculate the high-dimension poly-spherical Cauchy density for the
+Calculate the high-dimension polyspherical Cauchy density for the
 \eqn{i}-th observation.
 }
 \examples{

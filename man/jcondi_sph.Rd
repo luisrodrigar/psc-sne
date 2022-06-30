@@ -11,14 +11,14 @@ jcondi_sph(y, i, j, rho, d_i_sph_cauchy = NULL)
 
 \item{i}{corresponds to the \eqn{i}-th observation index.}
 
-\item{j}{corresponds to the j-th observation index.}
+\item{j}{corresponds to the \eqn{j}-th observation index.}
 
-\item{rho}{concentration parameter between 0 and 1 (not included).}
+\item{rho}{concentration parameter must be in [0, 1).}
 
-\item{d_i_sph_cauchy}{the marginal probability of the \eqn{i}-th observation.}
+\item{d_i_sph_cauchy}{the marginal probability of the \eqn{i}-th observation. Optional, default value to \code{NULL}.}
 }
 \value{
-spherical marginal Cauchy density probability given the parameters.
+Spherical marginal Cauchy density probability given the parameters.
 }
 \description{
 Calculate the probability of choosing a pair of elements

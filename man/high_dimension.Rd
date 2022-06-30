@@ -2,22 +2,22 @@
 % Please edit documentation in R/high_dimension.R
 \name{high_dimension}
 \alias{high_dimension}
-\title{Poly-spherical Cauchy conditional probability matrix (matrix version)}
+\title{Polyspherical Cauchy conditional probability matrix (matrix version)}
 \usage{
 high_dimension(x, rho_list, cos_sim_psh = NULL)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
 \item{rho_list}{rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.}
 
-\item{cos_sim_psh}{cosine similarities array of dimension \code{c(n, n, r)} for the hypersphere.}
+\item{cos_sim_psh}{cosine similarities array of dimension \code{c(n, n, r)} for the polysphere.}
 }
 \value{
-an array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
+An array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
 }
 \description{
-Calculates the high-dimension conditional probabilities of a poly-spherical Cauchy distribution. Matrix version algorithm.
+Calculates the high-dimension conditional probabilities of a polyspherical Cauchy distribution. Matrix version algorithm.
 }
 \examples{
 x <- sphunif::r_unif_sph(100, 3, 3)

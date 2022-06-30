@@ -1,15 +1,16 @@
 ###############################################
-##        Poly-spherical Cauchy HD           ##
+##        Polyspherical Cauchy HD           ##
 ## High-dimension neighborhood probabilities ##
 ###############################################
 
-#' @title Poly-spherical Cauchy conditional probability matrix (matrix version)
-#' @description Calculates the high-dimension conditional probabilities of a poly-spherical Cauchy distribution. Matrix version algorithm.
+#' @title Polyspherical Cauchy conditional probability matrix (matrix version)
 #'
-#' @param x an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.
+#' @description Calculates the high-dimension conditional probabilities of a polyspherical Cauchy distribution. Matrix version algorithm.
+#'
+#' @param x an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.
 #' @param rho_list rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.
-#' @param cos_sim_psh cosine similarities array of dimension \code{c(n, n, r)} for the hypersphere.
-#' @return an array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
+#' @param cos_sim_psh cosine similarities array of dimension \code{c(n, n, r)} for the polysphere.
+#' @return An array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(100, 3, 3)
@@ -65,11 +66,12 @@ high_dimension <- function(x, rho_list, cos_sim_psh = NULL) {
   return(P_ij)
 }
 
-#' @title Poly-spherical Cauchy conditional probability matrix (scalar version)
-#' @description Calculates the high-dimension conditional probabilities of a poly-spherical Cauchy distribution. Scalar version algorithm.
+#' @title Polyspherical Cauchy conditional probability matrix (scalar version)
+#'
+#' @description Calculates the high-dimension conditional probabilities of a polyspherical Cauchy distribution. Scalar version algorithm.
 #'
 #' @inheritParams high_dimension
-#' @return an array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
+#' @return An array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(100, 3, 3)

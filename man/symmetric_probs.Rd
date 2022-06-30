@@ -13,7 +13,7 @@ symmetric_probs(P)
 The sum of \code{P} and \code{t(P)} divided by twice the sample size.
 }
 \description{
-Calculate the symmetric probabilities of a given conditional poly-spherical Cauchy probability matrix.
+Calculate the symmetric probabilities of a given conditional polyspherical Cauchy probability matrix.
 }
 \examples{
 symmetric_probs(matrix(runif(3 * 3), nrow = 3, ncol = 3))

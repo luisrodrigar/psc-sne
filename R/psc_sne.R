@@ -1,16 +1,15 @@
 
 #' @title Kullback-Leibler divergence gradient
-#' @description Calculates analytically the gradient of the Kullback-Leibler divergence function.
-#' Defaults values for the optional parameters to NULL.
 #'
-#' @param Y data point onto the low-dimension (\eqn{\mathcal{S}^d}).
-#' @param i the index of the i-th observation where the gradient is calculated.
-#' @param rho parameter between 0 and 0.9999 (not included).
+#' @description Calculates analytically the gradient of the Kullback-Leibler divergence function.
+#'
+#' @inheritParams low_dimension_Q
+#' @inheritParams d_sph_cauchy
 #' @param d target dimension to reduced the data.
-#' @param P high-dimensional poly-spherical Cauchy probabilities.
-#' @param cos_sim cosine similarities of the high-dimension probabilities.
-#' @param Q low-dimension spherical Cauchy probabilities.
-#' @return data onto the sphere \eqn{\mathcal{S}^d}
+#' @param P high-dimensional polyspherical Cauchy probabilities.
+#' @param cos_sim an array of size \code{c(n, n, r)} with the cosine similarities in high-dimension for the polysphere \eqn{(\mathcal{S}^p)^r}. Optional parameter, default value set to \code{NULL}.
+#' @param Q low-dimension spherical Cauchy probabilities. Optional parameter, default value set to \code{NULL}.
+#' @return Resulting reduced data for the \eqn{i}-th observation onto the sphere \eqn{\mathcal{S}^d}
 kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   if (i < 1 || i > nrow(Y)) {
     stop("i value not allowed. Values > 0 and <= nrow(Y)")
@@ -49,25 +48,26 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   )))
 }
 
-#' @title Poly-spherical Cauchy SNE
-#' @description Calculates the poly-spherical-Cauchy-SNE given a data onto the poly-sphere and the reduced dimension.
+#' @title Polyspherical Cauchy SNE
 #'
-#' @param X an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.
+#' @description Calculates the polyspherical-Cauchy SNE given a data onto the poly-sphere and the reduced dimension.
+#'
+#' @param X an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.
 #' @param d the target dimension to use for reduce the dimension of the data \code{X}.
-#' @param rho_psc_list rho parameters of the high-dimensional poly-spherical Cauchy probabilities (optional, default NULL).
-#' @param rho rho parameter of the low-dimensional spherical Cauchy probabilities (optional, default 0.5).
-#' @param perplexity parameter which says what is more important: local or global aspects (optional, default 30).
-#' @param num_iteration maximum number of iterations (optional, default 200).
+#' @param rho_psc_list rho parameters of the high-dimensional polyspherical Cauchy probabilities (optional, default \code{NULL}).
+#' @param rho rho parameter of the low-dimensional spherical Cauchy probabilities (optional, default value \code{0.5}).
+#' @param perplexity parameter which says what is more important: local or global aspects (optional, default \code{30}).
+#' @param num_iteration maximum number of iterations (optional, default value \code{200}).
 #' @param initial_momentum first value of the momentum of the first 250 iterations.
 #' @param final_momentum momentum to take into account after the 250 iteration.
-#' @param eta is the learning rate of the optimization algorithm (optional, default 200).
-#' @param early_exaggeration the first 100 iterations results are exagerated, k times (optional, default 4.0).
-#' @param colors list with as many elements as observations are, only valid when visualization is true (optional, default NULL).
-#' @param visualize_prog defines whether the progression plots are shown or not (optional, default FALSE).
-#' @param tol is the tolerance, when is below this value it is considered that a good solution has been obtained (optional, default 10^-9).
+#' @param eta is the learning rate of the optimization algorithm (optional, default value \code{200}).
+#' @param early_exaggeration the first 100 iterations results are exaggerated, k times (optional, default value \code{4.0}).
+#' @param colors list with as many elements as observations are, only valid when visualization is true (optional, default value \code{NULL}).
+#' @param visualize_prog defines whether the progression plots are shown or not (optional, default value \code{FALSE}).
+#' @param tol is the tolerance, when is below this value it is considered that a good solution has been obtained (optional, default value \code{1e-9}).
 #' @param check whether to check or not the tolerance.
 #' @param parallel_cores number of cores to use concurrently for the calculation of the gradient.
-#' @return data reduced to \eqn{\mathcal{S}^d}.
+#' @return Resulting data reduced to \eqn{\mathcal{S}^d} after applying the algorithm for the total number of iterations selected.
 #' @export
 #' @examples
 #' X <- sphunif::r_unif_sph(40, 3, 3)
@@ -206,12 +206,13 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30, num_i
 }
 
 #' @title Visualize the reduction status
+#'
 #' @description Visualize the iteration solution in a plot for the \eqn{i}-th iteration.
 #'
-#' @param Y data point onto the low-dimension \eqn{\mathcal{S}^d}.
+#' @inheritParams low_dimension_Q
 #' @param i the \eqn{i}-th iteration.
 #' @param d the dimension to reduce the original data.
-#' @param colors optional value to represent the group colors in the plot.
+#' @param colors defines the group colors in the plot. Optional parameter, default value set to \code{NULL}.
 visualize_iter_sol <- function(Y, i, d, colors = NULL) {
   # If colors is null, set all of them to black
   if (is.null(colors)) {

@@ -7,14 +7,14 @@
 rho_optim_bst(x, perp_fixed, cl = clusterFactory(parallel::detectCores() - 1))
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{perp_fixed}{a fixed value used to optimized the rho values}
+\item{perp_fixed}{a fixed value used to optimized the rho values.}
 
 \item{cl}{defines a cluster to work with concurrently}
 }
 \value{
-rho values and conditional probability matrix
+Rho values and conditional probability matrix obtained as a result of the optimization.
 }
 \description{
 Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.

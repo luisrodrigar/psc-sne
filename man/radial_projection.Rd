@@ -10,7 +10,7 @@ radial_projection(y)
 \item{y}{matrix with the points in the sphere.}
 }
 \value{
-a matrix with the values of x projected onto the sphere of radius 1.
+A matrix with the values of x projected onto the sphere of radius 1.
 }
 \description{
 Projection of the points onto the sphere of radius 1.
