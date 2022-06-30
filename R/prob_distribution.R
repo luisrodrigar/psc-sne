@@ -1,8 +1,3 @@
-library(DirStats)
-library(Directional)
-library(rotasym)
-library(rlang)
-
 #####################################
 ### Spherical Cauchy Distribution ###
 #####################################
@@ -11,52 +6,48 @@ library(rlang)
 ## High-dimension ##
 ####################
 
-#' Calculate the high-dimension spherical Cauchy density function
+#' @title High-dimension polyspherical Cauchy density
 #'
-#' @param x 3d-array that is a poly-sphere, (S^p)^r
-#' @param i corresponds to the i-th observation index
-#' @param j corresponds to the j-th observation index
-#' @param rho param between 0 and 1 (not included)
-#' @param k corresponds to the k-th sphere index
-#' @param p corresponds to S^p, associated to R^(p+1)
-#' @return spherical Cauchy density value given the parameters
-#' @examples
-#' simple_dspcauchy_hd(x, 1, 2, 0.5, 2, 1)
-#' simple_dspcauchy_hd(x, 4, 3, 0.9999, 3, 2)
-simple_dspcauchy_hd <- function(x, i, j, rho, k, p) {
+#' @description Calculate the high-dimension spherical Cauchy density function.
+#'
+#' @inheritParams high_dimension
+#' @param i corresponds to the \eqn{i}-th observation index.
+#' @param j corresponds to the \eqn{j}-th observation index.
+#' @param rho concentration parameter must be in [0, 1).
+#' @param k corresponds to the k-th sphere index.
+#' @param p corresponds to S^p, associated to R^(p+1).
+#' @return Spherical Cauchy density value given the parameters.
+d_sph_cauchy <- function(x, i, j, rho, k, p) {
   if (i < 1 || i > nrow(x) || j < 1 || j > nrow(x)) {
-    stop("The indexes (i and j) not valid, must be >= 1 and <= nrow(x)")
+    stop("i or j not valid, must be within 1 and nrow(x)")
   }
   if (k < 1 || k > dim(x)[3]) {
-    stop("The 3rd dimensional index k not valid, must be >= 1 and <= r")
+    stop("k index not valid, must be between 1 and r, where (S^p)^r")
   }
   if (!rlang::is_scalar_atomic(rho)) {
-    stop("Parameter rho must be an scalar")
+    stop("rho must be an scalar")
   }
   if (p + 1 != ncol(x)) {
-    stop("Parameter p is not valid, it must match with the dataset dimension")
+    stop("p is not valid, it must match with the dataset dimension ncol(x)-1")
   }
   # Applying the formula: 1 + rho^2 - 2 * rho * x[i,,k]'x[j,,k]
   drop((1 + rho^2 - 2 * rho * t(x[i, , k]) %*% x[j, , k])^(-p))
 }
 
-#' Calculate the high-dimension poly-spherical Cauchy density for the
-#' i-th and j-th observations.
+#' @title Polyspherical Cauchy density for the \eqn{i}-th and \eqn{j}-th observations
 #'
-#' @param x 3d-array that is a poly-sphere, (S^p)^r
-#' @param i corresponds to the i-th observation index
-#' @param j corresponds to the j-th observation index
-#' @param rho param between 0 and 1 (not included)
-#' @return poly-spherical Cauchy density value given the parameters
-#' @examples
-#' P_ij_psc(x, 1, 2, 0.5)
-#' P_ij_psc(x, 4, 3, 0.9999)
-P_ij_psc <- function(x, i, j, rho) {
+#' @description Calculate the high-dimension polyspherical Cauchy density for the
+#' \eqn{i}-th and \eqn{j}-th observations.
+#'
+#' @inheritParams high_dimension
+#' @inheritParams d_sph_cauchy
+#' @return Polyspherical Cauchy density value given the parameters.
+d_ij_psph_cauchy <- function(x, i, j, rho) {
   if (i < 1 || i > nrow(x) || j < 1 || j > nrow(x)) {
-    stop("The indexes (i and j) not valid, must be >= 1 and <= nrow(x)")
+    stop("i or j not valid, must be between 1 and nrow(x)")
   }
   if (!rlang::is_scalar_atomic(rho)) {
-    stop("Parameter rho must be an scalar")
+    stop("rho must be an scalar")
   }
   # If the i-th and the j-th observation are the same, the value returned is zero
   if (i == j) {
@@ -64,108 +55,131 @@ P_ij_psc <- function(x, i, j, rho) {
   }
   # Productory of the density of the i-th and j-th observations for each sphere (S^p)
   return(prod(sapply(1:(dim(x)[3]),
-    simple_dspcauchy_hd,
-    x = x, i = i, j = j, rho = rho, p = (ncol(x) - 1)
+    FUN = d_sph_cauchy,
+    x = x,
+    i = i,
+    j = j,
+    rho = rho,
+    p = (ncol(x) - 1)
   )))
 }
 
-#' Calculate the high-dimension poly-spherical Cauchy density for the
-#' i-th observation.
+#' @title Marginal polyspherical Cauchy density for the \eqn{i}-th observation
+
+#' @description Calculate the high-dimension polyspherical Cauchy density for the
+#' \eqn{i}-th observation.
 #'
-#' @param x 3d-array that is a poly-sphere, (S^p)^r
-#' @param i corresponds to the i-th observation index
-#' @param rho_list param values between 0 and 1 (not included)
-#' @return poly-spherical Cauchy density value given the parameters
+#' @inheritParams high_dimension
+#' @inheritParams d_sph_cauchy
+#' @return Polyspherical Cauchy density value given the parameters.
+#' @export
 #' @examples
-#' P_i_psc(x, 1, rep(0.5, nrow(x)))
-#' P_i_psc(x, 4, rep(0.9999, nrow(x)))
-P_i_psc <- function(x, i, rho_list) {
+#' x <- sphunif::r_unif_sph(20, 3, 4)
+#' d_i_psph_cauchy(x, 1, rep(0.5, 20))
+#' d_i_psph_cauchy(x, 4, rep(0.9999, 20))
+d_i_psph_cauchy <- function(x, i, rho_list) {
   if (i < 1 || i > nrow(x)) {
-    stop("The indexes i not valid, must be >= 1 and <= nrow(x)")
+    stop("i not valid, must be between 1 and nrow(x)")
   }
   if (rlang::is_scalar_atomic(rho_list)) {
-    stop("Parameter rho must be a vector of dimension n")
+    stop("rho must be a vector of dimension n")
   }
   # Sum of the probabilities of the productory for a given i-th observation
-  return(sapply(1:nrow(x), FUN = P_ij_psc, x = x, i = i, rho = rho_list[i]))
+  return(sapply(1:nrow(x), FUN = d_ij_psph_cauchy, x = x, i = i, rho = rho_list[i]))
 }
 
-#' Calculate the marginal high-dimension poly-spherical Cauchy probabilities for the i-th observation.
+#' @title Polyspherical marginal density function values for all the observations
 #'
-#' @param x 3d-array that is a poly-sphere, (S^p)^r
-#' @param rho_list param values between 0 and 1 (not included)
-#' @return marginal poly-spherical Cauchy probabilities value given the parameters
+#' @description Calculate the marginal high-dimension polyspherical Cauchy probabilities for the \eqn{i}-th observation.
+#'
+#' @inheritParams high_dimension
+#' @return Marginal polyspherical Cauchy probabilities vector given the \eqn{\boldsymbold{\rho}} parameters.
+#' @export
 #' @examples
-#' P_total_psc(x, rep(0.5, nrow(x)))
-#' P_total_psc(x, rep(0.9999, nrow(x)))
-P_total_psc <- function(x, rho_list) {
+#' x <- sphunif::r_unif_sph(20, 3, 4)
+#' d_total_psph_cauchy(x, rep(0.5, 20))
+#' d_total_psph_cauchy(x, rep(0.9999, 20))
+d_total_psph_cauchy <- function(x, rho_list) {
   if (rlang::is_scalar_atomic(rho_list)) {
-    stop("Parameter rho must be a vector of dimension n")
+    stop("rho must be a vector of dimension n")
   }
   # Sum of the row probabilities to get the marginal ones of each i-th observation
   return(rowSums(sapply(1:nrow(x),
-    FUN = P_i_psc, x = x, rho = rho_list,
+    FUN = d_i_psph_cauchy, x = x, rho = rho_list,
     simplify = "array"
   )))
 }
 
-#' Calculate the conditional high-dimension probability of the j-th observation given the i-th.
+#' @title Conditional polyspherical Cauchy probability for the \eqn{i}-th and \eqn{j}-th observations
 #'
-#' @param x 3d-array that is a poly-sphere, (S^p)^r
-#' @param i corresponds to the i-th observation index
-#' @param j corresponds to the j-th observation index
-#' @param rho_list param values between 0 and 1 (not included)
-#' @param total_P_i marginal probability of the i-th observation
-#' @return conditional poly-spherical Cauchy probability of the j-th given the i-th observation
+#' @description Calculate the conditional high-dimension probability of the \eqn{j}-th observation given the \eqn{i}-th.
+#'
+#' @inheritParams high_dimension
+#' @inheritParams d_sph_cauchy
+#' @param d_total_i_psph_cauchy marginal probability of the \eqn{i}-th observation. Optional, defaulta value \code{NULL}.
+#' @return Conditional polyspherical Cauchy probability of the \eqn{j}-th given the \eqn{i}-th observation.
+#' @export
 #' @examples
-#' jcondi_psc(x, 1, 2, rep(0.5, nrow(x)))
-#' jcondi_psc(x, 4, 6, rep(0.9999, nrow(x)), P_total_psc(x, rep(0.9999, nrow(x)))[4])
-jcondi_psc <- function(x, i, j, rho_list, total_P_i) {
+#' x <- sphunif::r_unif_sph(20, 3, 4)
+#' jcondi_psph(x, 1, 2, rep(0.5, 20), d_total_psph_cauchy(x, rep(0.5, 20))[1])
+#' jcondi_psph(x, 4, 6, rep(0.9999, 20), d_total_psph_cauchy(x, rep(0.9999, 20))[4])
+jcondi_psph <- function(x, i, j, rho_list, d_total_i_psph_cauchy = NULL) {
   if (i < 1 || i > nrow(x) || j < 1 || j > nrow(x)) {
-    stop("The indexes (i and j) not valid, must be >= 1 and <= nrow(x)")
+    stop("i or j not valid, must be between 1 and nrow(x)")
   }
   if (rlang::is_scalar_atomic(rho_list)) {
-    stop("Parameter rho must be a vector of dimension n")
+    stop("rho must be a vector of dimension n")
   }
-  if (!rlang::is_scalar_atomic(total_P_i)) {
-    stop("Parameter total_P_i must be an scalar")
+  # Calculate the marginal density for the i-th observation
+  if (is.null(d_total_i_psph_cauchy)) {
+    d_total_i_psph_cauchy <- sum(d_i_psph_cauchy(x, i, rho_list))
+  }
+  if (!rlang::is_scalar_atomic(d_total_i_psph_cauchy)) {
+    stop("d_total_i_psph_cauchy must be an scalar")
   }
   # If the i-th and the j-th observation are the same, the value returned is zero
   if (i == j) {
     return(0)
   }
   # Conditional probability of the j-th given the i-th observation
-  return(P_ij_psc(x, i, j, rho_list[i]) / total_P_i)
+  return(d_ij_psph_cauchy(x, i, j, rho_list[i]) / d_total_i_psph_cauchy)
 }
 
-#' Calculate the conditional high-dimension probability for all the j-th observation given the i-th.
+#' @title Conditional polyspherical Cauchy probability for the \eqn{i}-th observation
 #'
-#' @param x 3d-array that is a poly-sphere, (S^p)^r
-#' @param i corresponds to the i-th observation index
-#' @param rho_list param values between 0 and 1 (not included)
-#' @param total_P_i marginal probability of the i-th observation
-#' @return conditional poly-spherical Cauchy probability for all the j-th given the i-th observation
+#' @description Calculate the conditional high-dimension probability for all the \eqn{j}-th observation given the \eqn{i}-th.
+#'
+#' @inheritParams high_dimension
+#' @inheritParams d_sph_cauchy
+#' @inheritParams jcondi_psph
+#' @return Conditional polyspherical Cauchy probability for all the \eqn{j}-th given the \eqn{i}-th observation.
+#' @export
 #' @examples
-#' psc_cond_given_i(x, 1, rep(0.5, nrow(x)))
-#' psc_cond_given_i(x, 4, rep(0.9999, nrow(x)), P_total_psc(x, rep(0.9999, nrow(x)))[4])
-psc_cond_given_i <- function(x, i, rho_list, total_P_i = NULL) {
+#' x <- sphunif::r_unif_sph(20, 3, 4)
+#' rho_list_1 <- rep(0.5, 20)
+#' rho_list_2 <- rep(0.9999, 20)
+#' d_total_1_psph <- d_total_psph_cauchy(x, rho_list_1)[1]
+#' d_total_4_psph <- d_total_psph_cauchy(x, rho_list_2)[4]
+#' prob_cond_i_psph(x, 1, rho_list_1, d_total_1_psph)
+#' prob_cond_i_psph(x, 4, rho_list_2, d_total_4_psph)
+prob_cond_i_psph <- function(x, i, rho_list, d_total_i_psph_cauchy = NULL) {
   if (i < 1 || i > nrow(x)) {
-    stop("The index i not valid, must be >= 1 and <= nrow(x)")
+    stop("i not valid, must be between 1 and nrow(x)")
   }
   if (rlang::is_scalar_atomic(rho_list)) {
-    stop("Parameter rho must be a vector of dimension n")
+    stop("rho_list must be a vector of dimension n")
   }
-  if (!rlang::is_scalar_atomic(total_P_i)) {
-    stop("Parameter total_P_i must be an scalar")
+  # Calculate the marginal density for the i-th observation
+  if (is.null(d_total_i_psph_cauchy)) {
+    d_total_i_psph_cauchy <- sum(d_i_psph_cauchy(x, i, rho_list))
   }
-  # Calculate the marginal probability if it is null the parameter
-  if (is.null(total_P_i)) {
-    total_P_i <- sum(P_i_psc(x, i, rho_list))
+  if (!rlang::is_scalar_atomic(d_total_i_psph_cauchy)) {
+    stop("d_total_i_psph_cauchy must be an scalar")
   }
   # Calculate every j-th conditional probability given the i-th observation
-  return(sapply(1:nrow(x), jcondi_psc,
+  return(sapply(1:nrow(x), jcondi_psph,
     x = x, i = i, rho_list = rho_list,
-    total_P_i = total_P_i
+    d_total_i_psph_cauchy = d_total_i_psph_cauchy
   ))
 }
 
@@ -173,96 +187,77 @@ psc_cond_given_i <- function(x, i, rho_list, total_P_i = NULL) {
 ##  Low-dimension  ##
 #####################
 
-#' Calculate the low-dimension spherical Cauchy density function
+#' @title Marginal spherical Cauchy density function
 #'
-#' @param x 3d-array that is a poly-sphere, (S^p)^r
-#' @param i corresponds to the i-th observation index
-#' @param j corresponds to the j-th observation index
-#' @param rho param between 0 and 1 (not included)
-#' @param d corresponds to S^d, associated to R^(d+1)
-#' @return spherical Cauchy density value given the parameters
-#' @examples
-#' simple_dspcauchy_ld(y, 1, 2, 0.5, 2, 1)
-#' simple_dspcauchy_ld(y, 4, 3, 0.9999, 3, 2)
-simple_dspcauchy_ld <- function(y, i, j, rho, d) {
-  if (i < 1 || i > nrow(y) || j < 1 || j > nrow(y)) {
-    stop("The indexes (i and j) not valid, must be >= 1 and <= nrow(y)")
-  }
-  if (!rlang::is_scalar_atomic(rho)) {
-    stop("Parameter rho must be an scalar")
-  }
-  if (d + 1 != ncol(y)) {
-    stop("Parameter p is not valid, it must match with the dataset dimension")
-  }
-  drop((1 + rho^2 - 2 * rho * t(y[i, ]) %*% y[j, ])^(-d))
-}
-
-#' Calculate the marginal low-dimension spherical Cauchy probability
+#' @description Calculate the marginal low-dimension spherical Cauchy probability.
 #'
-#' @param x 3d-array that is a poly-sphere, (S^p)^r
-#' @param i corresponds to the i-th observation index
-#' @param rho param between 0 and 1 (not included)
-#' @return spherical marginal Cauchy density probability given the parameters
-#' @examples
-#' Q_i_sc(y, 1, 0.5)
-#' Q_i_sc(y, 4, 0.9999)
-Q_i_sc <- function(y, i, rho) {
+#' @param y matrix that stands for an sphere, \eqn{\mathcal{S}^d}.
+#' @inheritParams d_sph_cauchy
+#' @return Spherical marginal Cauchy density probability given the parameters.
+d_i_sph_cauchy <- function(y, i, rho) {
   if (i < 1 || i > nrow(y)) {
-    stop("The index i not valid, must be >= 1 and <= nrow(y)")
+    stop("i not valid, must be between 1 and nrow(y)")
   }
   if (!rlang::is_scalar_atomic(rho)) {
-    stop("Parameter rho must be an scalar")
+    stop("rho must be an scalar")
   }
   # Sum of all the densities for the i-th observation and every all observations
-  sum(sapply((1:nrow(y))[-i], simple_dspcauchy_ld, y = y, i = i, rho = rho, d = ncol(y) - 1))
+  sum(sapply((1:nrow(y))[-i], d_sph_cauchy,
+    x = array(y, dim = c(nrow(y), ncol(y), 1)),
+    i = i, rho = rho, k = 1, p = ncol(y) - 1
+  ))
 }
 
-#' Calculate the probability of choosing a pair of elements
-#' where the i-th and the j-th observations are selected
+#' @title Conditional spherical Cauchy probability
 #'
-#' @param x 3d-array that is a poly-sphere, (S^p)^r
-#' @param i corresponds to the i-th observation index
-#' @param rho param between 0 and 1 (not included)
-#' @param total_Q_i is the marginal probability of the i-th observation
-#' @return spherical marginal Cauchy density probability given the parameters
-#' @examples
-#' jcondi_sc(y, 1, 3, 0.5)
-#' jcondi_sc(y, 4, 5, 0.9999, Q_i_sc(y, 4, 0.9999))
-jcondi_sc <- function(y, i, j, rho, total_Q_i = NULL) {
+#' @description Calculate the probability of choosing a pair of elements
+#' where the \eqn{i}-th and the \eqn{j}-th observations are selected.
+#'
+#' @inheritParams d_i_sph_cauchy
+#' @inheritParams d_sph_cauchy
+#' @param d_i_sph_cauchy the marginal probability of the \eqn{i}-th observation. Optional, default value to \code{NULL}.
+#' @return Spherical marginal Cauchy density probability given the parameters.
+jcondi_sph <- function(y, i, j, rho, d_i_sph_cauchy = NULL) {
   if (i < 1 || i > nrow(y)) {
-    stop("The index i not valid, must be >= 1 and <= nrow(y)")
+    stop("i not valid, must be between 1 and nrow(y)")
   }
   if (!rlang::is_scalar_atomic(rho)) {
-    stop("Parameter rho must be an scalar")
+    stop("rho must be an scalar")
   }
-  if (is.null(total_Q_i)) {
-    total_Q_i <- Q_i_sc(y, i, rho)
+  if (is.null(d_i_sph_cauchy)) {
+    d_i_sph_cauchy <- d_i_sph_cauchy(y, i, rho)
   }
   # If the i-th and the j-th observation are the same, the value returned is zero
   if (i == j) {
     return(0)
   }
   # Calculate the probability of choosing one pairs at random (i-th and j-th observation)
-  return(simple_dspcauchy_ld(y, i, j, rho, ncol(y) - 1) / total_Q_i)
+  return(d_sph_cauchy(
+    array(y, dim = c(nrow(y), ncol(y), 1)), i, j, rho, 1,
+    ncol(y) - 1
+  ) / d_i_sph_cauchy)
 }
 
-#' Calculate n probabilities where each element is the probability of choosing the
-#' i-th and the j-th observations, the i-th element is a fixed element in the chosen pairs.
+#' @title Conditional spherical Cauchy probabilities given the \eqn{i}-th observation
 #'
-#' @param x 3d-array that is a poly-sphere, (S^p)^r
-#' @param i corresponds to the i-th observation index
-#' @param rho param between 0 and 1 (not included)
-#' @return spherical marginal Cauchy density probability given the parameters
+#' @description Calculate \eqn{n}, where it stands for the sample size, probabilities where each element is the probability of choosing the
+#' \eqn{i}-th and the \eqn{j}-th observations, the \eqn{i}-th element is a fixed element in the chosen pairs.
+#'
+#' @inheritParams d_i_sph_cauchy
+#' @inheritParams d_sph_cauchy
+#' @return Spherical marginal Cauchy density probability given the parameters.
+#' @export
 #' @examples
-#' sc_cond_given_i(y, 1, 0.5)
-#' sc_cond_given_i(y, 4, 0.9999)
-sc_cond_given_i <- function(y, i, rho) {
+#' y <- rotasym::r_unif_sphere(100, 2)
+#' prob_cond_i_sph(y, 1, 0.5)
+#' prob_cond_i_sph(y, 4, 0.9999)
+prob_cond_i_sph <- function(y, i, rho) {
   if (i < 1 || i > nrow(y)) {
-    stop("The index i not valid, must be >= 1 and <= nrow(y)")
+    stop("i not valid, must be between 1 and nrow(y)")
   }
   if (!rlang::is_scalar_atomic(rho)) {
-    stop("Parameter rho must be an scalar")
+    stop("rho must be an scalar")
   }
   # Calculate the probabilities of chosen a pair of elements where the i-th element is fixed
-  return(sapply(1:nrow(y), jcondi_sc, y = y, i = i, rho))
+  return(sapply(1:nrow(y), jcondi_sph, y = y, i = i, rho))
 }

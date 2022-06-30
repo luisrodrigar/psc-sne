@@ -109,8 +109,8 @@ r <- 5
 rho <- 0.5
 perplexity <- 15
 
-X <- gen_polysphere(n, p, r)
-optim_hat <- rho_optim_bst(X, perplexity)
+X <- sphunif::r_unif_sph(n, p + 1, r)
+optim_hat <- rho_optim_bst(X, perplexity, clusterFactory(2))
 rho_hat <- optim_hat$rho_values
 P <- optim_hat$P
 P <- symmetric_probs(P)
