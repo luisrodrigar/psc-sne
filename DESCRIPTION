@@ -1,6 +1,6 @@
 Package: pscsne
 Type: Package
-Title: Poly-spherical Cauchy SNE
+Title: Polyspherical Cauchy SNE
 Version: 0.0.1
 Date: 2022-05-14
 Authors@R: c(
@@ -9,36 +9,32 @@ Authors@R: c(
             comment = c(ORCID = "0000-0002-9224-4111")),
      person(given = "Luis Angel", family = "Rodríguez García", role = "aut")
      )
-Description: Implementation the poly-spherical cauchy SNE, a nonlinear dimensionality reduction technique.
+Description: Implementation the polyspherical cauchy SNE, a nonlinear dimensionality reduction technique.
 License: GPL-3
 LazyData: true
+Encoding: UTF-8
 Depends:
-    R (>= 3.5.0),
-    Rcpp
+    R (>= 3.5.0)
 Imports:
-    doFuture,
-    parallel,
-    doParallel,
+    DirStats,
     optimParallel,
-    foreach,
-    lsa,
-    future,
-    Directional,
-    rotasym,
-    numDeriv,
-    testthat,
-    mvtnorm
+    parallel,
+    rlang,
+    sphunif
 Suggests:
     knitr,
     markdown,
     rmarkdown,
     scatterplot3d,
-    viridisLite
-LinkingTo: Rcpp, RcppArmadillo
+    viridisLite,
+    Directional,
+    mvtnorm,
+    numDeriv,
+    rotasym,
+    testthat
 URL: https://github.com/luisrodrigar/psc-sne
 BugReports: https://github.com/luisrodrigar/psc-sne
-Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.0
 Roxygen: list(old_usage = TRUE)
 VignetteBuilder: knitr
 Config/testthat/edition: 3

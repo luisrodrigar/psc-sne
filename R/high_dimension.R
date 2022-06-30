@@ -1,74 +1,30 @@
 ###############################################
-##        Poly-spherical Cauchy HD           ##
+##        Polyspherical Cauchy HD           ##
 ## High-dimension neighborhood probabilities ##
 ###############################################
 
-library(lsa)
-
-
-#' Calculate the symmetric probabilities of a given conditional probabilities matrix
+#' @title Polyspherical Cauchy conditional probability matrix (matrix version)
 #'
-#' @param P matrix of probabilities (P_i|j)_{ij}
-#' @return The sum of \code{P} and \code{t(P)} divided by twice the sample size
-#' @examples
-#' symmetric_probs(matrix(runif(3 * 3), nrow = 3, ncol = 3))
-#' symmetric_probs(diag(3))
-symmetric_probs <- function(P) {
-  n <- nrow(P)
-  P <- (P + t(P)) / (2 * n)
-  return(P)
-}
-
-#' Set a specific value to the diagonal of a matrix
+#' @description Calculates the high-dimension conditional probabilities of a polyspherical Cauchy distribution. Matrix version algorithm.
 #'
-#' @param x array 3-dimensional
-#' @param k the k-th matrix of the 3d array
-#' @param val the specific value to set in the diagonal
-#' @return The \code{k}-th matrix of \code{x} with the diagonal set to \code{val}
+#' @param x an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.
+#' @param rho_list rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.
+#' @param cos_sim_psh cosine similarities array of dimension \code{c(n, n, r)} for the polysphere.
+#' @return An array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
+#' @export
 #' @examples
-#' diag_3d(x, 1, 0)
-#' diag_3d(x, 3, 0)
-diag_3d <- function(x, k, val) {
-  if (k < 1 || k > dim(x)[3]) {
-    stop("The 3rd dimensional index k not valid, must be >= 1 and <= r")
-  }
-  diag(x[, , k]) <- val
-  return(x[, , k])
-}
-
-#' Calculates the cosine similarity for each matrix
-#'
-#' @param x array 3-dimensional
-#' @return a 3-dimensional array with the cosine similarities of each matrix of \code{x}
-#' @examples
-#' cosine_polysph(x)
-cosine_polysph <- function(x) {
-  r <- dim(x)[3]
-  cosine_sphere_ith <- function(k) {
-    cos_sim <- cosine(t(x[, , k]))
-  }
-  sapply(1:r, cosine_sphere_ith, simplify = "array")
-}
-
-#' Matrix version
-#' Calculates the high-dimension probabilities of a polyspherical cauchy distribution
-#'
-#' @param x array 3-dimensional
-#' @param rho_list rho parameter for each \code{i}-th observation
-#' @param cos_sim_pol cosine similarities of the polysphere
-#' @return a 3-dimensional array with the high-dimension probabilities of the array \code{x}
-#' @examples
-#' high_dimension(x, rep(0.5, 3))
-#' high_dimension(x, rep(0.5, 3), cosine_polysph(diag(3)))
-high_dimension <- function(x, rho_list, cos_sim_pol = NULL) {
+#' x <- sphunif::r_unif_sph(100, 3, 3)
+#' high_dimension(x, rep(0.5, 100))
+#' high_dimension(x, rep(0.5, 100), cosine_polysph(x))
+high_dimension <- function(x, rho_list, cos_sim_psh = NULL) {
   if (!rlang::is_vector(rho_list)) {
-    stop("Parameter rho_list must be a vector")
+    stop("rho_list must be a vector")
   }
   if (length(rho_list) != nrow(x)) {
-    stop("Parameter rho_list not valid, size must be equal to nrow(x)")
+    stop("rho_list size has to be equal to nrow(x)")
   }
-  if (!is.null(cos_sim_pol) && length(dim(cos_sim_pol)) != 3) {
-    stop("Parameter cos_sim_ps must be a 3d-array")
+  if (!is.null(cos_sim_psh) && length(dim(cos_sim_psh)) != 3) {
+    stop("cos_sim_psh must be an array of size c(n, p + 1, r), from (S^p)^r")
   }
   # Number of observations
   n <- nrow(x)
@@ -77,13 +33,13 @@ high_dimension <- function(x, rho_list, cos_sim_pol = NULL) {
   # Number of spheres
   r <- dim(x)[3]
 
-  # Calculate the cosine similarities of 'x' if 'cos_sim_pol' param is null
-  if (is.null(cos_sim_pol)) {
-    cos_sim_pol <- cosine_polysph(x)
+  # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
+  if (is.null(cos_sim_psh)) {
+    cos_sim_psh <- cosine_polysph(x)
   }
 
   # Calculate -2 * rho_list * (Y[i,,] %*% Y[j,,]) by each row of the 3d-array
-  P <- sweep(cos_sim_pol,
+  P <- sweep(cos_sim_psh,
     MARGIN = 1, STATS = (-2 * rho_list), FUN = "*",
     check.margin = FALSE
   )
@@ -110,29 +66,28 @@ high_dimension <- function(x, rho_list, cos_sim_pol = NULL) {
   return(P_ij)
 }
 
-#' Scalar version
-#' Calculates the high-dimension probabilities of a polyspherical Cauchy distribution
+#' @title Polyspherical Cauchy conditional probability matrix (scalar version)
 #'
-#' @param x array 3-dimensional
-#' @param rho_list rho parameter for each \code{i}-th observation
-#' @return a 3-dimensional matrix with the high-dimension probabilities of the array \code{x}
+#' @description Calculates the high-dimension conditional probabilities of a polyspherical Cauchy distribution. Scalar version algorithm.
+#'
+#' @inheritParams high_dimension
+#' @return An array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
+#' @export
 #' @examples
-#' high_dimension_p(x, rep(0.5, 3))
-#' high_dimension_p(x, rep(0.5, 3))
+#' x <- sphunif::r_unif_sph(100, 3, 3)
+#' high_dimension_p(x, rep(0.5, 100))
 high_dimension_p <- function(x, rho_list) {
   if (!rlang::is_vector(rho_list)) {
-    stop("Parameter rho_list must be a vector")
+    stop("rho_list must be a vector")
   }
   if (length(rho_list) != nrow(x)) {
-    stop("Parameter rho_list not valid, size must be equal to nrow(x)")
+    stop("rho_list size has to be equal to nrow(x)")
   }
   # Marginal conditional probability of the i-th observation
-  total_p <- P_total_psc(x, rho_list)
+  d_total_psph <- d_total_psph_cauchy(x, rho_list)
   # Function that calculates the probability of the j-th observation given the i-th one
   jcondi <- function(i) {
-    sapply(1:nrow(x), function(j) {
-      jcondi_psc(x, i, j, rho_list, total_p[i])
-    })
+    sapply(1:nrow(x), function(j) jcondi_psph(x, i, j, rho_list, d_total_psph[i]))
   }
   # Apply the previous function for each observation
   return(t(sapply(1:nrow(x), jcondi)))
