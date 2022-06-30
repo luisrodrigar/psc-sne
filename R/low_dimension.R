@@ -1,14 +1,15 @@
 ##############################################
-##        Poly-spherical Cauchy HD          ##
+##           Spherical Cauchy HD            ##
 ## Low-dimension neighborhood probabilities ##
 ##############################################
 
 #' @title Low-dimension probabilities
+#'
 #' @description Calculate the low-dimension probabilities of a reduced matrix Y.
 #'
-#' @param Y matrix with the points in the sphere.
-#' @param rho parameter between 0 and 1 (not included).
-#' @return a matrix with the values of x projected onto the sphere of radius 1.
+#' @param Y matrix of size \code{c(n, d)}, where \code{n} is the number of observation, with the points onto the sphere \eqn{\mathcal{S}^d}.
+#' @inheritParams d_sph_cauchy
+#' @return A matrix with the values of x projected onto the sphere of radius 1.
 #' @export
 #' @examples
 #' Y <- rotasym::r_unif_sphere(100, 2)

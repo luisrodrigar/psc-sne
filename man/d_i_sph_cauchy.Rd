@@ -11,10 +11,10 @@ d_i_sph_cauchy(y, i, rho)
 
 \item{i}{corresponds to the \eqn{i}-th observation index.}
 
-\item{rho}{concentration parameter between 0 and 1 (not included).}
+\item{rho}{concentration parameter must be in [0, 1).}
 }
 \value{
-spherical marginal Cauchy density probability given the parameters.
+Spherical marginal Cauchy density probability given the parameters.
 }
 \description{
 Calculate the marginal low-dimension spherical Cauchy probability.

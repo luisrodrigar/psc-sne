@@ -7,24 +7,23 @@
 kl_divergence_grad(Y, i, rho, d, P, cos_sim = NULL, Q = NULL)
 }
 \arguments{
-\item{Y}{data point onto the low-dimension (\eqn{\mathcal{S}^d}).}
+\item{Y}{matrix of size \code{c(n, d)}, where \code{n} is the number of observation, with the points onto the sphere \eqn{\mathcal{S}^d}.}
 
-\item{i}{the index of the i-th observation where the gradient is calculated.}
+\item{i}{corresponds to the \eqn{i}-th observation index.}
 
-\item{rho}{parameter between 0 and 0.9999 (not included).}
+\item{rho}{concentration parameter must be in [0, 1).}
 
 \item{d}{target dimension to reduced the data.}
 
-\item{P}{high-dimensional poly-spherical Cauchy probabilities.}
+\item{P}{high-dimensional polyspherical Cauchy probabilities.}
 
-\item{cos_sim}{cosine similarities of the high-dimension probabilities.}
+\item{cos_sim}{an array of size \code{c(n, n, r)} with the cosine similarities in high-dimension for the polysphere \eqn{(\mathcal{S}^p)^r}. Optional parameter, default value set to \code{NULL}.}
 
-\item{Q}{low-dimension spherical Cauchy probabilities.}
+\item{Q}{low-dimension spherical Cauchy probabilities. Optional parameter, default value set to \code{NULL}.}
 }
 \value{
-data onto the sphere \eqn{\mathcal{S}^d}
+Resulting reduced data for the \eqn{i}-th observation onto the sphere \eqn{\mathcal{S}^d}
 }
 \description{
 Calculates analytically the gradient of the Kullback-Leibler divergence function.
-Defaults values for the optional parameters to NULL.
 }

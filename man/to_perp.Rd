@@ -7,14 +7,14 @@
 to_perp(x, rho_list, cos_sim_ps = NULL)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
 \item{rho_list}{rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.}
 
-\item{cos_sim_ps}{cosine similarities matrix of each sphere \eqn{\mathcal{S}^p} (optional parameter).}
+\item{cos_sim_ps}{cosine similarities matrix of each sphere \eqn{\mathcal{S}^p} (optional parameter, default value \code{NULL}).}
 }
 \value{
-perplexity list for each observation.
+Perplexity of the \eqn{i}-th observation for all the remainder observations.
 }
 \description{
 Calculate the perplexity of each observations for a given \eqn{\mathbf{\rho}} parameters list. Matrix version algorithm.

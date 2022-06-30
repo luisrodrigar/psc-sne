@@ -2,24 +2,19 @@
 % Please edit documentation in R/perplexity.R
 \name{rho_optim_ineff}
 \alias{rho_optim_ineff}
-\title{Serial optimization of the \eqn{\rho} concentration parameters (matrix version)
-Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
-Optimize the value using the method L-BFGS-B.
-The boundaries are set from 0 to 0.9999. It prints the time consumption.}
+\title{Serial optimization of the \eqn{\rho} concentration parameters (matrix version)}
 \usage{
 rho_optim_ineff(x, perplexity)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{perplexity}{a fixed value (between 5 and 100) to optimize the rho values.}
+\item{perplexity}{a fixed value (between 5 and 100) to optimize the rho parameters.}
 }
 \value{
-rho list with the values optimized.
+Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized for the given perplexity.
 }
 \description{
-Serial optimization of the \eqn{\rho} concentration parameters (matrix version)
 Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
-Optimize the value using the method L-BFGS-B.
-The boundaries are set from 0 to 0.9999. It prints the time consumption.
+Optimize the value using the method L-BFGS-B. The boundaries are set from 0 to 0.9999. It prints the time consumption.
 }

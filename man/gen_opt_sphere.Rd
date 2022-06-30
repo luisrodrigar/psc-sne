@@ -12,7 +12,7 @@ gen_opt_sphere(n, d)
 \item{d}{size of the low-dimension which defines the sphere \eqn{\mathcal{S}^d}.}
 }
 \value{
-evenly optimal separated points onto the low-dimension sphere \eqn{\mathcal{S}^d}.
+Evenly optimal separated points onto the low-dimension sphere \eqn{\mathcal{S}^d}.
 }
 \description{
 Generated optimal evenly separated points onto the sphere \eqn{\mathcal{S}^d}.

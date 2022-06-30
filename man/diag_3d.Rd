@@ -7,7 +7,7 @@
 diag_3d(x, k, val)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
 \item{k}{the \code{k}-th sphere from \eqn{(\mathcal{S}^p)^r}.}
 

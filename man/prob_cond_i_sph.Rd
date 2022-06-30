@@ -11,10 +11,10 @@ prob_cond_i_sph(y, i, rho)
 
 \item{i}{corresponds to the \eqn{i}-th observation index.}
 
-\item{rho}{concentration parameter between 0 and 1 (not included).}
+\item{rho}{concentration parameter must be in [0, 1).}
 }
 \value{
-spherical marginal Cauchy density probability given the parameters.
+Spherical marginal Cauchy density probability given the parameters.
 }
 \description{
 Calculate \eqn{n}, where it stands for the sample size, probabilities where each element is the probability of choosing the

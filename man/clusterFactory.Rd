@@ -12,7 +12,7 @@ clusterFactory(num_cores, outfile = "")
 \item{outfile}{text file where print the output, empty means no output.}
 }
 \value{
-the cluster created.
+Cluster created with the number of cores passing as parameter.
 }
 \description{
 Cluster factory for concurrent tasks.

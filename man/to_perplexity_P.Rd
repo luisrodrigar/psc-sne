@@ -7,14 +7,14 @@
 to_perplexity_P(x, i, rho)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
-\item{i}{corresponds to the i-th observation for the perplexity is calculated.}
+\item{i}{corresponds to the \eqn{i}-th observation for the perplexity is calculated.}
 
-\item{rho}{concentration parameter between 0 and 1 (not included).}
+\item{rho}{concentration parameter must be in [0, 1).}
 }
 \value{
-perplexity and probabilities of the \eqn{i}-th observation for all the remainder observations.
+Perplexity and probabilities of the \eqn{i}-th observation for all the remainder observations.
 }
 \description{
 Calculate the perplexity of the \eqn{i}-th observation for a given a rho parameter.

@@ -1,10 +1,11 @@
 
 #' @title Cluster factory
+#'
 #' @description Cluster factory for concurrent tasks.
 #'
 #' @param num_cores number of cores to be available in the cluster.
 #' @param outfile text file where print the output, empty means no output.
-#' @return the cluster created.
+#' @return Cluster created with the number of cores passing as parameter.
 #' @export
 #' @examples
 #' clusterFactory(2)
@@ -21,11 +22,12 @@ clusterFactory <- function(num_cores, outfile = "") {
 }
 
 #' @title Reconstruct cosine similarities matrix
+#'
 #' @description Reconstruct the cosine similarities from vector elements to symmetric matrix.
 #'
 #' @param cos_sim_vec vector containing all non-repeated values of the cosine similarity matrix (upper triangular matrix).
 #' @param n sample size of the original data.
-#' @return a cosine similarity matrix formed by the \code{cos_sim_vector}.
+#' @return Cosine similarity matrix formed by the \code{cos_sim_vector}.
 #' @export
 #' @examples
 #' n <- 6
@@ -41,10 +43,11 @@ reconstruct_cos_sim_mat <- function(cos_sim_vec, n) {
 }
 
 #' @title Cosine similarity for the poly-sphere
+#'
 #' @description Calculates the cosine similarity for each sphere of the 3 dimensional array.
 #'
 #' @inheritParams high_dimension
-#' @return an array of size \code{c(n, n, r)} with the cosine similarities of each sphere \eqn{\mathcal{S}^d} from \code{x}.
+#' @return An array of size \code{c(n, n, r)} with the cosine similarities of each sphere \eqn{\mathcal{S}^d} from \code{x}.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(100, 3, 3)
@@ -58,7 +61,8 @@ cosine_polysph <- function(x) {
 }
 
 #' @title Symmetric probabilities
-#' @description Calculate the symmetric probabilities of a given conditional poly-spherical Cauchy probability matrix.
+#'
+#' @description Calculate the symmetric probabilities of a given conditional polyspherical Cauchy probability matrix.
 #'
 #' @param P matrix of probabilities \eqn{(P_{i|j})_{ij}} with size \code{c(n, n)} where \code{n} is the number of observations of the original array \code{x}.
 #' @return The sum of \code{P} and \code{t(P)} divided by twice the sample size.
@@ -73,6 +77,7 @@ symmetric_probs <- function(P) {
 }
 
 #' @title Set each object's diagonal of a 3d-array
+#'
 #' @description Set a specific value to the diagonal of a each matrix of a 3 dimensional array.
 #'
 #' @inheritParams high_dimension
@@ -93,10 +98,11 @@ diag_3d <- function(x, k, val) {
 }
 
 #' @title Radial projection onto the sphere
+#'
 #' @description Projection of the points onto the sphere of radius 1.
 #'
 #' @param y matrix with the points in the sphere.
-#' @return a matrix with the values of x projected onto the sphere of radius 1.
+#' @return A matrix with the values of x projected onto the sphere of radius 1.
 #' @export
 #' @examples
 #' y <- rotasym::r_unif_sphere(100, 2)
@@ -110,11 +116,12 @@ radial_projection <- function(y) {
 }
 
 #' @title Generate optimum evenly separated points
+#'
 #' @description Generated optimal evenly separated points onto the sphere \eqn{\mathcal{S}^d}.
 #'
 #' @param n positive integer that defines the size of the sample to generate.
 #' @param d size of the low-dimension which defines the sphere \eqn{\mathcal{S}^d}.
-#' @return evenly optimal separated points onto the low-dimension sphere \eqn{\mathcal{S}^d}.
+#' @return Evenly optimal separated points onto the low-dimension sphere \eqn{\mathcal{S}^d}.
 #' @export
 #' @examples
 #' gen_opt_sphere(100, 1)
@@ -138,10 +145,11 @@ gen_opt_sphere <- function(n, d) {
 }
 
 #' @title Fibonacci lattice algorithm to generate evenly separated points
+#'
 #' @description Generated optimal evenly separated points onto the sphere \eqn{\mathcal{S}^2}.
 #'
 #' @inheritParams gen_opt_sphere
-#' @return evenly optimal separated points onto the low-dimension sphere \eqn{\mathcal{S}^2}.
+#' @return Evenly optimal separated points onto the low-dimension sphere \eqn{\mathcal{S}^2}.
 #' @export
 #' @examples
 #' fibonacci_lattice(100)

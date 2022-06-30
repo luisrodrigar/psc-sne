@@ -7,12 +7,12 @@
 to_perp_scalar(x, rho_list)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
 \item{rho_list}{rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.}
 }
 \value{
-perplexity vector for each observation
+Perplexity of the \eqn{i}-th observation for all the remainder observations.
 }
 \description{
 Calculate the perplexity of each observations for a given rho parameters list.

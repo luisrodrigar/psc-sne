@@ -2,21 +2,21 @@
 % Please edit documentation in R/prob_distribution.R
 \name{prob_cond_i_psph}
 \alias{prob_cond_i_psph}
-\title{Conditional poly-spherical Cauchy probability for the \eqn{i}-th observation}
+\title{Conditional polyspherical Cauchy probability for the \eqn{i}-th observation}
 \usage{
 prob_cond_i_psph(x, i, rho_list, d_total_i_psph_cauchy = NULL)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the poly-spherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
 \item{i}{corresponds to the \eqn{i}-th observation index.}
 
 \item{rho_list}{rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.}
 
-\item{d_total_i_psph_cauchy}{marginal probability of the \eqn{i}-th observation.}
+\item{d_total_i_psph_cauchy}{marginal probability of the \eqn{i}-th observation. Optional, defaulta value \code{NULL}.}
 }
 \value{
-conditional poly-spherical Cauchy probability for all the \eqn{j}-th given the \eqn{i}-th observation.
+Conditional polyspherical Cauchy probability for all the \eqn{j}-th given the \eqn{i}-th observation.
 }
 \description{
 Calculate the conditional high-dimension probability for all the \eqn{j}-th observation given the \eqn{i}-th.

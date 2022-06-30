@@ -4,9 +4,9 @@
 \name{pscsne-package}
 \alias{pscsne-package}
 \alias{pscsne}
-\title{\code{pscsne}: Poly-spherical Cauchy SNE}
+\title{\code{pscsne}: Polyspherical Cauchy SNE}
 \description{
-Implementation of the Poly-spherical Cauchy SNE
+Implementation of the Polyspherical Cauchy SNE
 }
 \author{
 Eduardo García-Portugués and Luis Ángel Rodríguez García.

@@ -12,7 +12,7 @@ reconstruct_cos_sim_mat(cos_sim_vec, n)
 \item{n}{sample size of the original data.}
 }
 \value{
-a cosine similarity matrix formed by the \code{cos_sim_vector}.
+Cosine similarity matrix formed by the \code{cos_sim_vector}.
 }
 \description{
 Reconstruct the cosine similarities from vector elements to symmetric matrix.

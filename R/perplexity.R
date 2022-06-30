@@ -3,12 +3,13 @@
 ###########################################
 
 #' @title Perplexity of the \eqn{i}-th observation (scalar version)
+#'
 #' @description Calculate the perplexity of the \eqn{i}-th observation for a given a rho parameter.
 #'
 #' @inheritParams high_dimension
-#' @param i corresponds to the i-th observation for the perplexity is calculated.
-#' @param rho concentration parameter between 0 and 1 (not included).
-#' @return perplexity and probabilities of the \eqn{i}-th observation for all the remainder observations.
+#' @param i corresponds to the \eqn{i}-th observation for the perplexity is calculated.
+#' @param rho concentration parameter must be in [0, 1).
+#' @return Perplexity and probabilities of the \eqn{i}-th observation for all the remainder observations.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(25, 3, 3)
@@ -38,13 +39,13 @@ to_perplexity_P <- function(x, i, rho) {
 }
 
 #' @title Perplexity of the \eqn{i}-th observation (semi-scalar version)
+#'
 #' @description Calculate the perplexity of the \eqn{i}-th observation for a given a rho \eqn{\rho} concentration parameter.
 #'
 #' @inheritParams high_dimension
-#' @param i corresponds to the \eqn{i}-th observation for the perplexity is calculated.
-#' @param rho param between 0 and 1 (not included).
-#' @param cos_sim_ps cosine similarities matrix of each sphere \eqn{\mathcal{S}^p} (optional parameter).
-#' @return perplexity of the \eqn{i}-th observation for all the remainder observations.
+#' @inheritParams to_perplexity_P
+#' @param cos_sim_ps cosine similarities matrix of each sphere \eqn{\mathcal{S}^p} (optional parameter, default value \code{NULL}).
+#' @return Perplexity of the \eqn{i}-th observation for all the remainder observations.
 to_perplexity <- function(x, i, rho, cos_sim_ps = NULL) {
   if (i < 1 || i > nrow(x)) {
     stop("i not valid, must be in [1, nrow(x)]")
@@ -81,10 +82,11 @@ to_perplexity <- function(x, i, rho, cos_sim_ps = NULL) {
 # to_perplexity(x, 1, 0.5) 517.03870 583.15446 625.63860 613.75799 638.68714 1649.2364   100
 
 #' @title Perplexity matrix (scalar version)
+#'
 #' @description Calculate the perplexity of each observations for a given rho parameters list.
 #'
 #' @inheritParams high_dimension
-#' @return perplexity vector for each observation
+#' @return Perplexity of the \eqn{i}-th observation for all the remainder observations.
 to_perp_scalar <- function(x, rho_list) {
   if (length(dim(x)) != 3) {
     stop("x must be an array of dimension c(n, p + 1, r), from (S^p)^r")
@@ -101,11 +103,12 @@ to_perp_scalar <- function(x, rho_list) {
 }
 
 #' @title Perplexity matrix (matrix version)
+#'
 #' @description Calculate the perplexity of each observations for a given \eqn{\mathbf{\rho}} parameters list. Matrix version algorithm.
 #'
 #' @inheritParams high_dimension
 #' @inheritParams to_perplexity
-#' @return perplexity list for each observation.
+#' @return Perplexity of the \eqn{i}-th observation for all the remainder observations.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(25, 3, 3)
@@ -154,13 +157,14 @@ to_perp <- function(x, rho_list, cos_sim_ps = NULL) {
 # Time difference of 10.21872 mins
 
 #' @title Serial optimization \eqn{\rho} concentration parameters (scalar version)
+#'
 #' @description Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
 #' Optimize the value using a method L-BFGS-B, setting the boundaries from 0 to 0.9999.
 #' Each value is calculated serially. It prints the time consumption.
 #'
 #' @inheritParams high_dimension
-#' @param perplexity a fixed value (between 5 and 100) to optimize the rho values.
-#' @return rho list with the values optimized.
+#' @param perplexity a fixed value (between 5 and 100) to optimize the rho parameters.
+#' @return Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized for the given perplexity.
 rho_optim_serial <- function(x, perplexity) {
   # Sample size
   n <- nrow(x)
@@ -190,14 +194,15 @@ rho_optim_serial <- function(x, perplexity) {
 # Time difference of 18.12201 mins
 
 #' @title Concurrent optimization of the \eqn{\rho} concentration parameters (scalar version)
+#'
 #' @description Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
-#' Optimize the value using the method L-BFGS-B, setting the boundaries from 0 to 0.9999.
-#' Each value is calculated concurrently. It prints the time consumption.
+#' Optimize the value using the method L-BFGS-B, setting the boundaries within [0, 1).
+#' The limit is considered as \code{1 - 1e-4}. Each value is calculated concurrently. At the end, the time consumption is shown.
 #'
 #' @inheritParams high_dimension
 #' @inheritParams rho_optim_serial
-#' @param num_cores number of cores to execute the code concurrently.
-#' @return rho list with the values optimized.
+#' @param num_cores number of cores to execute the code concurrently. This value must be below the total number of the CPU has available.
+#' @return Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized for the given perplexity.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(20, 3, 4)
@@ -239,6 +244,7 @@ rho_optim_par <- function(x, perplexity, num_cores = parallel::detectCores() - 1
 # 3.812    5.742 1743.000
 
 #' @title Concurrent optim to calculate \eqn{\rho} concentration parameters (scalar version)
+#'
 #' @description Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
 #' Optimize the value using the concurrently method L-BFGS-B (optimParallel).
 #' The boundaries are set from 0 to 0.9999. It prints the time consumption.
@@ -246,7 +252,7 @@ rho_optim_par <- function(x, perplexity, num_cores = parallel::detectCores() - 1
 #' @inheritParams high_dimension
 #' @inheritParams rho_optim_serial
 #' @inheritParams rho_optim_par
-#' @return rho list with the values optimized.
+#' @return Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized for the given perplexity.
 rho_optimParallel <- function(x, perplexity, num_cores = parallel::detectCores() - 1) {
   # Sample size
   n <- nrow(x)
@@ -286,13 +292,13 @@ rho_optimParallel <- function(x, perplexity, num_cores = parallel::detectCores()
 ## 50 rows 25 spheres
 
 #' @title Serial optimization of the \eqn{\rho} concentration parameters (matrix version)
-#' Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
-#' Optimize the value using the method L-BFGS-B.
-#' The boundaries are set from 0 to 0.9999. It prints the time consumption.
+#'
+#' @description Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
+#' Optimize the value using the method L-BFGS-B. The boundaries are set from 0 to 0.9999. It prints the time consumption.
 #'
 #' @inheritParams high_dimension
 #' @inheritParams rho_optim_serial
-#' @return rho list with the values optimized.
+#' @return Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized for the given perplexity.
 rho_optim_ineff <- function(x, perplexity) {
   # Sample size
   n <- nrow(x)
@@ -327,6 +333,7 @@ rho_optim_ineff <- function(x, perplexity) {
 ## 50 rows 25 spheres
 
 #' @title Concurrent optimization of the \eqn{\rho} concentration parameters (matrix version)
+#'
 #' @description Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
 #' Optimize the value using the method L-BFGS-B.
 #' The boundaries are set from 0 to 0.9999. It prints the time consumption.
@@ -334,7 +341,7 @@ rho_optim_ineff <- function(x, perplexity) {
 #' @inheritParams high_dimension
 #' @inheritParams rho_optim_serial
 #' @inheritParams rho_optim_par
-#' @return rho list with the values optimized.
+#' @return Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized for the given perplexity.
 rho_optimize_1 <- function(x, perplexity, num_cores = parallel::detectCores() - 1) {
   # Sample size
   n <- nrow(x)
@@ -387,6 +394,7 @@ rho_optimize_1 <- function(x, perplexity, num_cores = parallel::detectCores() - 
 # )
 
 #' @title  Binary search tree algorithm
+#'
 #' @description Calculate the rho value based on a perplexity difference
 #' and current values of rho, rho min and rho max.
 #'
@@ -394,7 +402,7 @@ rho_optimize_1 <- function(x, perplexity, num_cores = parallel::detectCores() - 
 #' @param rho the current value optimized
 #' @param rho_min min value for the current rho
 #' @param rho_max max value for the current rho
-#' @return rho concentration parameter found in this step, currently min and max rho
+#' @return Rho concentration parameter found in this step, currently min and max rho
 bin_search <- function(perp_diff, rho, rho_min, rho_max) {
   if (perp_diff > 0 || is.na(perp_diff)) {
     rho_min <- rho
@@ -406,16 +414,17 @@ bin_search <- function(perp_diff, rho, rho_min, rho_max) {
 }
 
 #' @title Binary search rho optimization for the \eqn{i}-th observation
+#'
 #' @description  Calculate the rho based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
 #' The boundaries are set from 0 to 0.9999.
 #'
 #' @inheritParams high_dimension
 #' @param i the \eqn{i}-th observation.
 #' @param perp_fixed a fixed value used to optimized the rho values.
-#' @param tolerance whether the difference between previous and current results is below this value (optional, default 10^-3).
-#' @param rho parameter which determines the concentration of the spherical Cauchy distribution (optional, default 0.5).
+#' @param tolerance whether the difference between previous and current results is below this value (optional, default value \code{1e-3}).
+#' @param rho parameter which determines the concentration of the spherical Cauchy distribution (optional, default value \code{0.5}).
 #' @param max_tries number of maximum tries for each value of the rho list.
-#' @return rho concentration parameter and conditional probabilities calculated for the \eqn{i}-th observation.
+#' @return Rho concentration parameter and conditional probabilities calculated for the \eqn{i}-th observation.
 rho_optim_i_bst <- function(x, i, perp_fixed, tolerance = 1e-3, rho = 0.5,
                             max_tries = 20) {
   # Min value of rho
@@ -470,13 +479,14 @@ rho_optim_i_bst <- function(x, i, perp_fixed, tolerance = 1e-3, rho = 0.5,
 }
 
 #' @title Binary search rho optimization for each observation
+#'
 #' @description Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
 #' The boundaries are set from 0 to 0.9999 for each value. It prints the time consumption.
 #'
 #' @inheritParams high_dimension
-#' @param perp_fixed a fixed value used to optimized the rho values
+#' @inheritParams rho_optim_i_bst
 #' @param cl defines a cluster to work with concurrently
-#' @return rho values and conditional probability matrix
+#' @return Rho values and conditional probability matrix obtained as a result of the optimization.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(20, 3, 4)
