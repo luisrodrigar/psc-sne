@@ -180,6 +180,9 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   # Matrices to store the Y's and the Q's in each iteration
   total_iterations <- num_iteration + 2
   Y <- array(NA, c(n, d + 1, total_iterations))
+  # TODO: Y and QS take a HUGE amount of memory if num_iteration is large.
+  # You just need to save THREE instances of the data, and update them
+  # continuously.
 
   # Generate points evenly spaced
   Y[, , 1] <- Y[, , 2] <- gen_opt_sphere(n, d)
@@ -245,8 +248,8 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     # Progress
     cat(sprintf(
-      "Iter: %d; obj: %.3e; abs %.3e; rel: %.3e; norm: %.3e\n", i - 2,
-      obj_func_iter[i - 2], absolute_errors[i - 2],
+      "It: %d; obj: %.3e; abs: %.3e; rel: %.3e; norm: %.3e\n",
+      i - 2, obj_func_iter[i - 2], absolute_errors[i - 2],
       relative_errors[i - 2], gradient_norms[i - 2]
     ))
 
