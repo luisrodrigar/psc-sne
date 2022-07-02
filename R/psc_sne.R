@@ -17,38 +17,18 @@
 #' @return Resulting reduced data for the \eqn{i}-th observation onto the
 #' sphere \eqn{\mathcal{S}^d}
 #' @examples
-#' # TODO
+#' Y <- sphunif::r_unif_sph(40, 3, 1)[ , , 1]
+#' X <- sphunif::r_unif_sph(40, 3, 3)
+#' P <- high_dimension(X, rep(0.5, 40))
+#' kl_divergence_grad(Y, 3, 0.5, 2, P)
+#' cos_sim <- reconstruct_cos_sim_mat(
+#'     cos_sim_vec = sphunif::Psi_mat(array(X, dim = c(nrow(X), ncol(X), 1)),
+#'                                    scalar_prod = TRUE),
+#'     n = nrow(X))
+#' Q <- low_dimension_Q(Y, 0.5)
+#' kl_divergence_grad(Y, 3, 0.5, 2, P, cos_sim, Q)
+#' @export
 kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
-
-  # Checks
-  # TODO: skip all/most of these checks. This is an internal function to be
-  # called many times. There will be a performance drain.
-  if (i < 1 || i > nrow(Y)) {
-
-    stop("i value not allowed. Values > 0 and <= nrow(Y)")
-
-  }
-  if (d < 1) {
-
-    stop("d value not allowed, d >= 1")
-
-  }
-  if (rho < 0 || rho >= 1) {
-
-    stop("rho value not allowed, d in [0, 1)")
-
-  }
-  if (nrow(Y) != nrow(P)) {
-
-    stop("P size does not match with the num of observations")
-
-  }
-  if (d + 1 != ncol(Y)) {
-
-    stop("d does not match with ncol(Y) - 1")
-
-  }
-
   # Radial project and compute cosine similarities
   Z <- radial_projection(Y)
   if (is.null(cos_sim)) {
@@ -69,7 +49,7 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   }
 
   # Applying the formula of the gradient:
-  # 4dp\sum_{j=1}^n[y_i'/(1+rho^2-2rho*y_i'*y_j)*(q_{ij}-p_{ij})]
+  # 4 d p \sum_{j=1}^n [y_i' / (1+rho^2-2rho*y_i'*y_j) * (q_{ij}-p_{ij})]
   kl_grad <- 4 * d * rho *
     colSums(Z[-i, ] / (1 + rho^2 - 2 * rho * cos_sim[i, -i]) *
               (Q[i, -i] - P[i, -i]))
@@ -132,8 +112,59 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     stop("Error, d value must be greater or equal than 1")
 
   }
-  # TODO: this is the main function, more checks are required to robustify it
-  # against the user
+
+  if (ncol(X) - 1 < 1) {
+
+    stop("Error, dimension of X must be equal or greater than 2")
+
+  }
+
+  if (rho < 0 || rho >= 1) {
+
+    stop("Error, high-dimensional concentration parameter, rho, must be within [0, 1)")
+
+  }
+
+  if (!is.null(rho_psc_list) && rlang::is_scalar_atomic(rho_psc_list)) {
+
+    stop("Error, low-dimensional concentration parameters, rho list, must a vector")
+
+  }
+
+  if (!is.null(rho_psc_list) && any(rho_psc_list >= 1 | rho_psc_list < 0)) {
+
+    stop("Error, low-dimensional concentration parameters, rho list, must a vector")
+
+  }
+
+  if (!is.numeric(initial_momentum) ||
+      (initial_momentum <= 0 && initial_momentum >= 1)) {
+
+    stop("Error, initial momentum parameter must be within (0, 1)")
+
+  }
+
+  if (!is.numeric(final_momentum) ||
+      (final_momentum <= 0 && final_momentum >= 1)) {
+
+    stop("Error, final momentum parameter must be within (0, 1)")
+
+  }
+
+  if ((!is.numeric(perplexity) || perplexity <= 0) &&
+      (!is.numeric(num_iteration) || num_iteration <= 0) &&
+      (!is.numeric(eta) || eta <= 0) &&
+      (!is.numeric(parallel_cores) || parallel_cores <= 0)) {
+
+    stop("Error, perplexity, num_iteration, eta, early_exaggeration and parallel_cores must be positive number")
+
+  }
+
+  if(!is.numeric(tol) || tol >= 1 || tol < 0) {
+
+    stop("Error, tol parameter must be within [0, 1)")
+
+  }
 
   # Initializing the vectors for the objective value, errors and gradient norm
   obj_func_iter <- numeric(length = nrow(X))
