@@ -139,23 +139,7 @@ test_that("Checking that i is valid", {
   expect_error(kl_divergence_grad(Y, 120, rho, d, P))
 })
 
-test_that("Checking that d is valid", {
-  expect_error(kl_divergence_grad(Y, ii, rho, 0, P))
-})
-
-test_that("Checking that rho is valid", {
-  expect_error(kl_divergence_grad(Y, ii, 1, d, P))
-  expect_error(kl_divergence_grad(Y, ii, -1, d, P))
-})
-
 test_that("Checking that the number of observation is according with the number of rows in P", {
   Y_wrong_rows <- r_unif_sphere(2, p)
-  expect_error(kl_divergence_grad(Y_wrong_rows, ii, rho, d, P))
-})
-
-test_that("Checking that the dimension of Y is according with the given d", {
-  Y_wrong_rows <- r_unif_sphere(n, 1)
-  expect_error(kl_divergence_grad(Y_wrong_rows, ii, rho, d, P))
-  Y_wrong_rows <- r_unif_sphere(n, 2)
   expect_error(kl_divergence_grad(Y_wrong_rows, ii, rho, d, P))
 })
