@@ -183,7 +183,7 @@ extract_theta <- function(results, hours) {
   theta <- sapply(time_seq, function(i) {
     dir_speeds <- results[i:(i + day_ev - 1), c("d", "speed")]
     dir_speeds <- dir_speeds[complete.cases(dir_speeds), ]
-    if(sum(dir_speeds$speed) == 0) {
+    if (sum(dir_speeds$speed) == 0) {
       return(NA)
     }
     weights <- dir_speeds$speed / sum(dir_speeds$speed)
@@ -198,7 +198,7 @@ remove_time_duplicates <- function(results_filter_latlon) {
   # Ids with the first duplicate row
   ids_to_remove <- results_filter_latlon %>%
     select(time) %>%
-    duplicated
+    duplicated()
   # Return the data.frame without this columns
   results_filter_latlon[!ids_to_remove, ]
 }
@@ -210,37 +210,43 @@ theta_by_inst_location <- function(results, hours) {
   longitudes <- levels(as.factor(results$lon))
 
   # sequence from minimum to maximum time by each x hours
-  instant <- seq(from = as.POSIXlt(min(results$time), tz="UTC"),
-                       to = as.POSIXlt(max(results$time), tz="UTC"),
-                       by = paste(hours, 'hours', sep = " "))
+  instant <- seq(
+    from = as.POSIXlt(min(results$time), tz = "UTC"),
+    to = as.POSIXlt(max(results$time), tz = "UTC"),
+    by = paste(hours, "hours", sep = " ")
+  )
   # Grid of latitude and longitude
   grid <- expand.grid(latitudes, longitudes)
   # Calculate the weight mean circular theta each x hours
-  location_results <- mclapply(mc.cores = detectCores() - 1, X = 1:nrow(grid),
-                               FUN = function(i) {
-                                 # Extract latitude and longitude
-                                 lat_x <- grid[i, 1]
-                                 lon_x <- grid[i, 2]
-                                 # Create location based on the two previous values
-                                 location_x <- paste(lat_x, lon_x, sep = ",")
-                                 # repeat y times the location, where y is the size of the time interval
-                                 location_x <- rep(location_x, size)
-                                 # Calculate the weight mean circular theta (x hours)
-                                 theta_x <- results %>%
-                                   filter(lat == lat_x & lon == lon_x) %>%
-                                   remove_time_duplicates %>%
-                                   extract_theta(., hours = hours)
-                                 # Create data.frame
-                                 data.frame(instant, location_x, theta_x)
-                              })
+  location_results <- mclapply(
+    mc.cores = detectCores() - 1, X = 1:nrow(grid),
+    FUN = function(i) {
+      # Extract latitude and longitude
+      lat_x <- grid[i, 1]
+      lon_x <- grid[i, 2]
+      # Create location based on the two previous values
+      location_x <- paste(lat_x, lon_x, sep = ",")
+      # repeat y times the location, where y is the size of the time interval
+      location_x <- rep(location_x, size)
+      # Calculate the weight mean circular theta (x hours)
+      theta_x <- results %>%
+        filter(lat == lat_x & lon == lon_x) %>%
+        remove_time_duplicates() %>%
+        extract_theta(., hours = hours)
+      # Create data.frame
+      data.frame(instant, location_x, theta_x)
+    }
+  )
   # Merge all the data.frame from above
   data <- do.call(rbind, location_results)
   return(data)
 }
 
 # List individual RDatas
-files <- list.files(path = here("data-raw", "strait-juan-fuca", "data"),
-                    pattern = "*.RData", full.names = TRUE, recursive = FALSE)
+files <- list.files(
+  path = here("data-raw", "strait-juan-fuca", "data"),
+  pattern = "*.RData", full.names = TRUE, recursive = FALSE
+)
 
 # Obtain the results for every area and their corresponding daily directions
 results <- extract_data(begin_lat, end_lat, begin_lon, end_lon)
@@ -250,14 +256,20 @@ hours <- 3
 theta_inst_location <- theta_by_inst_location(results = results, hours = hours)
 # Convert to matrix where each row is a time instant.
 # Each column is a different location (latitude and longitude)
-juan_fuca <- reshape2::dcast(data = theta_inst_location,
-                   formula = instant ~ location_x,
-                   value.var = 'theta_x', fun.aggregate = list)
-rownames(juan_fuca) <- seq(from = as.POSIXlt(min(results$time), tz="UTC"),
-                           to = as.POSIXlt(max(results$time), tz="UTC"),
-                           by = paste(hours, 'hours', sep = " "))
+juan_fuca <- reshape2::dcast(
+  data = theta_inst_location,
+  formula = instant ~ location_x,
+  value.var = "theta_x", fun.aggregate = list
+)
+rownames(juan_fuca) <- seq(
+  from = as.POSIXlt(min(results$time), tz = "UTC"),
+  to = as.POSIXlt(max(results$time), tz = "UTC"),
+  by = paste(hours, "hours", sep = " ")
+)
 
 
 # Save the object
-save(list = "juan_fuca",
-     file = paste(here('data-raw', 'strait-juan-fuca'), "juanfuca.rda", sep = "/"))
+save(
+  list = "juan_fuca",
+  file = paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/")
+)
