@@ -208,19 +208,14 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   # Early exaggeration in the high-dimensional probabilities
   P <- P * early_exaggeration
 
-  # Matrices to store the Y's and the Q's in each iteration
-  total_iterations <- num_iteration + 2
-  Y <- array(NA, c(n, d + 1, total_iterations))
-  # TODO: Y and QS take a HUGE amount of memory if num_iteration is large.
-  # You just need to save THREE instances of the data, and update them
-  # continuously.
+  # Matrices to store the two previous Y's
+  Y <- array(NA, c(n, d + 1, 2))
 
   # Generate points evenly spaced
   Y[, , 1] <- Y[, , 2] <- gen_opt_sphere(n, d)
-  Qs <- array(NA, c(n, n, total_iterations))
 
   # Generate low-dimension probabilities for the data generated
-  Qs[, , 1] <- Qs[, , 2] <- low_dimension_Q(Y[, , 2], rho)
+  Q_i <- low_dimension_Q(Y[, , 2], rho)
 
   # Initial momentum
   momentum <- initial_momentum
@@ -242,7 +237,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     # Calculate the cosine similarities for the current Y solution
     Y_cos_sim <- reconstruct_cos_sim_mat(
-      sphunif::Psi_mat(array(Y[, , i - 1], dim = c(nrow(Y), ncol(Y), 1)),
+      sphunif::Psi_mat(array(Y[, , 2], dim = c(nrow(Y), ncol(Y), 1)),
                        scalar_prod = TRUE),
       nrow(Y)
     )
@@ -250,25 +245,26 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     # Gradient of the objective function for all the observations
     grad <- t(simplify2array(parallel::mclapply(
       mc.cores = parallel_cores, 1:n,
-      kl_divergence_grad, Y = Y[, , i - 1], rho = rho, d = d, P = P,
-      cos_sim = Y_cos_sim, Q = Qs[, , i - 1]
+      kl_divergence_grad, Y = Y[, , 2], rho = rho, d = d, P = P,
+      cos_sim = Y_cos_sim, Q = Q_i
     )))
 
     # Gradient descent
-    Y_i <- Y[, , i - 1] + (eta * -grad) +
-      momentum * (Y[, , i - 1] - Y[, , i - 2])
+    Y_i <- Y[, , 2] + (eta * -grad) +
+      momentum * (Y[, , 2] - Y[, , 1])
 
     # Projecting iteration solution onto the sphere/circumference of radio 1
     Y_i <- radial_projection(Y_i)
 
     # Store the iteration's Y in the 3d Y's matrix
-    Y[, , i] <- Y_i
+    Y[, , 1] <- Y[, , 2]
+    Y[, , 2] <- Y_i
 
     # Generate the Q matrix with the low-dimension probabilities
-    Qs[, , i] <- low_dimension_Q(Y[, , i], rho)
+    Q_i <- low_dimension_Q(Y_i, rho)
 
     # Objective func value, absolute and relative errors and the gradient norm
-    obj_func_iter[i - 2] <- sum(P * log(P / Qs[, , i]), na.rm = TRUE)
+    obj_func_iter[i - 2] <- sum(P * log(P / Q_i), na.rm = TRUE)
     if (i > 3) {
 
       absolute_errors[i - 2] <- abs(obj_func_iter[i - 3] - obj_func_iter[i - 2])
