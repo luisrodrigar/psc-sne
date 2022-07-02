@@ -76,61 +76,65 @@ get_data <- function() {
   )
 }
 
-# Download data in a monthly loop to avoid surpassing 500Mb limit
-for (year in 2020:2022) {
-  month <- 1
-  while ((year < 2022 && month <= 12) || (year == 2022 && month <= 6)) {
 
-    # Show progress
-    cat("\n", year, "-", month, "\n")
+download_data = FALSE # Change to TRUE download again in /data folder
+if (download_data) {
+  # Download data in a monthly loop to avoid surpassing 500Mb limit
+  for (year in 2020:2022) {
+    month <- 1
+    while ((year < 2022 && month <= 12) || (year == 2022 && month <= 6)) {
 
-    begin_tim <- date(paste(toString(year), toString(month),
-      "01 00:00:00 UTC",
-      sep = "-"
-    ))
+      # Show progress
+      cat("\n", year, "-", month, "\n")
 
-    # End time taking into account if a new year starts
-    if (month != 12) {
-      end_tim <- date(paste(toString(year), toString(month + 1),
-        "01 00:00:00 UTC",
-        sep = "-"
+      begin_tim <- date(paste(toString(year), toString(month),
+                              "01 00:00:00 UTC",
+                              sep = "-"
       ))
-    } else {
-      end_tim <- date(paste(toString(year + 1), toString(1),
-        "01 00:00:00 UTC",
-        sep = "-"
+
+      # End time taking into account if a new year starts
+      if (month != 12) {
+        end_tim <- date(paste(toString(year), toString(month + 1),
+                              "01 00:00:00 UTC",
+                              sep = "-"
+        ))
+      } else {
+        end_tim <- date(paste(toString(year + 1), toString(1),
+                              "01 00:00:00 UTC",
+                              sep = "-"
+        ))
+      }
+
+      # Download data
+      get_data()
+
+      # Get data dimensions
+      lat_length <- dim(u)[1]
+      lon_length <- dim(u)[2]
+      time_length <- dim(u)[3]
+
+      # Find the indexes associated to dimensions
+      lat_aux <- begin_lat_ind:(begin_lat_ind + lat_length - 1)
+      lon_aux <- begin_lon_ind:(begin_lon_ind + lon_length - 1)
+      time_aux <- begin_tim_ind:(begin_tim_ind + time_length - 1)
+
+      # Join all the cases
+      join <- merge(x = lat[lat_aux], y = lon[lon_aux])
+      final_dataframe <- merge(x = join, y = tim[time_aux], by = NULL)
+      colnames(final_dataframe) <- c("lat", "lon", "time")
+
+      # Add the velocities and save the data
+      final_dataframe$u <- c(u)
+      final_dataframe$v <- c(v)
+      save(final_dataframe, file = paste(
+        here("data-raw", "strait-juan-fuca", "data"),
+        paste(loc, "_", toString(year), "_", toString(month), ".RData", sep = ""),
+        sep = "/"
       ))
+
+      # Update month
+      month <- month + 1
     }
-
-    # Download data
-    get_data()
-
-    # Get data dimensions
-    lat_length <- dim(u)[1]
-    lon_length <- dim(u)[2]
-    time_length <- dim(u)[3]
-
-    # Find the indexes associated to dimensions
-    lat_aux <- begin_lat_ind:(begin_lat_ind + lat_length - 1)
-    lon_aux <- begin_lon_ind:(begin_lon_ind + lon_length - 1)
-    time_aux <- begin_tim_ind:(begin_tim_ind + time_length - 1)
-
-    # Join all the cases
-    join <- merge(x = lat[lat_aux], y = lon[lon_aux])
-    final_dataframe <- merge(x = join, y = tim[time_aux], by = NULL)
-    colnames(final_dataframe) <- c("lat", "lon", "time")
-
-    # Add the velocities and save the data
-    final_dataframe$u <- c(u)
-    final_dataframe$v <- c(v)
-    save(final_dataframe, file = paste(
-      here("data-raw", "strait-juan-fuca", "data"),
-      paste(loc, "_", toString(year), "_", toString(month), ".RData", sep = ""),
-      sep = "/"
-    ))
-
-    # Update month
-    month <- month + 1
   }
 }
 
@@ -224,17 +228,13 @@ theta_by_inst_location <- function(results, hours) {
       # Extract latitude and longitude
       lat_x <- grid[i, 1]
       lon_x <- grid[i, 2]
-      # Create location based on the two previous values
-      location_x <- paste(lat_x, lon_x, sep = ",")
-      # repeat y times the location, where y is the size of the time interval
-      location_x <- rep(location_x, size)
       # Calculate the weight mean circular theta (x hours)
       theta_x <- results %>%
         filter(lat == lat_x & lon == lon_x) %>%
-        remove_time_duplicates() %>%
-        extract_theta(., hours = hours)
+        remove_time_duplicates %>%
+        extract_theta(hours = hours)
       # Create data.frame
-      data.frame(instant, location_x, theta_x)
+      data.frame(instant, lat_x, lon_x, theta_x)
     }
   )
   # Merge all the data.frame from above
@@ -252,21 +252,20 @@ files <- list.files(
 results <- extract_data(begin_lat, end_lat, begin_lon, end_lon)
 # Data every 3 hours
 hours <- 3
-# Theta by location and time instant each 3 hours
-theta_inst_location <- theta_by_inst_location(results = results, hours = hours)
-# Convert to matrix where each row is a time instant.
-# Each column is a different location (latitude and longitude)
-juan_fuca <- reshape2::dcast(
-  data = theta_inst_location,
-  formula = instant ~ location_x,
-  value.var = "theta_x", fun.aggregate = list
-)
-rownames(juan_fuca) <- seq(
+seq_time <- seq(
   from = as.POSIXlt(min(results$time), tz = "UTC"),
   to = as.POSIXlt(max(results$time), tz = "UTC"),
   by = paste(hours, "hours", sep = " ")
 )
-
+# Convert to theta by location and time instant each 3 hours
+# and later on transform it into a matrix where each row is a time instant and
+# each column is a different location (latitude and longitude)
+juan_fuca <- theta_by_inst_location(results, hours = hours) %>%
+  reshape2::dcast(
+    formula = instant ~ lat_x + lon_x,
+    value.var = "theta_x",
+    fun.aggregate = list
+  )
 
 # Save the object
 save(
