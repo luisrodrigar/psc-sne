@@ -67,20 +67,22 @@ get_data <- function() {
   # u (m/s) = surface_eastward_sea_water_velocity
   # v (m/s) = surface_northward_sea_water_velocity
   u <<- ncvar_get(data, "u",
-    start = c(begin_lon_ind, begin_lat_ind, begin_tim_ind),
-    count = c(l_lon, l_lat, l_tim)
+                  start = c(begin_lon_ind, begin_lat_ind, begin_tim_ind),
+                  count = c(l_lon, l_lat, l_tim)
   )
   v <<- ncvar_get(data, "v",
-    start = c(begin_lon_ind, begin_lat_ind, begin_tim_ind),
-    count = c(l_lon, l_lat, l_tim)
+                  start = c(begin_lon_ind, begin_lat_ind, begin_tim_ind),
+                  count = c(l_lon, l_lat, l_tim)
   )
 }
 
 
-download_data = FALSE # Change to TRUE download again in /data folder
+download_data <- FALSE # Change to TRUE download again in /data folder
 if (download_data) {
-  # Download data in a monthly loop to avoid surpassing 500Mb limit
+
+  # Download data in a monthly loop to avoid surpassing the 500 Mb limit
   for (year in 2020:2022) {
+
     month <- 1
     while ((year < 2022 && month <= 12) || (year == 2022 && month <= 6)) {
 
@@ -94,15 +96,15 @@ if (download_data) {
 
       # End time taking into account if a new year starts
       if (month != 12) {
+
         end_tim <- date(paste(toString(year), toString(month + 1),
-                              "01 00:00:00 UTC",
-                              sep = "-"
-        ))
+                              "01 00:00:00 UTC", sep = "-"))
+
       } else {
+
         end_tim <- date(paste(toString(year + 1), toString(1),
-                              "01 00:00:00 UTC",
-                              sep = "-"
-        ))
+                              "01 00:00:00 UTC", sep = "-"))
+
       }
 
       # Download data
@@ -128,14 +130,16 @@ if (download_data) {
       final_dataframe$v <- c(v)
       save(final_dataframe, file = paste(
         here("data-raw", "strait-juan-fuca", "data"),
-        paste(loc, "_", toString(year), "_", toString(month), ".RData", sep = ""),
-        sep = "/"
-      ))
+        paste(loc, "_", toString(year), "_", toString(month), ".RData",
+              sep = ""), sep = "/"))
 
       # Update month
       month <- month + 1
+
     }
+
   }
+
 }
 
 ## Obtaining daily data for the specific zone
@@ -159,12 +163,15 @@ extract_data <- function(begin_lat, end_lat, begin_lon, end_lon) {
     results$d <- atan2(x = results$u, y = results$v)
     results$speed <- sqrt(results$u^2 + results$v^2)
     return(results)
+
   })
 
   # Merge available data
   total_data <- data.frame()
   for (i in seq_along(monthly_data)) {
+
     total_data <- rbind(total_data, monthly_data[[i]])
+
   }
   return(total_data)
 }
@@ -207,8 +214,10 @@ remove_time_duplicates <- function(results_filter_latlon) {
   results_filter_latlon[!ids_to_remove, ]
 }
 
-# Convert to time instants of x hours where columns are location, time instan and theta
+# Convert to time instants of x hours where columns are location, time instant
+# and theta
 theta_by_inst_location <- function(results, hours) {
+
   # Value for latitude and longitude
   latitudes <- levels(as.factor(results$lat))
   longitudes <- levels(as.factor(results$lon))
@@ -219,8 +228,10 @@ theta_by_inst_location <- function(results, hours) {
     to = as.POSIXlt(max(results$time), tz = "UTC"),
     by = paste(hours, "hours", sep = " ")
   )
+
   # Grid of latitude and longitude
   grid <- expand.grid(latitudes, longitudes)
+
   # Calculate the weight mean circular theta each x hours
   location_results <- mclapply(
     mc.cores = detectCores() - 1, X = 1:nrow(grid),
@@ -237,9 +248,11 @@ theta_by_inst_location <- function(results, hours) {
       data.frame(instant, lat_x, lon_x, theta_x)
     }
   )
+
   # Merge all the data.frame from above
   data <- do.call(rbind, location_results)
   return(data)
+
 }
 
 # List individual RDatas
@@ -250,6 +263,7 @@ files <- list.files(
 
 # Obtain the results for every area and their corresponding daily directions
 results <- extract_data(begin_lat, end_lat, begin_lon, end_lon)
+
 # Data every 3 hours
 hours <- 3
 seq_time <- seq(
@@ -257,10 +271,11 @@ seq_time <- seq(
   to = as.POSIXlt(max(results$time), tz = "UTC"),
   by = paste(hours, "hours", sep = " ")
 )
-# Convert to theta by location and time instant each 3 hours
-# and later on transform it into a matrix where each row is a time instant and
-# each column is a different location (latitude and longitude)
-juan_fuca <- theta_by_inst_location(results, hours = hours) %>%
+
+# Convert to theta by location and time instant each 3 hours and later on
+# transform it into a matrix where each row is a time instant and each column
+# is a different location (latitude and longitude)
+juanfuca <- theta_by_inst_location(results, hours = hours) %>%
   reshape2::dcast(
     formula = instant ~ lat_x + lon_x,
     value.var = "theta_x",
@@ -269,6 +284,6 @@ juan_fuca <- theta_by_inst_location(results, hours = hours) %>%
 
 # Save the object
 save(
-  list = "juan_fuca",
+  list = "juanfuca",
   file = paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/")
 )
