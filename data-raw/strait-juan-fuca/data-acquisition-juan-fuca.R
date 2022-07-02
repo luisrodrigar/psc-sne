@@ -251,8 +251,13 @@ theta_by_inst_location <- function(results, hours) {
 
   # Merge all the data.frame from above
   data <- do.call(rbind, location_results)
-  return(data)
-
+  # Arrange by ascending instant and rename column vars
+  data %>% arrange(instant) %>% rename(
+    time = instant,
+    lat = lat_x,
+    lon = lon_x,
+    theta = theta_x
+  )
 }
 
 # List individual RDatas
@@ -272,15 +277,8 @@ seq_time <- seq(
   by = paste(hours, "hours", sep = " ")
 )
 
-# Convert to theta by location and time instant each 3 hours and later on
-# transform it into a matrix where each row is a time instant and each column
-# is a different location (latitude and longitude)
-juanfuca <- theta_by_inst_location(results, hours = hours) %>%
-  reshape2::dcast(
-    formula = instant ~ lat_x + lon_x,
-    value.var = "theta_x",
-    fun.aggregate = list
-  )
+# Convert to theta by location (lat and lon) and time instant each 3 hours
+juanfuca <- theta_by_inst_location(results, hours = hours)
 
 # Save the object
 save(
