@@ -131,7 +131,8 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
   }
 
-  if (!is.null(rho_psc_list) && any(rho_psc_list >= 1 | rho_psc_list < 0)) {
+  if (!is.null(rho_psc_list) && !is.list(rho_psc_list) &&
+      any(rho_psc_list >= 1 | rho_psc_list < 0)) {
 
     stop("Error, low-dimensional concentration parameters, rho list, must a vector")
 
@@ -333,7 +334,7 @@ visualize_iter_sol <- function(Y, i, d, colors = NULL) {
 
   # Plot on a circumference
   if (d == 1) {
-    Y_rad <- DirStats::to_rad(Y[, , i])
+    Y_rad <- DirStats::to_rad(Y[, , 2])
     r <- 1
     theta <- Y_rad
     plot(r * sin(theta),
@@ -350,7 +351,7 @@ visualize_iter_sol <- function(Y, i, d, colors = NULL) {
   # Plot on an sphere
   else if (d == 2) {
     scatterplot3d::scatterplot3d(
-      Y[, , i], xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+      Y[, , 2], xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
       color = colors, main = paste("Iteration", i - 2)
     )
   }
