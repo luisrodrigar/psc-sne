@@ -191,16 +191,18 @@ extract_theta <- function(results, hours) {
   # Apply the speed-weighted average over the non-NA observations inside the
   # t hour period
   time_seq <- seq(1, total_events, day_ev)
-  theta <- sapply(time_seq, function(i) {
+  dir_results <- lapply(time_seq, function(i) {
     dir_speeds <- results[i:(i + day_ev - 1), c("d", "speed")]
     dir_speeds <- dir_speeds[complete.cases(dir_speeds), ]
     if (sum(dir_speeds$speed) == 0) {
-      return(NA)
+      return(c(NA, NA))
     }
     weights <- dir_speeds$speed / sum(dir_speeds$speed)
-    circular:::WeightedMeanCircularRad(w = weights, x = dir_speeds$d)
+    theta <- circular:::WeightedMeanCircularRad(w = weights, x = dir_speeds$d)
+    speed <- mean(dir_speeds$speed)
+    c(theta, speed)
   })
-  return(theta)
+  return(do.call(rbind, dir_results))
 }
 
 # Remove rows by latitude and longitude with duplicate time entry
@@ -216,7 +218,7 @@ remove_time_duplicates <- function(results_filter_latlon) {
 
 # Convert to time instants of x hours where columns are location, time instant
 # and theta
-theta_by_inst_location <- function(results, hours) {
+extract_long_fmt <- function(results, hours) {
 
   # Value for latitude and longitude
   latitudes <- levels(as.factor(results$lat))
@@ -256,7 +258,8 @@ theta_by_inst_location <- function(results, hours) {
     time = instant,
     lat = lat_x,
     lon = lon_x,
-    theta = theta_x
+    theta = X1,
+    speed = X2
   )
 }
 
@@ -278,10 +281,23 @@ seq_time <- seq(
 )
 
 # Convert to theta by location (lat and lon) and time instant each 3 hours
-juanfuca <- theta_by_inst_location(results, hours = hours)
+juanfuca <- extract_long_fmt(results, hours = hours)
 
 # Save the object
 save(
   list = "juanfuca",
   file = paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/")
 )
+
+# Transform to wide format the juan de fuca long data
+juanfuca_wide <- juanfuca %>%
+  mutate(
+    location = paste(lat, lon, sep = ",")
+  ) %>%
+  select(-lat, -lon) %>%
+  reshape(idvar = 'time', timevar = 'location', direction = 'wide')
+
+# Percentage of missing values
+percetange_na_by_col <- colMeans(is.na(juanfuca_wide[ , 2:ncol(juanfuca_wide)]))
+
+
