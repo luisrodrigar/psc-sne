@@ -13,8 +13,10 @@ visualize_iter_sol(Y, i, d, colors = NULL)
 
 \item{d}{the dimension to reduce the original data.}
 
-\item{colors}{defines the group colors in the plot. Optional parameter, default value set to \code{NULL}.}
+\item{colors}{defines the group colors in the plot. Optional parameter,
+default value set to \code{NULL}.}
 }
 \description{
-Visualize the iteration solution in a plot for the \eqn{i}-th iteration.
+Visualize the iteration solution in a plot for the
+\eqn{i}-th iteration.
 }

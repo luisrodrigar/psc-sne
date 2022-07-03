@@ -16,6 +16,7 @@
 #' Cauchy probabilities. Optional parameter, default value set to \code{NULL}.
 #' @return Resulting reduced data for the \eqn{i}-th observation onto the
 #' sphere \eqn{\mathcal{S}^d}
+#' @export
 #' @examples
 #' Y <- sphunif::r_unif_sph(40, 3, 1)[ , , 1]
 #' X <- sphunif::r_unif_sph(40, 3, 3)
@@ -27,7 +28,6 @@
 #'     n = nrow(X))
 #' Q <- low_dimension_Q(Y, 0.5)
 #' kl_divergence_grad(Y, 3, 0.5, 2, P, cos_sim, Q)
-#' @export
 kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   # Radial project and compute cosine similarities
   Z <- radial_projection(Y)
@@ -173,7 +173,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   relative_errors <- numeric(length = nrow(X))
   gradient_norms <- numeric(length = nrow(X))
 
-  # Sample size and sphere dimension within polysphsere
+  # Sample size and sphere dimension within polysphere
   n <- nrow(X)
   p <- ncol(X) - 1
 
@@ -238,8 +238,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     # Calculate the cosine similarities for the current Y solution
     Y_cos_sim <- reconstruct_cos_sim_mat(
-      sphunif::Psi_mat(array(Y[, , 2], dim = c(nrow(Y), ncol(Y), 1)),
-                       scalar_prod = TRUE),
+      sphunif::Psi_mat(Y[, , 2, drop = FALSE], scalar_prod = TRUE),
       nrow(Y)
     )
 
@@ -283,7 +282,9 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     if (visualize_prog && (i == 3 || (i - 2) %% 25 == 0 ||
                            i == num_iteration + 2)) {
+
       visualize_iter_sol(Y, i, d, colors)
+
     }
 
     # Reverse the early exaggeration made at the beginning
@@ -328,12 +329,15 @@ visualize_iter_sol <- function(Y, i, d, colors = NULL) {
 
   # If colors is null, set all of them to black
   if (is.null(colors)) {
+
     n <- nrow(Y)
     colors <- rep(1, n)
+
   }
 
   # Plot on a circumference
   if (d == 1) {
+
     Y_rad <- DirStats::to_rad(Y[, , 2])
     r <- 1
     theta <- Y_rad
@@ -343,17 +347,19 @@ visualize_iter_sol <- function(Y, i, d, colors = NULL) {
       xlim = c(-max(r), max(r)),
       ylim = c(-max(r), max(r)), main = paste("Iteration", i - 2)
     )
-
     graphics::polygon(max(r) * sin(seq(0, 2 * pi, length.out = 100)),
                       max(r) * cos(seq(0, 2 * pi, length.out = 100)))
+
   }
 
   # Plot on an sphere
   else if (d == 2) {
+
     scatterplot3d::scatterplot3d(
       Y[, , 2], xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
       color = colors, main = paste("Iteration", i - 2)
     )
+
   }
 
 }
