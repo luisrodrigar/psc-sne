@@ -25,10 +25,12 @@ library(circular)
 library(dplyr)
 library(abind)
 library(tidyr)
+print(here())
 ```
 
 ```{r}
-load("~/Documents/Statistics for Data Science/TFM/psc-sne/data-raw/strait-san-juan-fuca/sanjuanfuca.rda")
+juanfuca_pkg <-  paste(here("data-raw", "strait-juan-fuca"), "jdf.rda", sep = "/")
+load(juanfuca_pkg)
 ```
 
 Let's calculate some rho values for a perplexity of 12, 20, 33 and 45.

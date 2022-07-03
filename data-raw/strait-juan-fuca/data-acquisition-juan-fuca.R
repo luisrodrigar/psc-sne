@@ -283,11 +283,43 @@ seq_time <- seq(
 # Convert to theta by location (lat and lon) and time instant each 3 hours
 juanfuca <- extract_long_fmt(results, hours = hours)
 
+# Values of latitude and longitude
+lon_values <- as.numeric(levels(juanfuca$lon))
+lat_values <- as.numeric(levels(juanfuca$lat))
+
+# 3-dimensional array to store the matrix of thetas for the latitude and longitude
+lat_lon_theta_by_time <- array(
+  dim = c(length(lon_values), length(lat_values), length(unique(juanfuca$time))))
+# Select only the theta value with the location and time values
+jdf_by_time <- juanfuca %>%
+  select(time, lat, lon, theta)
+# Create the 3-dimensional array split by time
+jdf_by_time <- abind(split(jdf_by_time, jdf_by_time$time), along=3)
+for(k in 1:dim(jdf_by_time)[3]) {
+  # Conver to wide format data frame
+  # Where columns are longitude values and rows are latitude values
+  lat_lon_theta_by_time[ , , k] = data.frame(jdf_by_time[ , 2:4, k]) %>%
+    reshape(timevar = "lon", idvar = "lat", direction = "wide") %>%
+    select(-lat) %>% as.matrix
+}
+
+# How many NA's are there?
+filled.contour(lon_values, lat_values,
+               apply(lat_lon_theta_by_time, 1:2, function(x) mean(is.na(x))),
+               ylab = "lat", xlab = "lon", zlim = c(0, 1),
+               main = "Proportion NAs", plot.axes = {
+                 box(); axis(1); axis(2)
+                 points(expand.grid(lon_values, lat_values), pch = 16, cex = 0.5)
+               })
+
 # Save the object
 save(
   list = "juanfuca",
   file = paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/")
 )
+
+juanfuca_pkg <-  paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/")
+load(juanfuca_pkg)
 
 # Transform to wide format the juan de fuca long data
 juanfuca_wide <- juanfuca %>%
@@ -299,5 +331,36 @@ juanfuca_wide <- juanfuca %>%
 
 # Percentage of missing values
 percetange_na_by_col <- colMeans(is.na(juanfuca_wide[ , 2:ncol(juanfuca_wide)]))
+
+# Set the maximum percentage of NA's
+max_percentage_na <- 0.4
+# Obtain only the columns that contains less than x% of NA's
+jdf <- juanfuca_wide[, c(TRUE, percetange_na_by_col < max_percentage_na)]
+
+# all non repeated locations from the wide data.frame
+locations <- colnames(jdf)[seq(2, ncol(jdf), by = 2)]
+
+# Obtaining the location names, use in reshape times parameter
+time_names <-
+  sapply(seq_along(locations),
+         function(i) strsplit(locations[i], "theta.")[[1]][2])
+
+# long format with less than a percentage of NA's in location
+jdf_long_fmt <- reshape(jdf, direction = "long", idvar = "time", timevar = "location",
+        varying = 2:ncol(jdf), v.names = c("theta", "speed"), sep = ".",
+        times = time_names) %>%
+  # separate location by comma separator
+  separate(col = location, into=c("lat", "lon"), sep = ",") %>%
+  rename(
+    # reshape are putting incorrectly the order of each value for speed and theta
+    # swapping values between speed and theta
+    theta = speed,
+    speed = theta
+  ) %>% select(time, lat, lon, theta, speed)
+# Remove index names
+rownames(jdf_long_fmt) <- NULL
+
+
+
 
 
