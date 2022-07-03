@@ -13,17 +13,35 @@ kl_divergence_grad(Y, i, rho, d, P, cos_sim = NULL, Q = NULL)
 
 \item{rho}{concentration parameter must be in [0, 1).}
 
-\item{d}{target dimension to reduced the data.}
+\item{d}{target dimension to reduce the data.}
 
-\item{P}{high-dimensional polyspherical Cauchy probabilities.}
+\item{P}{matrix of size \code{c(n, n)} with the high-dimensional
+polyspherical Cauchy probabilities.}
 
-\item{cos_sim}{an array of size \code{c(n, n, r)} with the cosine similarities in high-dimension for the polysphere \eqn{(\mathcal{S}^p)^r}. Optional parameter, default value set to \code{NULL}.}
+\item{cos_sim}{an array of size \code{c(n, n, r)} with the cosine
+similarities in high-dimension for the polysphere \eqn{(\mathcal{S}^p)^r}.
+Optional parameter, default value set to \code{NULL}.}
 
-\item{Q}{low-dimension spherical Cauchy probabilities. Optional parameter, default value set to \code{NULL}.}
+\item{Q}{matrix of size \code{c(n, n)} with the low-dimension spherical
+Cauchy probabilities. Optional parameter, default value set to \code{NULL}.}
 }
 \value{
-Resulting reduced data for the \eqn{i}-th observation onto the sphere \eqn{\mathcal{S}^d}
+Resulting reduced data for the \eqn{i}-th observation onto the
+sphere \eqn{\mathcal{S}^d}
 }
 \description{
-Calculates analytically the gradient of the Kullback-Leibler divergence function.
+Calculates analytically the gradient of the Kullback-Leibler
+divergence between low- and high-dimensional pairwise probabilities.
+}
+\examples{
+Y <- sphunif::r_unif_sph(40, 3, 1)[ , , 1]
+X <- sphunif::r_unif_sph(40, 3, 3)
+P <- high_dimension(X, rep(0.5, 40))
+kl_divergence_grad(Y, 3, 0.5, 2, P)
+cos_sim <- reconstruct_cos_sim_mat(
+    cos_sim_vec = sphunif::Psi_mat(array(X, dim = c(nrow(X), ncol(X), 1)),
+                                   scalar_prod = TRUE),
+    n = nrow(X))
+Q <- low_dimension_Q(Y, 0.5)
+kl_divergence_grad(Y, 3, 0.5, 2, P, cos_sim, Q)
 }
