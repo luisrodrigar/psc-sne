@@ -16,7 +16,6 @@
 #' Cauchy probabilities. Optional parameter, default value set to \code{NULL}.
 #' @return Resulting reduced data for the \eqn{i}-th observation onto the
 #' sphere \eqn{\mathcal{S}^d}
-#' @export
 #' @examples
 #' Y <- sphunif::r_unif_sph(40, 3, 1)[ , , 1]
 #' X <- sphunif::r_unif_sph(40, 3, 3)
@@ -28,6 +27,7 @@
 #'     n = nrow(X))
 #' Q <- low_dimension_Q(Y, 0.5)
 #' kl_divergence_grad(Y, 3, 0.5, 2, P, cos_sim, Q)
+#' @export
 kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   # Radial project and compute cosine similarities
   Z <- radial_projection(Y)
