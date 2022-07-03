@@ -12,18 +12,8 @@ library(here)
 library(knitr)
 library(rgl)
 library(mvtnorm)
+library(pscsne)
 rgl::setupKnitr()
-```
-
-```{r include=FALSE}
-knitr::opts_knit$set(echo = TRUE, root.dir = rprojroot::find_rstudio_root_file())
-source(here('R', 'psc_sne.R'))
-source(here('R', 'psc_sne.R'))
-source(here('R', "perplexity.R"))
-source(here('R', "low_dimension.R"))
-source(here('R', "high_dimension.R"))
-source(here('R', "prob_distribution.R"))
-source(here('R', "utils.R"))
 ```
 
 ## Cases
@@ -68,7 +58,7 @@ sdetorus::torusAxis()
 Let's calculate the rho parameters based on a perplexity of 20:
 
 ```{r cache=TRUE}
-# Time difference of 2.582784 mins
+# Time difference of 27.58008 secs
 rho_first_20 <- rho_optim_bst(x_array, 20)
 ```
 
