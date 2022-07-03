@@ -67,12 +67,12 @@ get_data <- function() {
   # u (m/s) = surface_eastward_sea_water_velocity
   # v (m/s) = surface_northward_sea_water_velocity
   u <<- ncvar_get(data, "u",
-                  start = c(begin_lon_ind, begin_lat_ind, begin_tim_ind),
-                  count = c(l_lon, l_lat, l_tim)
+    start = c(begin_lon_ind, begin_lat_ind, begin_tim_ind),
+    count = c(l_lon, l_lat, l_tim)
   )
   v <<- ncvar_get(data, "v",
-                  start = c(begin_lon_ind, begin_lat_ind, begin_tim_ind),
-                  count = c(l_lon, l_lat, l_tim)
+    start = c(begin_lon_ind, begin_lat_ind, begin_tim_ind),
+    count = c(l_lon, l_lat, l_tim)
   )
 }
 
@@ -82,7 +82,6 @@ if (download_data) {
 
   # Download data in a monthly loop to avoid surpassing the 500 Mb limit
   for (year in 2020:2022) {
-
     month <- 1
     while ((year < 2022 && month <= 12) || (year == 2022 && month <= 6)) {
 
@@ -90,21 +89,21 @@ if (download_data) {
       cat("\n", year, "-", month, "\n")
 
       begin_tim <- date(paste(toString(year), toString(month),
-                              "01 00:00:00 UTC",
-                              sep = "-"
+        "01 00:00:00 UTC",
+        sep = "-"
       ))
 
       # End time taking into account if a new year starts
       if (month != 12) {
-
         end_tim <- date(paste(toString(year), toString(month + 1),
-                              "01 00:00:00 UTC", sep = "-"))
-
+          "01 00:00:00 UTC",
+          sep = "-"
+        ))
       } else {
-
         end_tim <- date(paste(toString(year + 1), toString(1),
-                              "01 00:00:00 UTC", sep = "-"))
-
+          "01 00:00:00 UTC",
+          sep = "-"
+        ))
       }
 
       # Download data
@@ -131,15 +130,15 @@ if (download_data) {
       save(final_dataframe, file = paste(
         here("data-raw", "strait-juan-fuca", "data"),
         paste(loc, "_", toString(year), "_", toString(month), ".RData",
-              sep = ""), sep = "/"))
+          sep = ""
+        ),
+        sep = "/"
+      ))
 
       # Update month
       month <- month + 1
-
     }
-
   }
-
 }
 
 ## Obtaining daily data for the specific zone
@@ -163,15 +162,12 @@ extract_data <- function(begin_lat, end_lat, begin_lon, end_lon) {
     results$d <- atan2(x = results$u, y = results$v)
     results$speed <- sqrt(results$u^2 + results$v^2)
     return(results)
-
   })
 
   # Merge available data
   total_data <- data.frame()
   for (i in seq_along(monthly_data)) {
-
     total_data <- rbind(total_data, monthly_data[[i]])
-
   }
   return(total_data)
 }
@@ -244,7 +240,7 @@ extract_long_fmt <- function(results, hours) {
       # Calculate the weight mean circular theta (x hours)
       theta_x <- results %>%
         filter(lat == lat_x & lon == lon_x) %>%
-        remove_time_duplicates %>%
+        remove_time_duplicates() %>%
         extract_theta(hours = hours)
       # Create data.frame
       data.frame(instant, lat_x, lon_x, theta_x)
@@ -254,13 +250,15 @@ extract_long_fmt <- function(results, hours) {
   # Merge all the data.frame from above
   data <- do.call(rbind, location_results)
   # Arrange by ascending instant and rename column vars
-  data %>% arrange(instant) %>% rename(
-    time = instant,
-    lat = lat_x,
-    lon = lon_x,
-    theta = X1,
-    speed = X2
-  )
+  data %>%
+    arrange(instant) %>%
+    rename(
+      time = instant,
+      lat = lat_x,
+      lon = lon_x,
+      theta = X1,
+      speed = X2
+    )
 }
 
 # List individual RDatas
@@ -289,28 +287,33 @@ lat_values <- as.numeric(levels(juanfuca$lat))
 
 # 3-dimensional array to store the matrix of thetas for the latitude and longitude
 lat_lon_theta_by_time <- array(
-  dim = c(length(lon_values), length(lat_values), length(unique(juanfuca$time))))
+  dim = c(length(lon_values), length(lat_values), length(unique(juanfuca$time)))
+)
 # Select only the theta value with the location and time values
 jdf_by_time <- juanfuca %>%
   select(time, lat, lon, theta)
 # Create the 3-dimensional array split by time
-jdf_by_time <- abind(split(jdf_by_time, jdf_by_time$time), along=3)
-for(k in 1:dim(jdf_by_time)[3]) {
+jdf_by_time <- abind(split(jdf_by_time, jdf_by_time$time), along = 3)
+for (k in 1:dim(jdf_by_time)[3]) {
   # Conver to wide format data frame
   # Where columns are longitude values and rows are latitude values
-  lat_lon_theta_by_time[ , , k] = data.frame(jdf_by_time[ , 2:4, k]) %>%
+  lat_lon_theta_by_time[, , k] <- data.frame(jdf_by_time[, 2:4, k]) %>%
     reshape(timevar = "lon", idvar = "lat", direction = "wide") %>%
-    select(-lat) %>% as.matrix
+    select(-lat) %>%
+    as.matrix()
 }
 
 # How many NA's are there?
 filled.contour(lon_values, lat_values,
-               apply(lat_lon_theta_by_time, 1:2, function(x) mean(is.na(x))),
-               ylab = "lat", xlab = "lon", zlim = c(0, 1),
-               main = "Proportion NAs", plot.axes = {
-                 box(); axis(1); axis(2)
-                 points(expand.grid(lon_values, lat_values), pch = 16, cex = 0.5)
-               })
+  apply(lat_lon_theta_by_time, 1:2, function(x) mean(is.na(x))),
+  ylab = "lat", xlab = "lon", zlim = c(0, 1),
+  main = "Proportion NAs", plot.axes = {
+    box()
+    axis(1)
+    axis(2)
+    points(expand.grid(lon_values, lat_values), pch = 16, cex = 0.5)
+  }
+)
 
 # Save the object
 save(
@@ -318,7 +321,7 @@ save(
   file = paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/")
 )
 
-juanfuca_pkg <-  paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/")
+juanfuca_pkg <- paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/")
 load(juanfuca_pkg)
 
 # Transform to wide format the juan de fuca long data
@@ -327,12 +330,12 @@ juanfuca_wide <- juanfuca %>%
     location = paste(lat, lon, sep = ",")
   ) %>%
   select(-lat, -lon) %>%
-  reshape(idvar = 'time', timevar = 'location', direction = 'wide')
+  reshape(idvar = "time", timevar = "location", direction = "wide")
 
 # Percentage of missing values
-percetange_na_by_col <- colMeans(is.na(juanfuca_wide[ , 2:ncol(juanfuca_wide)]))
+percetange_na_by_col <- colMeans(is.na(juanfuca_wide[, 2:ncol(juanfuca_wide)]))
 
-# Set the maximum percentage of NA's
+# Set the maximum percentage of NA's, 40%
 max_percentage_na <- 0.4
 # Obtain only the columns that contains less than x% of NA's
 jdf <- juanfuca_wide[, c(TRUE, percetange_na_by_col < max_percentage_na)]
@@ -342,25 +345,31 @@ locations <- colnames(jdf)[seq(2, ncol(jdf), by = 2)]
 
 # Obtaining the location names, use in reshape times parameter
 time_names <-
-  sapply(seq_along(locations),
-         function(i) strsplit(locations[i], "theta.")[[1]][2])
+  sapply(
+    seq_along(locations),
+    function(i) strsplit(locations[i], "theta.")[[1]][2]
+  )
 
 # long format with less than a percentage of NA's in location
-jdf_long_fmt <- reshape(jdf, direction = "long", idvar = "time", timevar = "location",
-        varying = 2:ncol(jdf), v.names = c("theta", "speed"), sep = ".",
-        times = time_names) %>%
+jdf_long_fmt <- reshape(jdf,
+  direction = "long", idvar = "time", timevar = "location",
+  varying = 2:ncol(jdf), v.names = c("theta", "speed"), sep = ".",
+  times = time_names
+) %>%
   # separate location by comma separator
-  separate(col = location, into=c("lat", "lon"), sep = ",") %>%
+  separate(col = location, into = c("lat", "lon"), sep = ",") %>%
   rename(
     # reshape are putting incorrectly the order of each value for speed and theta
     # swapping values between speed and theta
     theta = speed,
     speed = theta
-  ) %>% select(time, lat, lon, theta, speed)
+  ) %>%
+  select(time, lat, lon, theta, speed)
 # Remove index names
 rownames(jdf_long_fmt) <- NULL
 
-
-
-
-
+# Save dataset in long format
+save(
+  list = "jdf_long_fmt",
+  file = paste(here("data-raw", "strait-juan-fuca"), "jdf.rda", sep = "/")
+)
