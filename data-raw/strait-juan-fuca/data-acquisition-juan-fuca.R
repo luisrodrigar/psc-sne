@@ -8,6 +8,8 @@ library(reshape2)
 library(parallel)
 library(abind)
 library(tidyr)
+library(ggmap)
+library(viridis)
 
 # This script shows the necessary steps to obtain the data for the San Juan de Fuca
 # analysis. There are two main steps: (1) downloading the raw data;
@@ -319,6 +321,38 @@ filled.contour(lon_values, lat_values,
     points(expand.grid(lon_values, lat_values), pch = 16, cex = 0.5)
   }
 )
+
+# Calculate the percentage of NA's among the third dimension
+percetange_na <- colMeans(apply(lat_lon_theta_by_time, is.na, MARGIN = c(1, 2)))
+# Reflect the resulting matrix, reversing each row vector
+percetange_na <- sapply(1:nrow(percetange_na), function(i) rev(percetange_na[i, ]))
+# Adding rownames (latitude) and colnames (longitude)
+rownames(percetange_na) <- rev(lat_values)
+colnames(percetange_na) <- lon_values
+# Convert the matrix lat x lon into long format
+perc_na_long_fmt <- data.frame(percetange_na) %>%
+  add_rownames(var = "lat") %>%
+  data.frame %>%
+  reshape(varying = (1:ncol(percetange_na) + 1), idvar = 'lat', timevar = "lon",
+          direction = 'long', times = lon_values, v.names = "freq") %>%
+  mutate(
+    lat = round(as.numeric(lat), digits = 4),
+    lon = round(lon, digits = 4)
+  )
+
+# Download the map, margin is increased
+(map <- get_map(c(left = min(lon_values) - 0.05,
+          bottom = min(lat_values) - 0.05,
+          right = max(lon_values) + 0.05,
+          top = max(lat_values) + 0.05)))
+
+# Plot the map with the points and the countour surface colored
+ggmap(map, extent = "panel") +
+  ggtitle("Percentage of missing values") +
+  geom_point(data = perc_na_long_fmt, aes(x = lon, y = lat, color = freq), size = 0.2) +
+  geom_contour_filled(data = perc_na_long_fmt, aes(z = freq), alpha = 0.4, size = 0.1) +
+  scale_color_viridis()
+
 
 # Save the object
 save(
