@@ -5,6 +5,9 @@ library(circular)
 library(dplyr)
 library(here)
 library(reshape2)
+library(parallel)
+library(abind)
+library(tidyr)
 
 # This script shows the necessary steps to obtain the data for the San Juan de Fuca
 # analysis. There are two main steps: (1) downloading the raw data;
@@ -31,10 +34,10 @@ tim <- date("2012-01-01 00:00:00 UTC") + hours(ncvar_get(data, "time"))
 # Check (lat, lon) coordinates at https://cordc.ucsd.edu/projects/mapping/maps/
 # to focus on a given region
 loc <- "Strait_of_Juan_de_Fuca"
-begin_lat <- 48.175
-end_lat <- 48.392
-begin_lon <- -124.18
-end_lon <- -123.48
+begin_lat <- 47.90
+end_lat <- 48.8
+begin_lon <- -124.20
+end_lon <- -123.40
 
 # Get data function -- takes info from global environment and writes on it
 get_data <- function() {
@@ -77,11 +80,12 @@ get_data <- function() {
 }
 
 
-download_data <- FALSE # Change to TRUE download again in /data folder
+download_data <- TRUE # Change to TRUE download again in /data folder
 if (download_data) {
 
   # Download data in a monthly loop to avoid surpassing the 500 Mb limit
   for (year in 2020:2022) {
+
     month <- 1
     while ((year < 2022 && month <= 12) || (year == 2022 && month <= 6)) {
 
@@ -137,6 +141,7 @@ if (download_data) {
 
       # Update month
       month <- month + 1
+
     }
   }
 }
