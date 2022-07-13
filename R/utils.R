@@ -108,11 +108,9 @@ diag_3d <- function(x, k, val) {
 #' y <- rotasym::r_unif_sphere(100, 2)
 #' radial_projection(y)
 radial_projection <- function(y) {
-  # For every observation, apply the formula of the radial projection
-  t(sapply(1:nrow(y), function(i) {
-    # y_i / |y_i|
-    y[i, ] / norm(y[i, ], type = "2")
-  }))
+
+  return(y / rowSums(rbind(y^2)))
+
 }
 
 #' @title Generate optimum evenly separated points
