@@ -36,10 +36,15 @@ tim <- date("2012-01-01 00:00:00 UTC") + hours(ncvar_get(data, "time"))
 # Check (lat, lon) coordinates at https://cordc.ucsd.edu/projects/mapping/maps/
 # to focus on a given region
 loc <- "Strait_of_Juan_de_Fuca"
-begin_lat <- 47.90
-end_lat <- 48.8
-begin_lon <- -124.20
-end_lon <- -123.40
+begin_lat <- 47.85
+end_lat <- 48.64
+begin_lon <- -124.254
+end_lon <- -123.36
+
+# begin_lat <- 48.5
+# end_lat <- 48.8
+# begin_lon <- -124.10
+# end_lon <- -123.8
 
 # Get data function -- takes info from global environment and writes on it
 get_data <- function() {
@@ -150,6 +155,35 @@ if (download_data) {
 
 ## Obtaining daily data for the specific zone
 
+# Remove rows by latitude and longitude with duplicate time entry
+# Identified this occurs for the last and the first rows of consecutive months
+remove_next_month_instants <- function(results) {
+
+  # Get the set of time instants
+  dates <- unique(as.POSIXct(results$time, tz = "UTC"))
+  # Convert them into their associated month
+  months <- month(dates)
+  # Calculate the frequency table
+  freq_table <- table(months)
+
+  # Only if there is more than one month in the data
+  if (length(freq_table) > 1) {
+
+    # Min and max dates in a unit dataset which is a month interval
+    least_frequent_index <- which(freq_table == min(freq_table))
+    least_frequent_month <- as.numeric(names(freq_table[least_frequent_index]))
+
+    # Get dates to remove from original dataset
+    date_to_remove <- dates[which(months == least_frequent_month)]
+    # Exclude that date
+    results <- results %>%
+      filter(!(as.POSIXct(time, tz = "UTC") %in% as.POSIXct(date_to_remove, tz = "UTC")))
+
+  }
+  return(results)
+}
+
+
 # Function that reads over all the files in the directory containing the raw
 # data and return the records inside a given area delimited by longitude
 # and latitude
@@ -164,6 +198,9 @@ extract_data <- function(begin_lat, end_lat, begin_lon, end_lon) {
       final_dataframe, lat > begin_lat, lat < end_lat,
       lon > begin_lon, lon < end_lon
     )
+
+    # Remove next month instants
+    results <- remove_next_month_instants(results)
 
     # Calculate directions and speed
     results$d <- atan2(x = results$u, y = results$v)
@@ -181,91 +218,85 @@ extract_data <- function(begin_lat, end_lat, begin_lon, end_lon) {
 
 # Function that calculates the speed-weighted average of the directions over
 # periods of certain number of hours of duration
-extract_theta <- function(results, hours) {
+extract_theta <- function(results, hours, lat, lon, instant) {
 
   # Dimensions
-  n <- length(levels(as.factor(results$lat)))
-  m <- length(levels(as.factor(results$lon)))
   t <- hours
-  day_ev <- n * m * t
   total_events <- length(results$u)
-
 
   # Apply the speed-weighted average over the non-NA observations inside the
   # t hour period
-  time_seq <- seq(1, total_events, day_ev)
-  dir_results <- lapply(time_seq, function(i) {
-    dir_speeds <- results[i:(i + day_ev - 1), c("d", "speed")]
-    dir_speeds <- dir_speeds[complete.cases(dir_speeds), ]
-    if (sum(dir_speeds$speed) == 0) {
-      return(c(NA, NA))
-    }
-    weights <- dir_speeds$speed / sum(dir_speeds$speed)
-    theta <- circular:::WeightedMeanCircularRad(w = weights, x = dir_speeds$d)
-    speed <- mean(dir_speeds$speed)
-    c(theta, speed)
-  })
-  return(do.call(rbind, dir_results))
+  time_seq <- seq(1, total_events, t)
+  data_t_time <- lapply(
+    time_seq,
+    function(i) {
+      # Obtaining the rows within the t interval of time
+      dir_speeds <- results[i:(i + t - 1), c("d", "speed")]
+      # Removing rows that contain any NA's
+      dir_speeds <- dir_speeds[complete.cases(dir_speeds), ]
+      # The index of the time instant
+      instant_index <- ceiling(i / 3)
+      # return NA for empty dir_speed or sum of speeds equal to 0
+      if (is.null(dir_speeds$speed) || sum(dir_speeds$speed) == 0) {
+
+       # Returning the values NA for the direction angle and speed
+       return(c(as.numeric(instant[instant_index]), lat, lon, NA, NA))
+
+      } else {
+
+       # Return the weight mean circular direction
+       # over the t interval and the speed mean
+       return(c(as.numeric(instant[instant_index]), lat, lon,
+                circular:::WeightedMeanCircularRad(
+                  w = dir_speeds$speed / sum(dir_speeds$speed),
+                  x = dir_speeds$d),
+                mean(dir_speeds$speed)))
+
+      }
+    })
+  return(do.call(rbind, data_t_time))
 }
 
-# Remove rows by latitude and longitude with duplicate time entry
-# Identified this occurs for the last and the first rows of consecutive months
-remove_time_duplicates <- function(results_filter_latlon) {
-  # Ids with the first duplicate row
-  ids_to_remove <- results_filter_latlon %>%
-    select(time) %>%
-    duplicated()
-  # Return the data.frame without this columns
-  results_filter_latlon[!ids_to_remove, ]
-}
 
 # Convert to time instants of x hours where columns are location, time instant
 # and theta
 extract_long_fmt <- function(results, hours) {
 
-  # Value for latitude and longitude
-  latitudes <- levels(as.factor(results$lat))
-  longitudes <- levels(as.factor(results$lon))
-
   # sequence from minimum to maximum time by each x hours
-  instant <- seq(
+  instant_seq <- seq(
     from = as.POSIXlt(min(results$time), tz = "UTC"),
     to = as.POSIXlt(max(results$time), tz = "UTC"),
     by = paste(hours, "hours", sep = " ")
   )
 
   # Grid of latitude and longitude
-  grid <- expand.grid(latitudes, longitudes)
+  grid <- expand.grid(unique(results$lat), unique(results$lon))
 
-  # Calculate the weight mean circular theta each x hours
   location_results <- mclapply(
-    mc.cores = detectCores() - 1, X = 1:nrow(grid),
+    mc.cores = detectCores() - 1,
+    X = 1:nrow(grid),
     FUN = function(i) {
-      # Extract latitude and longitude
-      lat_x <- grid[i, 1]
-      lon_x <- grid[i, 2]
-      # Calculate the weight mean circular theta (x hours)
-      theta_x <- results %>%
-        filter(lat == lat_x & lon == lon_x) %>%
-        remove_time_duplicates() %>%
-        extract_theta(hours = hours)
-      # Create data.frame
-      data.frame(instant, lat_x, lon_x, theta_x)
-    }
-  )
+      results %>%
+        filter(lat == grid[i, 1] & lon == grid[i, 2]) %>%
+        extract_theta(hours = hours,
+                      lat = grid[i, 1],
+                      lon = grid[i, 2],
+                      instant = instant_seq)
+      })
 
   # Merge all the data.frame from above
   data <- do.call(rbind, location_results)
   # Arrange by ascending instant and rename column vars
-  data %>%
-    arrange(instant) %>%
-    rename(
-      time = instant,
-      lat = lat_x,
-      lon = lon_x,
-      theta = X1,
-      speed = X2
-    )
+  data.frame(data) %>%
+    mutate(
+      time = as.POSIXct(.[[1]], origin = '1970-01-01', tz = 'UTC'),
+      lat = .[[2]],
+      lon = .[[3]],
+      theta = .[[4]],
+      speed = .[[5]]
+    ) %>%
+    select(time, lat, lon, theta, speed) %>%
+    arrange(time)
 }
 
 # List individual RDatas
@@ -279,35 +310,49 @@ results <- extract_data(begin_lat, end_lat, begin_lon, end_lon)
 
 # Data every 3 hours
 hours <- 3
-seq_time <- seq(
-  from = as.POSIXlt(min(results$time), tz = "UTC"),
-  to = as.POSIXlt(max(results$time), tz = "UTC"),
-  by = paste(hours, "hours", sep = " ")
-)
 
 # Convert to theta by location (lat and lon) and time instant each 3 hours
 juanfuca <- extract_long_fmt(results, hours = hours)
 
+# Save the object
+save(
+  list = "juanfuca",
+  file = paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/")
+)
+
+# Remove source data
+rm(results)
+# Garbage collector: clean unused memory space
+gc()
+
+load(paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/"))
+
 # Values of latitude and longitude
-lon_values <- as.numeric(levels(juanfuca$lon))
-lat_values <- as.numeric(levels(juanfuca$lat))
+lon_values <- unique(juanfuca$lon)
+lat_values <- unique(juanfuca$lat)
+
+# Select only the theta value with the location and time values
+jdf_by_time <- juanfuca %>%
+  select(time, lat, lon, theta) %>%
+  mutate(time = as.character(time, format="%Y-%m-%d %H:%M:%S"))
+# Create the 3-dimensional array split by time
+jdf_by_time <- abind(split(jdf_by_time, jdf_by_time$time), along = 3)
 
 # 3-dimensional array to store the matrix of thetas for the latitude and longitude
 lat_lon_theta_by_time <- array(
   dim = c(length(lon_values), length(lat_values), length(unique(juanfuca$time)))
 )
-# Select only the theta value with the location and time values
-jdf_by_time <- juanfuca %>%
-  select(time, lat, lon, theta)
-# Create the 3-dimensional array split by time
-jdf_by_time <- abind(split(jdf_by_time, jdf_by_time$time), along = 3)
+
 for (k in 1:dim(jdf_by_time)[3]) {
   # Conver to wide format data frame
   # Where columns are longitude values and rows are latitude values
-  lat_lon_theta_by_time[, , k] <- data.frame(jdf_by_time[, 2:4, k]) %>%
+  lat_lon_theta_by_time[, , k] = (data.frame(jdf_by_time[, 2:4, k]) %>%
+    mutate(lat = as.numeric(lat),
+           lon = as.numeric(lon),
+           theta = as.numeric(theta)) %>%
     reshape(timevar = "lon", idvar = "lat", direction = "wide") %>%
     select(-lat) %>%
-    as.matrix()
+    as.matrix())
 }
 
 # How many NA's are there?
@@ -353,13 +398,6 @@ ggmap(map, extent = "panel") +
   geom_contour_filled(data = perc_na_long_fmt, aes(z = freq), alpha = 0.4, size = 0.1) +
   scale_color_viridis()
 
-
-# Save the object
-save(
-  list = "juanfuca",
-  file = paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/")
-)
-
 juanfuca_pkg <- paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/")
 load(juanfuca_pkg)
 
@@ -375,7 +413,7 @@ juanfuca_wide <- juanfuca %>%
 percetange_na_by_col <- colMeans(is.na(juanfuca_wide[, 2:ncol(juanfuca_wide)]))
 
 # Set the maximum percentage of NA's, 40%
-max_percentage_na <- 0.4
+max_percentage_na <- 0.3
 # Obtain only the columns that contains less than x% of NA's
 jdf <- juanfuca_wide[, c(TRUE, percetange_na_by_col < max_percentage_na)]
 
