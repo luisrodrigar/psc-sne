@@ -48,17 +48,41 @@ jdf_coor <- jdf_coor[index_to_remove , , ]
 
 # Calculate the Cartesian angles
 jdf_pscsne <- sapply(1:dim(jdf_coor)[3], function(k) DirStats::to_cir(as.numeric(jdf_coor[ , 3, k])), simplify = 'array')
+
+# Save dataset in long format
+save(
+  list = "jdf_pscsne",
+  file = paste(here("data-raw", "strait-juan-fuca"), "pscsne.rda", sep = "/")
+)
+
+# Remove all objects
+rm(list = ls())
+gc()
+
+# Loading the psc-sne input object
+load(paste(here("data-raw", "strait-juan-fuca"), "pscsne.rda", sep = "/"))
+
 ```
 
 Let's calculate some rho values for a perplexity of 12, 20, 33 and 45.
 
 ```{r cache=TRUE}
 
-rho_12 <- rep(.5, nrow(jdf_pscsne))
+# rho_12 <- rep(.5, nrow(jdf_pscsne))
 # rho_12 <- rho_optim_bst(sanjuanfuca, 12)
-# rho_20 <- rho_optim_bst(sanjuanfuca, 20)
+rho_25 <- rho_optim_bst(jdf_pscsne, 25)
 # rho_33 <- rho_optim_bst(sanjuanfuca, 33)
 # rho_45 <- rho_optim_bst(sanjuanfuca, 45)
+
+```
+
+```{r}
+
+load(paste(here("data-raw", "strait-juan-fuca"), "pscsne.rda", sep = "/"))
+
+rho_point5 <- rep(0.5, nrow(jdf_pscsne))
+high_dimension(x = jdf_pscsne, rho_list = rho_point5)
+
 
 ```
 
@@ -66,7 +90,7 @@ Let's reduce the dimension using the polyspherical Cauchy SNE. First, optimized 
 
 ```{r cache=TRUE}
 Y <- psc_sne(X=jdf_pscsne, d=1, 
-             rho_psc_list = rho_12, 
+             rho_psc_list = rho, 
              num_iteration=300)
 ```
 

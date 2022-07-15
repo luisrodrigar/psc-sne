@@ -35,27 +35,27 @@ high_dimension <- function(x, rho_list, cos_sim_psh = NULL) {
 
   # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
   if (is.null(cos_sim_psh)) {
-    cos_sim_psh <- cosine_polysph(x)
+    cos_sim_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
   }
 
   # Calculate -2 * rho_list * (Y[i,,] %*% Y[j,,]) by each row of the 3d-array
   P <- sweep(cos_sim_psh,
-    MARGIN = 1, STATS = (-2 * rho_list), FUN = "*",
-    check.margin = FALSE
+             MARGIN = 1, STATS = (-2 * rho_list), FUN = "*",
+             check.margin = FALSE
   )
   # Calculate P + (rho_list^2) by each row of the 3d-array
   P <- sweep(P,
-    MARGIN = 1, STATS = (rho_list^2), FUN = "+",
-    check.margin = FALSE
+             MARGIN = 1, STATS = (rho_list^2), FUN = "+",
+             check.margin = FALSE
   )
   # Calculate 1 / (1 + P)^p
   P <- 1 / (1 + P)^p
 
-  # Set the diagonal of each matrix of the 3d-array to zero
-  Paux <- P
-  P <- sapply(1:r, FUN = diag_3d, x = Paux, val = 0, simplify = "array")
   # Product operator by matrices of the 3d-array
-  P_i_r <- apply(P, MARGIN = c(1, 2), prod)
+  P_i_r <- apply(P, MARGIN = 1, prod)
+  # Reconstruct from vector to symmetric matrix
+  P_i_r <- vec2matrix(P_i_r, n, diag_value = 0)
+
   # Summation operator by rows
   Pi <- rowSums(P_i_r)
   # Calculate (P_ij)_{ij} / (P_i)_{i}

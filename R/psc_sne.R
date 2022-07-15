@@ -21,10 +21,11 @@
 #' X <- sphunif::r_unif_sph(40, 3, 3)
 #' P <- high_dimension(X, rep(0.5, 40))
 #' kl_divergence_grad(Y, 3, 0.5, 2, P)
-#' cos_sim <- reconstruct_cos_sim_mat(
+#' cos_sim <- vec2matrix(
 #'     cos_sim_vec = sphunif::Psi_mat(array(X, dim = c(nrow(X), ncol(X), 1)),
 #'                                    scalar_prod = TRUE),
-#'     n = nrow(X))
+#'     n = nrow(X),
+#'     diag_value = 1)
 #' Q <- low_dimension_Q(Y, 0.5)
 #' kl_divergence_grad(Y, 3, 0.5, 2, P, cos_sim, Q)
 #' @export
@@ -33,10 +34,11 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   Z <- radial_projection(Y)
   if (is.null(cos_sim)) {
 
-    cos_sim <- reconstruct_cos_sim_mat(
+    cos_sim <- vec2matrix(
       cos_sim_vec = sphunif::Psi_mat(array(Z, dim = c(nrow(Z), ncol(Z), 1)),
                                      scalar_prod = TRUE),
-      n = nrow(Z)
+      n = nrow(Z),
+      diag_value = 1
     )
 
   }
@@ -50,10 +52,9 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 
   # Applying the formula of the gradient:
   # 4 d p \sum_{j=1}^n [y_i' / (1+rho^2-2rho*y_i'*y_j) * (q_{ij}-p_{ij})]
-  kl_grad <- 4 * d * rho *
+  return(4 * d * rho *
     colSums(Z[-i, ] / (1 + rho^2 - 2 * rho * cos_sim[i, -i]) *
-              (Q[i, -i] - P[i, -i]))
-  return(kl_grad)
+              (Q[i, -i] - P[i, -i])))
 
 }
 
@@ -197,9 +198,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   } else {
 
     # Calculating the probabilities based on the rho values
-    cos_sim_psh <- cosine_polysph(X)
-    P_cond <- high_dimension(x = X, rho_list = rho_psc_list,
-                             cos_sim_psh = cos_sim_psh)
+    P_cond <- high_dimension(x = X, rho_list = rho_psc_list)
 
   }
 
@@ -237,9 +236,10 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     }
 
     # Calculate the cosine similarities for the current Y solution
-    Y_cos_sim <- reconstruct_cos_sim_mat(
+    Y_cos_sim <- vec2matrix(
       sphunif::Psi_mat(Y[, , 2, drop = FALSE], scalar_prod = TRUE),
-      nrow(Y)
+      nrow(Y),
+      diag_value = 1
     )
 
     # Gradient of the objective function for all the observations

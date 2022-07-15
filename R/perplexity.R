@@ -58,7 +58,7 @@ to_perplexity <- function(x, i, rho, cos_sim_ps = NULL) {
   }
   # Calculate the cosine similarities of 'x' if 'cos_sim_ps' param is null
   if (is.null(cos_sim_ps)) {
-    cos_sim_ps <- cosine_polysph(x)
+    cos_sim_ps <- sphunif::Psi_mat(x, scalar_prod = TRUE)
   }
   # Conditional probability of the high-dimension of x
   Pjcondi <- high_dimension(x, rep(rho, nrow(x)), cos_sim_ps)
@@ -126,7 +126,7 @@ to_perp <- function(x, rho_list, cos_sim_ps = NULL) {
   }
   # Calculate the cosine similarities of 'x' if 'cos_sim_ps' param is null
   if (is.null(cos_sim_ps)) {
-    cos_sim_ps <- cosine_polysph(x)
+    cos_sim_ps <- sphunif::Psi_mat(x, scalar_prod = TRUE)
   }
   # Calculate the high-dimension probabilities
   P <- high_dimension(x, rho_list, cos_sim_ps)
