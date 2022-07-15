@@ -114,7 +114,7 @@ optim_hat <- rho_optim_bst(X, perplexity, clusterFactory(2))
 rho_hat <- optim_hat$rho_values
 P <- optim_hat$P
 P <- symmetric_probs(P)
-Y <- r_unif_sphere(n, (d + 1))
+Y <- sphunif::r_unif_sph(n, (d + 1))[ , , 1]
 
 ii <- 1
 yi <- Y[ii, ]
@@ -127,7 +127,7 @@ test_that("Checking value with gradient approximation", {
 })
 
 test_that("Checking that the radial projetion is done", {
-  Y_non_in_the_sphere <- rmvnorm(n, c(1, 2, 3), diag(3))
+  Y_non_in_the_sphere <- mvtnorm::rmvnorm(n, c(1, 2, 3), diag(3))
   Y_sphere <- radial_projection(Y_non_in_the_sphere)
   expect_equal(
     kl_divergence_grad(Y_non_in_the_sphere, ii, rho, d, P),

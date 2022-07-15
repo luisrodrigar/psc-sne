@@ -24,17 +24,20 @@ low_dimension_Q <- function(Y, rho) {
   # Projecting the points onto the sphere, in case they are not
   Z <- radial_projection(Y)
   # Calculate the cosine similarities matrix of Z
-  cos_simil <- reconstruct_cos_sim_mat(
-    cos_sim_vec = sphunif::Psi_mat(array(Z, dim = c(n, d + 1, 1)), scalar_prod = TRUE),
-    n = n
-  )
+  cos_simil <- sphunif::Psi_mat(array(Z, dim = c(n, d + 1, 1)), scalar_prod = TRUE)
+
   # Applying the Spherical Cauchy low-dimension joint function
   Q <- (1 + rho^2 - 2 * rho * cos_simil)^(-d)
-  # Set the elements of the diagonal to zero
-  diag(Q) <- 0
+
   # Calculate the total probability
-  Qi <- sum(Q)
+  Qi <- 2 * sum(Q)
   # Calculate the matrix probability of the joint probabilities
   Q_ij <- Q / Qi
+
+  # Reconstruct from vector to symmetric matrix
+  Q_ij <- vec2matrix(Q_ij, n, 0)
+
   return(Q_ij)
 }
+
+
