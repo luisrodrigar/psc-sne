@@ -20,7 +20,8 @@ Imports:
     optimParallel,
     parallel,
     rlang,
-    sphunif
+    sphunif,
+    sdetorus
 Suggests:
     knitr,
     markdown,

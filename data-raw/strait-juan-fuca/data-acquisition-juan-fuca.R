@@ -413,7 +413,7 @@ juanfuca_wide <- juanfuca %>%
 percetange_na_by_col <- colMeans(is.na(juanfuca_wide[, 2:ncol(juanfuca_wide)]))
 
 # Set the maximum percentage of NA's, 40%
-max_percentage_na <- 0.3
+max_percentage_na <- 0.22
 # Obtain only the columns that contains less than x% of NA's
 jdf <- juanfuca_wide[, c(TRUE, percetange_na_by_col < max_percentage_na)]
 
