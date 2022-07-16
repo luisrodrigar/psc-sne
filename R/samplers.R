@@ -41,6 +41,10 @@
 #' pairs(samp_2, xlim = c(-pi, pi), ylim = c(-pi, pi), col = rainbow(n),
 #'       pch = 16)
 #' sdetorus::torusAxis()
+#' scatterplot3d::scatterplot3d(
+#'   samp_2, xlim = c(-pi, pi), ylim = c(-pi, pi), zlim = c(-pi, pi),
+#'   xlab = "", ylab = "", zlab = "", color = rainbow(n), pch = 16
+#' )
 #'
 #' # Small-circle trends on (S^2)^2
 #' n <- 200
