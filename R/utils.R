@@ -25,22 +25,26 @@ clusterFactory <- function(num_cores, outfile = "") {
 #'
 #' @description Convert the vector into a symmetric matrix with diagonal equal to a specific value.
 #'
-#' @param cos_sim_vec vector containing all non-repeated values of the cosine similarity matrix (upper triangular matrix).
+#' @param vec vector containing all non-repeated values of the cosine similarity matrix (upper triangular matrix).
 #' @param n sample size of the original data.
 #' @param diag_value value for the diagonal of the resultant matrix.
-#' @return Cosine similarity matrix formed by the \code{cos_sim_vector}.
+#' @return Matrix formed by the \code{vec}.
 #' @export
 #' @examples
 #' n <- 6
 #' x <- sphunif::r_unif_sph(n, 3)
-#' cos_sim_vec <- sphunif::Psi_mat(x, scalar_prod = TRUE)
-#' vec2matrix(cos_sim_vec[, 1], n, diag_value = 1)
-vec2matrix <- function(cos_sim_vec, n, diag_value) {
-  cos_sim_mat <- matrix(0, nrow = n, ncol = n)
-  cos_sim_mat[upper.tri(cos_sim_mat)] <- cos_sim_vec
-  cos_sim_mat <- cos_sim_mat + t(cos_sim_mat)
-  diag(cos_sim_mat) <- diag_value
-  return(cos_sim_mat)
+#' cos_sim_vec <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
+#' vec2matrix(cos_sim_vec, n, diag_value = 1)
+vec2matrix <- function(vec, n, diag_value) {
+  # Create the matrix of dimension n x n
+  mat <- matrix(0, nrow = n, ncol = n)
+  # Define the elements of the upper triangular matrix as the vector
+  mat[upper.tri(mat)] <- vec
+  # Convert from a upper triangular matrix into a symmetric one
+  mat <- mat + t(mat)
+  # Set the elements of the diagonal
+  diag(mat) <- diag_value
+  return(mat)
 }
 
 #' @title Vector index of an upper triangular matrix withou diagonal
@@ -72,6 +76,49 @@ index_upper_trian <- function(i, j, n) {
   return(i + floor(((j - 2) * (j - 1)) / 2))
 }
 
+#' @title Cosine similarities vector for the i-th observation
+#'
+#' @description Obtain the index of an element within a vector for the equivalent in
+#' the upper triangular matrix without diagonal
+#'
+#' @inheritParams high_dimension
+#' @inheritParams d_sph_cauchy
+#' @param r the number of spheres in the polysphere
+#' @param n the sample size.
+#' @export
+#' @examples
+#' n <- 6
+#' r <- 6
+#' x <- sphunif::r_unif_sph(n, 3, r)
+#' cos_sim_psh <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
+#' cos_sim_i(cos_sim_psh, 4, r, n)
+cos_sim_i <- function(cos_sim_psh, i, r, n) {
+  sapply(1:r, function(k) {
+    sapply(1:n, function(j) {
+      if(j == i) {
+
+        # Cosine similarity when the i-th and j-th observation are the same
+        return(1)
+
+      }
+
+      if(i > j) {
+
+        # Since it is an upper triangular matrix what represents the vector
+        # If the i-th observation is greater than the j-th observation
+        # this means that the element is located in the lower triangular matrix
+        # Then we swap both indexes
+        return(cos_sim_psh[index_upper_trian(j, i, n), k])
+
+      }
+
+      # Get the cosine similarity for the i-th with respect the j-th observations
+      return(cos_sim_psh[index_upper_trian(i, j, n), k])
+    })
+  })
+}
+
+
 #' @title Cosine similarity for the poly-sphere
 #'
 #' @description Calculates the cosine similarity for each sphere of the 3 dimensional array.
@@ -87,7 +134,7 @@ cosine_polysph <- function(x) {
   n <- nrow(x)
   # applying the cosine function to each third dimension of the array
   cos_sim_vec <- sphunif::Psi_mat(x, scalar_prod = TRUE)
-  sapply(1:r, function(k) vec2matrix(cos_sim_vec[, k], n, 1), simplify = "array")
+  sapply(1:r, function(k) vec2matrix(drop(cos_sim_vec[, k]), n, 1), simplify = "array")
 }
 
 #' @title Symmetric probabilities

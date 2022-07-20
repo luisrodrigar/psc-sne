@@ -295,7 +295,7 @@ extract_long_fmt <- function(results, hours) {
       theta = .[[4]],
       speed = .[[5]]
     ) %>%
-    select(time, lat, lon, theta, speed) %>%
+    dplyr::select(time, lat, lon, theta, speed) %>%
     arrange(time)
 }
 
@@ -333,7 +333,7 @@ lat_values <- unique(juanfuca$lat)
 
 # Select only the theta value with the location and time values
 jdf_by_time <- juanfuca %>%
-  select(time, lat, lon, theta) %>%
+  dplyr::select(time, lat, lon, theta) %>%
   mutate(time = as.character(time, format="%Y-%m-%d %H:%M:%S"))
 # Create the 3-dimensional array split by time
 jdf_by_time <- abind(split(jdf_by_time, jdf_by_time$time), along = 3)
@@ -351,7 +351,7 @@ for (k in 1:dim(jdf_by_time)[3]) {
            lon = as.numeric(lon),
            theta = as.numeric(theta)) %>%
     reshape(timevar = "lon", idvar = "lat", direction = "wide") %>%
-    select(-lat) %>%
+    dplyr::select(-lat) %>%
     as.matrix())
 }
 
@@ -406,7 +406,7 @@ juanfuca_wide <- juanfuca %>%
   mutate(
     location = paste(lat, lon, sep = ",")
   ) %>%
-  select(-lat, -lon) %>%
+  dplyr::select(-lat, -lon) %>%
   reshape(idvar = "time", timevar = "location", direction = "wide")
 
 # Percentage of missing values
@@ -441,7 +441,7 @@ jdf_long_fmt <- reshape(jdf,
     theta = speed,
     speed = theta
   ) %>%
-  select(time, lat, lon, theta, speed)
+  dplyr::select(time, lat, lon, theta, speed)
 # Remove index names
 rownames(jdf_long_fmt) <- NULL
 

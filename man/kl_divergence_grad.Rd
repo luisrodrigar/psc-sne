@@ -39,8 +39,8 @@ X <- sphunif::r_unif_sph(40, 3, 3)
 P <- high_dimension(X, rep(0.5, 40))
 kl_divergence_grad(Y, 3, 0.5, 2, P)
 cos_sim <- vec2matrix(
-    cos_sim_vec = sphunif::Psi_mat(array(X, dim = c(nrow(X), ncol(X), 1)),
-                                   scalar_prod = TRUE),
+    vec = drop(sphunif::Psi_mat(array(X, dim = c(nrow(X), ncol(X), 1)),
+                                   scalar_prod = TRUE)),
     n = nrow(X),
     diag_value = 1)
 Q <- low_dimension_Q(Y, 0.5)

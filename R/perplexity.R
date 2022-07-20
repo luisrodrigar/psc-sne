@@ -38,68 +38,29 @@ to_perplexity_P <- function(x, i, rho) {
   return(list(perp = perp, Pjcondi = Pjcondi))
 }
 
-#' @title Perplexity of the \eqn{i}-th observation (semi-scalar version)
+#' @title Perplexity for the i-th observation (vector version)
 #'
-#' @description Calculate the perplexity of the \eqn{i}-th observation for a given a rho \eqn{\rho} concentration parameter.
-#'
-#' @inheritParams high_dimension
-#' @inheritParams to_perplexity_P
-#' @param cos_sim_ps cosine similarities matrix of each sphere \eqn{\mathcal{S}^p} (optional parameter, default value \code{NULL}).
-#' @return Perplexity of the \eqn{i}-th observation for all the remainder observations.
-to_perplexity <- function(x, i, rho, cos_sim_ps = NULL) {
-  if (i < 1 || i > nrow(x)) {
-    stop("i not valid, must be in [1, nrow(x)]")
-  }
-  if (!rlang::is_scalar_atomic(rho)) {
-    stop("rho must be an scalar")
-  }
-  if (!is.null(cos_sim_ps) && length(dim(cosine_polysph(x))) != 3) {
-    stop("cos_sim_ps has to be an array of size c(n, p + 1, r), from (S^p)^r")
-  }
-  # Calculate the cosine similarities of 'x' if 'cos_sim_ps' param is null
-  if (is.null(cos_sim_ps)) {
-    cos_sim_ps <- sphunif::Psi_mat(x, scalar_prod = TRUE)
-  }
-  # Conditional probability of the high-dimension of x
-  Pjcondi <- high_dimension(x, rep(rho, nrow(x)), cos_sim_ps)
-  # Entropy formula for the j-th observation given the i-th one
-  entropy <- function(j) {
-    (Pjcondi[i, j] * log2(Pjcondi[i, j]))
-  }
-  return(2^(-sum(sapply(seq_len(nrow(x))[-i], entropy))))
-}
-
-# check <- function(l) max(sapply(l, function(y) max(abs(l[[1]] - y)))) < 1e-7
-# microbenchmark::microbenchmark(
-#   to_perplexity_P(x, 1, 0.5),
-#   to_perplexity(x, 1, 0.5),
-#   check = check
-# )
-#
-# Unit: milliseconds
-# expr       min        lq      mean    median        uq       max neval
-# to_perplexity_P(x, 1, 0.5)  16.69372  17.88449  24.63309  18.65393  27.29528  234.1621   100
-# to_perplexity(x, 1, 0.5) 517.03870 583.15446 625.63860 613.75799 638.68714 1649.2364   100
-
-#' @title Perplexity matrix (scalar version)
-#'
-#' @description Calculate the perplexity of each observations for a given rho parameters list.
+#' @description Calculate the perplexity of the i-th observation for a given \eqn{\mathbf{\rho}} parameters list. Vector version algorithm.
 #'
 #' @inheritParams high_dimension
+#' @inheritParams d_sph_cauchy
 #' @return Perplexity of the \eqn{i}-th observation for all the remainder observations.
-to_perp_scalar <- function(x, rho_list) {
-  if (length(dim(x)) != 3) {
-    stop("x must be an array of dimension c(n, p + 1, r), from (S^p)^r")
+#' @export
+#' @examples
+#' x <- sphunif::r_unif_sph(25, 3, 3)
+#' i <- 1
+#' to_perp_i(x, i, 0.25)
+to_perp_i <- function(x, i, rho, cos_sim_psh = NULL) {
+  # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
+  if (is.null(cos_sim_psh)) {
+    cos_sim_psh <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
   }
-  if (rlang::is_scalar_atomic(rho_list)) {
-    stop("rho_list must be a vector")
-  }
-  # Call to_perplexity_P (scalar way) for all the observations
-  return(sapply(
-    X = 1:nrow(x),
-    FUN = function(i, x, rho_list) to_perplexity_P(x, i, rho_list[i])$perp,
-    x = x, rho_list = rho_list
-  ))
+  # Obtaining the high dimension probability vector for the i-th observation
+  P_i <- high_dimension_i(x, i, rho, cos_sim_psh)
+  # Apply the formula of the entropy (matrix way)
+  op <- P_i * log2(P_i)
+  # Return the perplexity list result after applying the perplexity formula (matrix way)
+  return(2^(-sum(op, na.rm = TRUE)))
 }
 
 #' @title Perplexity matrix (matrix version)
@@ -108,28 +69,25 @@ to_perp_scalar <- function(x, rho_list) {
 #'
 #' @inheritParams high_dimension
 #' @inheritParams to_perplexity
-#' @return Perplexity of the \eqn{i}-th observation for all the remainder observations.
+#' @return Perplexity of each \eqn{i}-th observation for all the remainder observations.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(25, 3, 3)
 #' to_perp(x, rep(0.5, 25))
-#' to_perp(x, rep(1 - 1e-4, 25), cosine_polysph(x))
-to_perp <- function(x, rho_list, cos_sim_ps = NULL) {
+#' to_perp(x, rep(1 - 1e-4, 25), drop(sphunif::Psi_mat(x, scalar_prod = TRUE)))
+to_perp <- function(x, rho_list, cos_sim_psh = NULL) {
   if (length(dim(x)) != 3) {
     stop("x must be an array of dimension c(n, p + 1, r), from (S^p)^r")
   }
   if (rlang::is_scalar_atomic(rho_list)) {
     stop("rho_list must be a vector")
   }
-  if (!is.null(cos_sim_ps) && length(dim(cos_sim_ps)) != 3) {
-    stop("cos_sim_ps must be an array of dimension c(n, n, r) where (S^p)^r")
-  }
-  # Calculate the cosine similarities of 'x' if 'cos_sim_ps' param is null
-  if (is.null(cos_sim_ps)) {
-    cos_sim_ps <- sphunif::Psi_mat(x, scalar_prod = TRUE)
+  # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
+  if (is.null(cos_sim_psh)) {
+    cos_sim_psh <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
   }
   # Calculate the high-dimension probabilities
-  P <- high_dimension(x, rho_list, cos_sim_ps)
+  P <- high_dimension(x, rho_list, cos_sim_psh)
   # Apply the formula of the entropy (matrix way)
   op <- P * log2(P)
   # Set the diagonal elements to zero
@@ -137,6 +95,7 @@ to_perp <- function(x, rho_list, cos_sim_ps = NULL) {
   # Return the perplexity list result after applying the perplexity formula (matrix way)
   return(2^(-rowSums(op)))
 }
+
 
 # microbenchmark::microbenchmark(
 #   to_perplexity_P(x, 1, 0.5),
@@ -256,29 +215,31 @@ rho_optim_par <- function(x, perplexity, num_cores = parallel::detectCores() - 1
 rho_optimParallel <- function(x, perplexity, num_cores = parallel::detectCores() - 1) {
   # Sample size
   n <- nrow(x)
-  # Setting up the characteristics of the parallelization
-  cl <- clusterFactory(num_cores)
   # Time start
   start_time <- Sys.time()
   # For each observation, calculate the optimal value using a concurrently optimization method
   rho_opt <- sapply(1:n, FUN = function(i) {
+    print(i)
+    # Setting up the characteristics of the parallelization
+    cl <- clusterFactory(num_cores)
+    parallel::setDefaultCluster(cl = cl)
     optimParallel::optimParallel(
       par = 0.5,
       fn = function(rho) {
         # Objective function: (perplexity-fixed_perplexity)^2
-        res <- to_perplexity_P(x, i, rho)$perp - perplexity
+        res <- (to_perp_i(x, i, rho) - perplexity)^2
         ifelse(is.finite(res), res, 1e6)
       },
       lower = 0, upper = 1 - 1e-4,
-      parallel = list(cl = cl, forward = FALSE)
+      parallel = list(loginfo = TRUE, forward = TRUE)
     )$par
+    # Stop the clusters
+    parallel::stopCluster(cl)
   })
   # Time end
   end_time <- Sys.time()
   # Print time difference
   print(end_time - start_time)
-  # Stop the clusters
-  parallel::stopCluster(cl)
   return(rho_opt)
 }
 
@@ -305,9 +266,10 @@ rho_optim_ineff <- function(x, perplexity) {
   # Time start
   start_time <- Sys.time()
   # Calculate the cosine similarities of (S^p)^r
-  cosine_polysph <- cosine_polysph(x)
+  cosine_polysph <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
   # For each observation, calculate the optimal value matrix way
   rho_opt <- sapply(1:n, function(i) {
+    print(i)
     stats::optim(
       par = rep(0.5, n),
       fn = function(rho) {
@@ -350,14 +312,14 @@ rho_optimize_1 <- function(x, perplexity, num_cores = parallel::detectCores() - 
   # Time start
   start_time <- Sys.time()
   # Calculate the cosine similarities of (S^p)^r
-  cosine_polysph <- cosine_polysph(x)
+  cosine_polysph <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
   # For each observation, calculate concurrently the optimal value based on the fixed perplexity
   rho_opt <- parallel::parLapply(cl, 1:n, function(i) {
     stats::optim(
       par = 0.5,
       fn = function(rho) {
         # Objective function: (perplexity-fixed_perplexity)^2
-        res <- (to_perplexity(x = x, i = i, rho = rho, cosine_polysph) - perplexity)^2
+        res <- (to_perp_i(x = x, i = i, rho = rho, cosine_polysph) - perplexity)^2
         ifelse(is.finite(res), res, 1e6)
       },
       method = "L-BFGS-B", lower = 0, upper = 1 - 1e-4
@@ -485,19 +447,20 @@ rho_optim_i_bst <- function(x, i, perp_fixed, tolerance = 1e-3, rho = 0.5,
 #'
 #' @inheritParams high_dimension
 #' @inheritParams rho_optim_i_bst
-#' @param cl defines a cluster to work with concurrently
+#' @inheritParams rho_optim_par
 #' @return Rho values and conditional probability matrix obtained as a result of the optimization.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(20, 3, 4)
-#' rho_optim_bst(x, perp_fixed = 15, cl = clusterFactory(2))
-#' rho_optim_bst(x, perp_fixed = 26, cl = clusterFactory(2))
-rho_optim_bst <- function(x, perp_fixed,
-                          cl = clusterFactory(parallel::detectCores() - 1)) {
+#' rho_optim_bst(x, perp_fixed = 15, num_cores = 2)
+#' rho_optim_bst(x, perp_fixed = 26, num_cores = 2)
+rho_optim_bst <- function(x, perp_fixed, num_cores = parallel::detectCores() - 1) {
   # Sample size
   n <- nrow(x)
   # Time start
   start_time <- Sys.time()
+  # Setting up the characteristics of the parallelization
+  cl <- clusterFactory(num_cores)
   # Concurrently calculate the optimized value of each observation
   res_opt <- parallel::parLapply(cl, 1:n, function(i) {
     rho_optim_i_bst(x, i, perp_fixed)

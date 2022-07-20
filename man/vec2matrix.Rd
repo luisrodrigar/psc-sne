@@ -4,17 +4,17 @@
 \alias{vec2matrix}
 \title{Reconstruct the symmetric matrix without diagonal}
 \usage{
-vec2matrix(cos_sim_vec, n, diag_value)
+vec2matrix(vec, n, diag_value)
 }
 \arguments{
-\item{cos_sim_vec}{vector containing all non-repeated values of the cosine similarity matrix (upper triangular matrix).}
+\item{vec}{vector containing all non-repeated values of the cosine similarity matrix (upper triangular matrix).}
 
 \item{n}{sample size of the original data.}
 
 \item{diag_value}{value for the diagonal of the resultant matrix.}
 }
 \value{
-Cosine similarity matrix formed by the \code{cos_sim_vector}.
+Matrix formed by the \code{vec}.
 }
 \description{
 Convert the vector into a symmetric matrix with diagonal equal to a specific value.
@@ -22,6 +22,6 @@ Convert the vector into a symmetric matrix with diagonal equal to a specific val
 \examples{
 n <- 6
 x <- sphunif::r_unif_sph(n, 3)
-cos_sim_vec <- sphunif::Psi_mat(x, scalar_prod = TRUE)
-vec2matrix(cos_sim_vec[, 1], n, diag_value = 1)
+cos_sim_vec <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
+vec2matrix(cos_sim_vec, n, diag_value = 1)
 }

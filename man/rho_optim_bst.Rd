@@ -4,14 +4,14 @@
 \alias{rho_optim_bst}
 \title{Binary search rho optimization for each observation}
 \usage{
-rho_optim_bst(x, perp_fixed, cl = clusterFactory(parallel::detectCores() - 1))
+rho_optim_bst(x, perp_fixed, num_cores = parallel::detectCores() - 1)
 }
 \arguments{
 \item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
 \item{perp_fixed}{a fixed value used to optimized the rho values.}
 
-\item{cl}{defines a cluster to work with concurrently}
+\item{num_cores}{number of cores to execute the code concurrently. This value must be below the total number of the CPU has available.}
 }
 \value{
 Rho values and conditional probability matrix obtained as a result of the optimization.
@@ -22,6 +22,6 @@ The boundaries are set from 0 to 0.9999 for each value. It prints the time consu
 }
 \examples{
 x <- sphunif::r_unif_sph(20, 3, 4)
-rho_optim_bst(x, perp_fixed = 15, cl = clusterFactory(2))
-rho_optim_bst(x, perp_fixed = 26, cl = clusterFactory(2))
+rho_optim_bst(x, perp_fixed = 15, num_cores = 2)
+rho_optim_bst(x, perp_fixed = 26, num_cores = 2)
 }

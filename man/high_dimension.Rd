@@ -22,5 +22,5 @@ Calculates the high-dimension conditional probabilities of a polyspherical Cauch
 \examples{
 x <- sphunif::r_unif_sph(100, 3, 3)
 high_dimension(x, rep(0.5, 100))
-high_dimension(x, rep(0.5, 100), cosine_polysph(x))
+high_dimension(x, rep(0.5, 100), drop(sphunif::Psi_mat(x, scalar_prod = TRUE)))
 }
