@@ -32,10 +32,10 @@ low_dimension_Q <- function(Y, rho) {
   # Calculate the total probability
   Qi <- 2 * sum(Q)
   # Calculate the matrix probability of the joint probabilities
-  Q_ij <- Q / Qi
+  Q_ij <- drop(Q / Qi)
 
   # Reconstruct from vector to symmetric matrix
-  Q_ij <- vec2matrix(Q_ij, n, 0)
+  Q_ij <- vec2matrix(vec = Q_ij, n = n, diag_value = 0)
 
   return(Q_ij)
 }

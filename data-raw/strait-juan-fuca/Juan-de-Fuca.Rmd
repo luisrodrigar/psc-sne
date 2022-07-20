@@ -11,7 +11,6 @@ library(rprojroot)
 library(here)
 library(knitr)
 library(rgl)
-rgl::setupKnitr()
 library(ncdf4)
 library(lubridate)
 library(circular)
@@ -19,27 +18,37 @@ library(dplyr)
 library(abind)
 library(tidyr)
 library(pscsne)
-```
+library(webshot2)
 
-```{r}
-juanfuca_pkg <-  paste(here("data-raw", "strait-juan-fuca"), "jdf.rda", sep = "/")
-load(juanfuca_pkg)
+knitr::opts_chunk$set(echo = TRUE)
+rgl::setupKnitr()
 ```
 
 Transform the original data set into an array of dimension `c(n, d+1, r)`, where `n` is the time instant, `r` is the number of (latitude and longitude) coordinates and `d+1` are the Cartesian angles which in this cases is equal to 2. 
 
-```{r}
+```{r eval = FALSE}
+# Get long format data from strait of Juan de Fuca
+juanfuca_pkg <-  paste(here("data-raw", "strait-juan-fuca"), "jdf.rda", sep = "/")
+load(juanfuca_pkg)
+
+# Get the entries for the whole year of 2021
+jdf_long_fmt <- jdf_long_fmt %>% 
+  filter(time >= as.POSIXct("2021-01-01 00:00:00", tz = "UTC") &
+           time < as.POSIXct("2022-01-01 00:00:00", tz = "UTC"))
+
 # Obtain other data frame
 # Transform into coordinates (value formed by lat and lon separated by a comma)
 # Remove speed from the dataset
 jdf_coor <- jdf_long_fmt %>% 
   unite(col = "coordinates", lat, lon, sep = ",") %>% 
-  select(-speed)
+  dplyr::select(-"speed") 
+  
 # Transform the data frame into a 3-dimensional array
 jdf_coor <- abind(split(jdf_coor, jdf_coor$coordinates), along = 3)
 
 # Sum the number of NA's by each row
-to_remove <- colSums(t(sapply(1:dim(jdf_coor)[3], function(k) is.na(jdf_coor[ , 3, k]))))
+to_remove <- colSums(t(sapply(1:dim(jdf_coor)[3], 
+                              function(k) is.na(jdf_coor[ , 3, k]))))
 # Indexes of the rows without NA's
 index_to_remove <- to_remove == 0
 
@@ -47,11 +56,17 @@ index_to_remove <- to_remove == 0
 jdf_coor <- jdf_coor[index_to_remove , , ]
 
 # Calculate the Cartesian angles
-jdf_pscsne <- sapply(1:dim(jdf_coor)[3], function(k) DirStats::to_cir(as.numeric(jdf_coor[ , 3, k])), simplify = 'array')
+jdf_pscsne <- sapply(1:dim(jdf_coor)[3], 
+                     function(k) DirStats::to_cir(as.numeric(jdf_coor[ , 3, k])), 
+                     simplify = 'array')
+
+# Get the rho values for a specific perplexity
+perplexity <- 30
+rho_30 <- rho_optim_bst(jdf_pscsne, perplexity, 7)
 
 # Save dataset in long format
 save(
-  list = "jdf_pscsne",
+  list = ls(),
   file = paste(here("data-raw", "strait-juan-fuca"), "pscsne.rda", sep = "/")
 )
 
@@ -59,39 +74,43 @@ save(
 rm(list = ls())
 gc()
 
+```
+
+Let's load the data objects generated in the previous chunk.
+
+```{r}
 # Loading the psc-sne input object
 load(paste(here("data-raw", "strait-juan-fuca"), "pscsne.rda", sep = "/"))
-
 ```
 
-Let's calculate some rho values for a perplexity of 12, 20, 33 and 45.
-
-```{r cache=TRUE}
-
-# rho_12 <- rep(.5, nrow(jdf_pscsne))
-# rho_12 <- rho_optim_bst(sanjuanfuca, 12)
-rho_25 <- rho_optim_bst(jdf_pscsne, 25)
-# rho_33 <- rho_optim_bst(sanjuanfuca, 33)
-# rho_45 <- rho_optim_bst(sanjuanfuca, 45)
-
-```
-
-```{r}
-
-load(paste(here("data-raw", "strait-juan-fuca"), "pscsne.rda", sep = "/"))
-
-rho_point5 <- rep(0.5, nrow(jdf_pscsne))
-high_dimension(x = jdf_pscsne, rho_list = rho_point5)
-
-
-```
-
-Let's reduce the dimension using the polyspherical Cauchy SNE. First, optimized rho for a perplexity of 12 and $d=1$:
+Now we are ready to reduce the dimension using the polyspherical Cauchy SNE. First, optimized rho is based on a perplexity of 30, $d=1$ and initializing the resultant reduced data with random uniformed points:
 
 ```{r cache=TRUE}
 Y <- psc_sne(X=jdf_pscsne, d=1, 
-             rho_psc_list = rho, 
-             num_iteration=300)
+             rho_psc_list = rho_30, 
+             num_iteration=1000, init = "random")
+```
+
+And plot the results in a circumference:
+
+```{r fig.asp=1}
+Y_rad <- DirStats::to_rad(Y)
+r <- 1
+theta <<- Y_rad
+plot(r*sin(theta),
+     r*cos(theta),
+     xlim=c(-max(r),max(r)),
+     ylim=c(-max(r),max(r)))
+
+polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```
+
+Let's do the same but initializing the resultant reduced dimension data with optimized evenly space points:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=jdf_pscsne, d=1, 
+             rho_psc_list = rho_30, 
+             num_iteration=1000, init = "equispaced")
 ```
 
 ```{r fig.asp=1}
@@ -106,133 +125,101 @@ plot(r*sin(theta),
 polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
 ```
 
-Now, optimized rho for a perplexity of 12 and $d=2$:
+Let's now reduced the dimension onto the sphere, $d=2$, of radius 1, with an optimized rho based on a perplexity of 30 and initialize the resultant reduced dimension data with random uniformed points:
+
 
 ```{r cache=TRUE}
 Y <- psc_sne(X=jdf_pscsne, d=2, 
-             rho_psc_list = rho_12, 
-             num_iteration=300)
+             rho_psc_list = rho_30,
+             num_iteration=1000, init = "random")
 ```
+
+```{r, fig.height=5, fig.width=5, fig.align='center', rgl=TRUE, dev='png'}
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightblue", alpha = 0.8,
+             lit = FALSE)
+rgl::points3d(Y, col = rep(1, nrow(Y)))
+rgl.viewpoint(theta=180, phi=90, zoom=.9)
+```
+
+Let's do the same but initializing the resultant reduced dimension data with optimized evenly space points:
+
+```{r cache=TRUE}
+Y <- psc_sne(X=jdf_pscsne, d=2, 
+             rho_psc_list = rho_30,
+             num_iteration=1000, init = "equispaced")
+```
+
+And plot the results in an sphere:
 
 ```{r}
 scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
                              zlim = c(-1, 1), color = rep(1, nrow(Y)))
+```
 
+Onto the 3d sphere. Here we can see a well-defined belt which separates observations.
+
+```{r, fig.height=5, fig.width=5, fig.align='center', rgl=TRUE, dev='png'}
 rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
+             radius = 1, type = "s", col = "lightblue", alpha = 0.8,
              lit = FALSE)
 rgl::points3d(Y, col = rep(1, nrow(Y)))
-```
-Now, optimized rho for a perplexity of 20 and $d=1$:
-
-```{r cache=TRUE}
-Y <- psc_sne(X=jdf_pscsne, d=1, 
-             rho_psc_list = rho_20, 
-             num_iteration=300)
+rgl.viewpoint(theta=180, phi=90, zoom=.9)
 ```
 
-```{r fig.asp=1}
-Y_rad <- DirStats::to_rad(Y)
-r <- 1
-theta <<- Y_rad
-plot(r*sin(theta),
-     r*cos(theta),
-     xlim=c(-max(r),max(r)),
-     ylim=c(-max(r),max(r)))
+Nevertheless, as you can see in the next plot, there is some continuity so the belt is not completely around the sphere. That could be informing the difference between "East" and "West" flows and also on the existence of other intermediate regimes.
 
-polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+```{r, fig.height=5, fig.width=5, fig.align='center', rgl=TRUE, dev='png'}
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+             radius = 1, type = "s", col = "lightblue", alpha = 0.8,
+             lit = FALSE)
+rgl::points3d(Y, col = rep(1, nrow(Y)))
+rgl.viewpoint(theta=-90, phi=-90, zoom=.9)
 ```
 
-Now, optimized rho for a perplexity of 12 and $d=2$:
+Let's see what are the rows located in both sides of the belt, to figure out why they are well separated.
 
-```{r cache=TRUE}
-Y <- psc_sne(X=jdf_pscsne, d=2, 
-             rho_psc_list = rho_12, 
-             num_iteration=300)
+```{r, eval = FALSE}
+rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+            radius = 1, type = "s", col = "lightblue", alpha = 1,
+            lit = FALSE)
+rgl::text3d(Y, text = 1:nrow(Y), cex=0.8)
+rgl.viewpoint(theta=180, phi=90, zoom=.23)
+```
+
+As it is shown in the previous plot (which is a zoom-in in the zone around the belt), there are two groups:
+
+- The one group which is above the belt, with the following row ids: *934*, *814*, *1024*, *775*, *512*, *1400*, *1032*, *2069*, *2054*, *1392*, *1004*, *1208*, *1523*, *801*, *1971*, *1026*, *1934*, *1502*, *900*, *1744*, *2053*, *1445*, *1536* and *2412*
+- The other group is below the well-separated area, with the following row ids: *2051*, *2105*, *747*, *1584*, *890*, *438*, *925*, *1633*, *831*.
+
+```{r}
+up_group <- c(934, 814, 1024, 775, 512, 1400, 1032, 2069, 2054, 1392, 1004, 1208,
+              1523, 801, 1971, 1026, 1934, 1502, 900, 1744, 2053, 1445, 1536, 2412)
+below_group <- c(2051, 2105, 747, 1584, 890, 438, 925, 1633, 831, 1311, 1893, 
+                 2055, 614, 2056, 1701, 929, 2023, 749, 479, 197, 445, 1302)
+
+total <- c(up_group, below_group)
+colors <- c(rep(2, length(up_group)), rep(3, length(below_group)))
+
+data_groups <- jdf_pscsne[total, , ]
+
+par(mfrow=c(3, 5))
+for(k in 1:dim(jdf_pscsne)[3]) {
+  
+  Y_rad <- DirStats::to_rad(data_groups[ , , k])
+  r <- 1
+  theta <<- Y_rad
+  plot(r*sin(theta),
+       r*cos(theta),
+       col=colors,
+       xlim=c(-max(r),max(r)),
+       ylim=c(-max(r),max(r)))
+  polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+  
+}
+
 ```
 
 ```{r}
-scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
-                             zlim = c(-1, 1), color = rep(1, nrow(Y)))
-
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
-             lit = FALSE)
-rgl::points3d(Y, col = rep(1, nrow(Y)))
-```
-
-Now, optimized rho for a perplexity of 33 and $d=1$:
-
-```{r cache=TRUE}
-Y <- psc_sne(X=jdf_pscsne, d=1, 
-             rho_psc_list = rho_33, 
-             num_iteration=300)
-```
-
-```{r fig.asp=1}
-Y_rad <- DirStats::to_rad(Y)
-r <- 1
-theta <<- Y_rad
-plot(r*sin(theta),
-     r*cos(theta),
-     xlim=c(-max(r),max(r)),
-     ylim=c(-max(r),max(r)))
-
-polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
-```
-
-Now, optimized rho for a perplexity of 33 and $d=2$:
-
-```{r cache=TRUE}
-Y <- psc_sne(X=jdf_pscsne, d=2, 
-             rho_psc_list = rho_33, 
-             num_iteration=300)
-```
-
-```{r}
-scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
-                             zlim = c(-1, 1), color = rep(1, nrow(Y)))
-
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
-             lit = FALSE)
-rgl::points3d(Y, col = rep(1, nrow(Y)))
-```
-
-Lastly, optimized rho for a perplexity of 45 and $d=1$:
-
-```{r cache=TRUE}
-Y <- psc_sne(X=jdf_pscsne, d=1, 
-             rho_psc_list = rho_45, 
-             num_iteration=300)
-```
-
-```{r fig.asp=1}
-Y_rad <- DirStats::to_rad(Y)
-r <- 1
-theta <<- Y_rad
-plot(r*sin(theta),
-     r*cos(theta),
-     xlim=c(-max(r),max(r)),
-     ylim=c(-max(r),max(r)))
-
-polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
-```
-
-Now, optimized rho for a perplexity of 33 and $d=2$:
-
-```{r cache=TRUE}
-Y <- psc_sne(X=jdf_pscsne, d=2, 
-             rho_psc_list = rho_45, 
-             num_iteration=300)
-```
-
-```{r}
-scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
-                             zlim = c(-1, 1), color = rep(1, nrow(Y)))
-
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "lightblue", alpha = 0.25,
-             lit = FALSE)
-rgl::points3d(Y, col = rep(1, nrow(Y)))
+Y
 ```
