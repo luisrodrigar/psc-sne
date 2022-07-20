@@ -22,8 +22,8 @@
 #' P <- high_dimension(X, rep(0.5, 40))
 #' kl_divergence_grad(Y, 3, 0.5, 2, P)
 #' cos_sim <- vec2matrix(
-#'     cos_sim_vec = sphunif::Psi_mat(array(X, dim = c(nrow(X), ncol(X), 1)),
-#'                                    scalar_prod = TRUE),
+#'     vec = drop(sphunif::Psi_mat(array(X, dim = c(nrow(X), ncol(X), 1)),
+#'                                    scalar_prod = TRUE)),
 #'     n = nrow(X),
 #'     diag_value = 1)
 #' Q <- low_dimension_Q(Y, 0.5)
@@ -35,8 +35,8 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   if (is.null(cos_sim)) {
 
     cos_sim <- vec2matrix(
-      cos_sim_vec = sphunif::Psi_mat(array(Z, dim = c(nrow(Z), ncol(Z), 1)),
-                                     scalar_prod = TRUE),
+      vec = drop(sphunif::Psi_mat(array(Z, dim = c(nrow(Z), ncol(Z), 1)),
+                                     scalar_prod = TRUE)),
       n = nrow(Z),
       diag_value = 1
     )
@@ -94,6 +94,10 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 #' @param check whether to check or not the tolerance.
 #' @param parallel_cores number of cores to use concurrently for the
 #' calculation of the gradient.
+#' @param init is a parameter to indicate how to proceed with the initialization
+#' of the resultant reduced dimension object. There are two possible ways:
+#' \code{equispaced} (evenly spaced points in the circumference/sphere) or
+#' \code{random} (random points generated uniformly).
 #' @return Resulting data reduced to \eqn{\mathcal{S}^d} after applying the
 #' algorithm for the total number of iterations selected.
 #' @examples
@@ -105,7 +109,8 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
                     num_iteration = 200, initial_momentum = 0.5,
                     final_momentum = 0.8, eta = 200, early_exaggeration = 4.0,
                     colors = NULL, visualize_prog = FALSE, tol = 1e-9,
-                    check = TRUE, parallel_cores = parallel::detectCores() - 1) {
+                    check = TRUE, parallel_cores = parallel::detectCores() - 1,
+                    init = c("equispaced", "random")[1]) {
 
   # Checks
   if (d < 1) {
@@ -185,7 +190,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   if (is.null(rho_psc_list)) {
 
     # Calculating the rho optimal values by means of the 'rho_optim_bst' method
-    res_opt <- rho_optim_bst(X, perplexity, clusterFactory(parallel_cores))
+    res_opt <- rho_optim_bst(X, perplexity, parallel_cores)
     P_cond <- res_opt$P
     rho_psc_list <- res_opt$rho_values
 
@@ -211,8 +216,18 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   # Matrices to store the two previous Y's
   Y <- array(NA, c(n, d + 1, 2))
 
-  # Generate points evenly spaced
-  Y[, , 1] <- Y[, , 2] <- gen_opt_sphere(n, d)
+  if(init == "equispaced") {
+
+    # Generate points evenly spaced
+    Y[, , 1] <- Y[, , 2] <- gen_opt_sphere(n, d)
+
+  } else {
+
+    # Generate random points uniformly
+    Y[, , 1] <- Y[, , 2] <- sphunif::r_unif_sph(n, d + 1)[ , , 1]
+
+  }
+
 
   # Generate low-dimension probabilities for the data generated
   Q_i <- low_dimension_Q(Y[, , 2], rho)
@@ -237,8 +252,8 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     # Calculate the cosine similarities for the current Y solution
     Y_cos_sim <- vec2matrix(
-      sphunif::Psi_mat(Y[, , 2, drop = FALSE], scalar_prod = TRUE),
-      nrow(Y),
+      vec = drop(sphunif::Psi_mat(Y[, , 2, drop = FALSE], scalar_prod = TRUE)),
+      n = nrow(Y),
       diag_value = 1
     )
 

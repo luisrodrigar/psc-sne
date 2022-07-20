@@ -8,7 +8,8 @@ psc_sne(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   num_iteration = 200, initial_momentum = 0.5, final_momentum = 0.8,
   eta = 200, early_exaggeration = 4, colors = NULL,
   visualize_prog = FALSE, tol = 1e-09, check = TRUE,
-  parallel_cores = parallel::detectCores() - 1)
+  parallel_cores = parallel::detectCores() - 1, init = c("equispaced",
+  "random")[1])
 }
 \arguments{
 \item{X}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
@@ -55,6 +56,11 @@ a good solution has been obtained (optional, default value \code{1e-9}).}
 
 \item{parallel_cores}{number of cores to use concurrently for the
 calculation of the gradient.}
+
+\item{init}{is a parameter to indicate how to proceed with the initialization
+of the resultant reduced dimension object. There are two possible ways:
+\code{equispaced} (evenly spaced points in the circumference/sphere) or
+\code{random} (random points generated uniformly).}
 }
 \value{
 Resulting data reduced to \eqn{\mathcal{S}^d} after applying the

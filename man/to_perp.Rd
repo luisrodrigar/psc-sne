@@ -4,17 +4,17 @@
 \alias{to_perp}
 \title{Perplexity matrix (matrix version)}
 \usage{
-to_perp(x, rho_list, cos_sim_ps = NULL)
+to_perp(x, rho_list, cos_sim_psh = NULL)
 }
 \arguments{
 \item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
 
 \item{rho_list}{rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.}
 
-\item{cos_sim_ps}{cosine similarities matrix of each sphere \eqn{\mathcal{S}^p} (optional parameter, default value \code{NULL}).}
+\item{cos_sim_psh}{cosine similarities array of dimension \code{c(n, n, r)} for the polysphere.}
 }
 \value{
-Perplexity of the \eqn{i}-th observation for all the remainder observations.
+Perplexity of each \eqn{i}-th observation for all the remainder observations.
 }
 \description{
 Calculate the perplexity of each observations for a given \eqn{\mathbf{\rho}} parameters list. Matrix version algorithm.
@@ -22,5 +22,5 @@ Calculate the perplexity of each observations for a given \eqn{\mathbf{\rho}} pa
 \examples{
 x <- sphunif::r_unif_sph(25, 3, 3)
 to_perp(x, rep(0.5, 25))
-to_perp(x, rep(1 - 1e-4, 25), cosine_polysph(x))
+to_perp(x, rep(1 - 1e-4, 25), drop(sphunif::Psi_mat(x, scalar_prod = TRUE)))
 }
