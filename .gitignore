@@ -54,5 +54,3 @@ pkg-devtools.R
 src/*.o
 src/*.so
 src/*.dll
-img/
-*.mp4
