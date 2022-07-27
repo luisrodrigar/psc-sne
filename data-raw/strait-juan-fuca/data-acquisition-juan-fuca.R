@@ -41,11 +41,6 @@ end_lat <- 48.64
 begin_lon <- -124.254
 end_lon <- -123.36
 
-# begin_lat <- 48.5
-# end_lat <- 48.8
-# begin_lon <- -124.10
-# end_lon <- -123.8
-
 # Get data function -- takes info from global environment and writes on it
 get_data <- function() {
 
@@ -76,6 +71,7 @@ get_data <- function() {
   # Download (u, v), being:
   # u (m/s) = surface_eastward_sea_water_velocity
   # v (m/s) = surface_northward_sea_water_velocity
+  # objects have dimension c(l_lon, l_lat, l_tim)
   u <<- ncvar_get(data, "u",
     start = c(begin_lon_ind, begin_lat_ind, begin_tim_ind),
     count = c(l_lon, l_lat, l_tim)
@@ -94,26 +90,33 @@ if (download_data) {
   for (year in 2020:2022) {
 
     month <- 1
-    while ((year < 2022 && month <= 12) || (year == 2022 && month <= 6)) {
+    if(year == 2020) {
+
+      # Starting in June for the year 2020
+      month <- 6
+
+    }
+
+    while ((year <= 2021 && month <= 12) || (year == 2022 && month <= 6)) {
 
       # Show progress
       cat("\n", year, "-", month, "\n")
 
       begin_tim <- date(paste(toString(year), toString(month),
-        "01 00:00:00 UTC",
-        sep = "-"
+                              "01 00:00:00 UTC",
+                              sep = "-"
       ))
 
       # End time taking into account if a new year starts
       if (month != 12) {
         end_tim <- date(paste(toString(year), toString(month + 1),
-          "01 00:00:00 UTC",
-          sep = "-"
+                              "01 00:00:00 UTC",
+                              sep = "-"
         ))
       } else {
         end_tim <- date(paste(toString(year + 1), toString(1),
-          "01 00:00:00 UTC",
-          sep = "-"
+                              "01 00:00:00 UTC",
+                              sep = "-"
         ))
       }
 
@@ -121,8 +124,8 @@ if (download_data) {
       get_data()
 
       # Get data dimensions
-      lat_length <- dim(u)[1]
-      lon_length <- dim(u)[2]
+      lat_length <- dim(u)[2]
+      lon_length <- dim(u)[1]
       time_length <- dim(u)[3]
 
       # Find the indexes associated to dimensions
@@ -131,9 +134,14 @@ if (download_data) {
       time_aux <- begin_tim_ind:(begin_tim_ind + time_length - 1)
 
       # Join all the cases
-      join <- merge(x = lat[lat_aux], y = lon[lon_aux])
+      # Since u and v are objects of dimension c(l_lon, l_lat, l_tim)
+      # The combinations must be done between each latitude and its possible
+      # combinatin with the longitude values. Later on, those three-dimensional
+      # arrays will be passed as vector (c(array) converts into a vector first
+      # by each column, later each row and finally the third dimension)
+      join <- merge(x = lon[lon_aux], y = lat[lat_aux])
       final_dataframe <- merge(x = join, y = tim[time_aux], by = NULL)
-      colnames(final_dataframe) <- c("lat", "lon", "time")
+      colnames(final_dataframe) <- c("lon", "lat", "time")
 
       # Add the velocities and save the data
       final_dataframe$u <- c(u)
@@ -235,7 +243,7 @@ extract_theta <- function(results, hours, lat, lon, instant) {
       # Removing rows that contain any NA's
       dir_speeds <- dir_speeds[complete.cases(dir_speeds), ]
       # The index of the time instant
-      instant_index <- ceiling(i / 3)
+      instant_index <- ceiling(i / hours)
       # return NA for empty dir_speed or sum of speeds equal to 0
       if (is.null(dir_speeds$speed) || sum(dir_speeds$speed) == 0) {
 
@@ -260,7 +268,7 @@ extract_theta <- function(results, hours, lat, lon, instant) {
 
 # Convert to time instants of x hours where columns are location, time instant
 # and theta
-extract_long_fmt <- function(results, hours) {
+extract_long_fmt <- function(results, hours, num_cores = detectCores() - 1) {
 
   # sequence from minimum to maximum time by each x hours
   instant_seq <- seq(
@@ -273,7 +281,7 @@ extract_long_fmt <- function(results, hours) {
   grid <- expand.grid(unique(results$lat), unique(results$lon))
 
   location_results <- mclapply(
-    mc.cores = detectCores() - 1,
+    mc.cores = num_cores,
     X = 1:nrow(grid),
     FUN = function(i) {
       results %>%
@@ -312,7 +320,7 @@ results <- extract_data(begin_lat, end_lat, begin_lon, end_lon)
 hours <- 3
 
 # Convert to theta by location (lat and lon) and time instant each 3 hours
-juanfuca <- extract_long_fmt(results, hours = hours)
+juanfuca <- extract_long_fmt(results, hours = hours, num_cores = 7)
 
 # Save the object
 save(
@@ -327,123 +335,101 @@ gc()
 
 load(paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/"))
 
+theta_lat_lon_create <- function(lon_values, lat_values, data) {
+
+  # Select only the theta value with the location and time values
+  jdf_by_time <- data %>%
+    dplyr::select(time, lat, lon, theta) %>%
+    mutate(time = as.character(time, format="%Y-%m-%d %H:%M:%S"),
+           lat = as.character(lat),
+           lon = as.character(lon),
+           theta = as.character(theta))
+  # Create the 3-dimensional array split by time
+  jdf_by_time <- abind(split(jdf_by_time, jdf_by_time$time), along = 3)
+
+  # Time instant size
+  r <- dim(jdf_by_time)[3]
+
+  # 3-dimensional array to store the matrix of thetas for the latitude and longitude
+  lat_lon_theta_by_time <- array(
+    dim = c(length(lat_values), length(lon_values), r)
+  )
+
+  for (k in seq_len(r)) {
+    # Convert to wide format data frame
+    # Where columns are longitude values and rows are latitude values
+    lat_lon_theta_by_time[, , k] = (data.frame(jdf_by_time[ , 2:4, k]) %>%
+                                      mutate(lat = as.numeric(lat),
+                                             lon = as.numeric(lon),
+                                             theta = as.numeric(theta)) %>%
+                                      reshape(timevar = "lon", idvar = "lat", direction = "wide") %>%
+                                      dplyr::select(-lat) %>%
+                                      as.matrix())
+  }
+  return(lat_lon_theta_by_time)
+}
+
+get_percentage_na <- function(data) {
+
+  return(data %>%
+           group_by(lat, lon) %>%
+           summarise(freq = mean(is.na(theta))) %>%
+           data.frame)
+}
+
 # Values of latitude and longitude
 lon_values <- unique(juanfuca$lon)
 lat_values <- unique(juanfuca$lat)
 
-# Select only the theta value with the location and time values
-jdf_by_time <- juanfuca %>%
-  dplyr::select(time, lat, lon, theta) %>%
-  mutate(time = as.character(time, format="%Y-%m-%d %H:%M:%S"))
-# Create the 3-dimensional array split by time
-jdf_by_time <- abind(split(jdf_by_time, jdf_by_time$time), along = 3)
-
-# 3-dimensional array to store the matrix of thetas for the latitude and longitude
-lat_lon_theta_by_time <- array(
-  dim = c(length(lon_values), length(lat_values), length(unique(juanfuca$time)))
-)
-
-for (k in 1:dim(jdf_by_time)[3]) {
-  # Conver to wide format data frame
-  # Where columns are longitude values and rows are latitude values
-  lat_lon_theta_by_time[, , k] = (data.frame(jdf_by_time[, 2:4, k]) %>%
-    mutate(lat = as.numeric(lat),
-           lon = as.numeric(lon),
-           theta = as.numeric(theta)) %>%
-    reshape(timevar = "lon", idvar = "lat", direction = "wide") %>%
-    dplyr::select(-lat) %>%
-    as.matrix())
-}
+# Create objet to use in filled.contour
+lat_lon_theta_by_time <- theta_lat_lon_create(lon_values = lon_values,
+                                              lat_values = lat_values,
+                                              data = juanfuca)
 
 # How many NA's are there?
 filled.contour(lon_values, lat_values,
-  apply(lat_lon_theta_by_time, 1:2, function(x) mean(is.na(x))),
-  ylab = "lat", xlab = "lon", zlim = c(0, 1),
-  main = "Proportion NAs", plot.axes = {
-    box()
-    axis(1)
-    axis(2)
-    points(expand.grid(lon_values, lat_values), pch = 16, cex = 0.5)
-  }
-)
+               t(apply(lat_lon_theta_by_time, 1:2, function(x) mean(is.na(x)))),
+               ylab = "lat", xlab = "lon", zlim = c(0, 1),
+               main = "Proportion NAs", plot.axes = {
+                 box()
+                 axis(1)
+                 axis(2)
+                 points(expand.grid(lon_values, lat_values), pch = 16, cex = 0.5)
+                 })
 
-# Calculate the percentage of NA's among the third dimension
-percetange_na <- colMeans(apply(lat_lon_theta_by_time, is.na, MARGIN = c(1, 2)))
-# Reflect the resulting matrix, reversing each row vector
-percetange_na <- sapply(1:nrow(percetange_na), function(i) rev(percetange_na[i, ]))
-# Adding rownames (latitude) and colnames (longitude)
-rownames(percetange_na) <- rev(lat_values)
-colnames(percetange_na) <- lon_values
-# Convert the matrix lat x lon into long format
-perc_na_long_fmt <- data.frame(percetange_na) %>%
-  add_rownames(var = "lat") %>%
-  data.frame %>%
-  reshape(varying = (1:ncol(percetange_na) + 1), idvar = 'lat', timevar = "lon",
-          direction = 'long', times = lon_values, v.names = "freq") %>%
-  mutate(
-    lat = round(as.numeric(lat), digits = 4),
-    lon = round(lon, digits = 4)
-  )
+# Show percentage of missing values on the map (Strait Juan de Fuca)
+perc_na_long_fmt <- get_percentage_na(juanfuca)
 
 # Download the map, margin is increased
 (map <- get_map(c(left = min(lon_values) - 0.05,
-          bottom = min(lat_values) - 0.05,
-          right = max(lon_values) + 0.05,
-          top = max(lat_values) + 0.05)))
+                  bottom = min(lat_values) - 0.05,
+                  right = max(lon_values) + 0.05,
+                  top = max(lat_values) + 0.05)))
 
 # Plot the map with the points and the countour surface colored
 ggmap(map, extent = "panel") +
   ggtitle("Percentage of missing values") +
-  geom_point(data = perc_na_long_fmt, aes(x = lon, y = lat, color = freq), size = 0.2) +
-  geom_contour_filled(data = perc_na_long_fmt, aes(z = freq), alpha = 0.4, size = 0.1) +
-  scale_color_viridis()
+  geom_contour_filled(data = perc_na_long_fmt, aes(z = freq), alpha = 0.6, size = 0.1)
 
-juanfuca_pkg <- paste(here("data-raw", "strait-juan-fuca"), "juanfuca.rda", sep = "/")
-load(juanfuca_pkg)
+# Merge the previous dataset that contains the frequency of missing values
+# with the base dataset that contains all the information for this interval of time
+jdf_freq <- merge(x = juanfuca, y = perc_na_long_fmt, by = c("lat", "lon"))
 
-# Transform to wide format the juan de fuca long data
-juanfuca_wide <- juanfuca %>%
-  mutate(
-    location = paste(lat, lon, sep = ",")
-  ) %>%
-  dplyr::select(-lat, -lon) %>%
-  reshape(idvar = "time", timevar = "location", direction = "wide")
+# Set the maximum percentage of NA's, 10%
+max_percentage_na <- 0.10
 
-# Percentage of missing values
-percetange_na_by_col <- colMeans(is.na(juanfuca_wide[, 2:ncol(juanfuca_wide)]))
+jdf_long_fmt <- jdf_freq %>%
+  filter(freq <= max_percentage_na) %>%
+  arrange(time)
 
-# Set the maximum percentage of NA's, 40%
-max_percentage_na <- 0.22
-# Obtain only the columns that contains less than x% of NA's
-jdf <- juanfuca_wide[, c(TRUE, percetange_na_by_col < max_percentage_na)]
+# Plot in the map the locations selected
+ggmap(map, extent = "panel") +
+  ggtitle("Selected data locations for the analysis") +
+  geom_contour_filled(data = jdf_long_fmt, aes(z = freq), alpha = 0.6, size = 0.1)
 
-# all non repeated locations from the wide data.frame
-locations <- colnames(jdf)[seq(2, ncol(jdf), by = 2)]
-
-# Obtaining the location names, use in reshape times parameter
-time_names <-
-  sapply(
-    seq_along(locations),
-    function(i) strsplit(locations[i], "theta.")[[1]][2]
-  )
-
-# long format with less than a percentage of NA's in location
-jdf_long_fmt <- reshape(jdf,
-  direction = "long", idvar = "time", timevar = "location",
-  varying = 2:ncol(jdf), v.names = c("theta", "speed"), sep = ".",
-  times = time_names
-) %>%
-  # separate location by comma separator
-  separate(col = location, into = c("lat", "lon"), sep = ",") %>%
-  rename(
-    # reshape are putting incorrectly the order of each value for speed and theta
-    # swapping values between speed and theta
-    theta = speed,
-    speed = theta
-  ) %>%
-  dplyr::select(time, lat, lon, theta, speed)
-# Remove index names
-rownames(jdf_long_fmt) <- NULL
+# Remove freq column
+jdf_long_fmt <- jdf_long_fmt %>%
+  select(-freq)
 
 # Save dataset in long format
 save(

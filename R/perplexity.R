@@ -304,22 +304,29 @@ rho_optim_ineff <- function(x, perplexity) {
 #' @inheritParams rho_optim_serial
 #' @inheritParams rho_optim_par
 #' @return Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized for the given perplexity.
-rho_optimize_1 <- function(x, perplexity, num_cores = parallel::detectCores() - 1) {
+rho_optimize_1 <- function(x, perplexity, num_cores = parallel::detectCores() - 1, cos_sim_psh = NULL) {
   # Sample size
   n <- nrow(x)
   # Setting up the characteristics of the parallelization
-  cl <- parallel::makeForkCluster(num_cores)
+  cl <- clusterFactory(num_cores, "log.txt")
   # Time start
   start_time <- Sys.time()
-  # Calculate the cosine similarities of (S^p)^r
-  cosine_polysph <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
+
+  if(is.null(cos_sim_psh)) {
+
+    # Calculate the cosine similarities of (S^p)^r
+    cos_sim_psh <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
+
+  }
+
   # For each observation, calculate concurrently the optimal value based on the fixed perplexity
   rho_opt <- parallel::parLapply(cl, 1:n, function(i) {
+    print(i)
     stats::optim(
       par = 0.5,
       fn = function(rho) {
         # Objective function: (perplexity-fixed_perplexity)^2
-        res <- (to_perp_i(x = x, i = i, rho = rho, cosine_polysph) - perplexity)^2
+        res <- (to_perp_i(x = x, i = i, rho = rho, cos_sim_psh) - perplexity)^2
         ifelse(is.finite(res), res, 1e6)
       },
       method = "L-BFGS-B", lower = 0, upper = 1 - 1e-4
@@ -460,9 +467,10 @@ rho_optim_bst <- function(x, perp_fixed, num_cores = parallel::detectCores() - 1
   # Time start
   start_time <- Sys.time()
   # Setting up the characteristics of the parallelization
-  cl <- clusterFactory(num_cores)
+  cl <- clusterFactory(num_cores, "log.txt")
   # Concurrently calculate the optimized value of each observation
   res_opt <- parallel::parLapply(cl, 1:n, function(i) {
+    print(i)
     rho_optim_i_bst(x, i, perp_fixed)
   })
   # Time end
