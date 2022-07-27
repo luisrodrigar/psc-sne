@@ -4,8 +4,7 @@
 \alias{rho_optimize_1}
 \title{Concurrent optimization of the \eqn{\rho} concentration parameters (matrix version)}
 \usage{
-rho_optimize_1(x, perplexity, num_cores = parallel::detectCores() - 1,
-  cos_sim_psh = NULL)
+rho_optimize_1(x, perplexity, num_cores = parallel::detectCores() - 1)
 }
 \arguments{
 \item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
@@ -13,8 +12,6 @@ rho_optimize_1(x, perplexity, num_cores = parallel::detectCores() - 1,
 \item{perplexity}{a fixed value (between 5 and 100) to optimize the rho parameters.}
 
 \item{num_cores}{number of cores to execute the code concurrently. This value must be below the total number of the CPU has available.}
-
-\item{cos_sim_psh}{cosine similarities array of dimension \code{c(n, n, r)} for the polysphere.}
 }
 \value{
 Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized for the given perplexity.
