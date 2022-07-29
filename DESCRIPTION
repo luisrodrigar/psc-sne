@@ -21,7 +21,8 @@ Imports:
     parallel,
     rlang,
     sphunif,
-    sdetorus
+    sdetorus,
+    utils
 Suggests:
     knitr,
     markdown,

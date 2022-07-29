@@ -6,6 +6,6 @@
 #'
 #' @docType package
 #' @name pscsne-package
-#' @import graphics stats
+#' @import graphics stats utils
 #' @aliases pscsne pscsne-package
 NULL
