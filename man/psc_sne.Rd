@@ -6,10 +6,9 @@
 \usage{
 psc_sne(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   num_iteration = 200, initial_momentum = 0.5, final_momentum = 0.8,
-  eta = 200, early_exaggeration = 4, colors = NULL,
-  visualize_prog = FALSE, tol = 1e-09, check = TRUE,
-  parallel_cores = parallel::detectCores() - 1, init = c("equispaced",
-  "random")[1])
+  eta = 200, early_exaggeration = 4, colors = NULL, show_prog = FALSE,
+  tol = 1e-09, check = TRUE, parallel_cores = parallel::detectCores() -
+  1, init = c("equispaced", "random")[1])
 }
 \arguments{
 \item{X}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
@@ -46,7 +45,7 @@ exaggerated by this factor (optional, default value \code{4.0}).}
 \item{colors}{list with as many elements as observations are, only valid
 when visualization is true (optional, default value \code{NULL}).}
 
-\item{visualize_prog}{defines whether the progression plots are shown or
+\item{show_prog}{defines whether the progression plots are shown or
 not (optional, default value \code{FALSE}).}
 
 \item{tol}{is the tolerance, when is below this value it is considered that

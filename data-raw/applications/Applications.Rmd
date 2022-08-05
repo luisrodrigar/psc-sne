@@ -65,8 +65,9 @@ rho_first_20 <- rho_optim_bst(x_array, 20)
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE, fig.asp=1}
-Y <- psc_sne(X=x_array, d=1, rho_psc_list = rho_first_20, num_iteration=500, 
-             colors=colors, visualize_prog = TRUE)
+res_pscsne <- psc_sne(X=x_array, d=1, rho_psc_list = rho_first_20, 
+                      num_iteration=500, colors=colors, show_prog = TRUE)
+Y <- res_pscsne$best_Y
 ```
 
 ```{r fig.asp=1}
@@ -86,8 +87,10 @@ polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE, fig.asp=1}
-Y <- psc_sne(X=x_array, d=2, rho_psc_list = rho_first_20, num_iteration=500,
-             colors=colors, visualize_prog = TRUE, eta=100, check=F)
+res_pscsne <- psc_sne(X=x_array, d=2, rho_psc_list = rho_first_20, 
+                      num_iteration=500, colors=colors, show_prog = TRUE, 
+                      eta=100, check=F)
+Y <- res_pscsne$best_Y
 ```
 
 ```{r fig.asp=1}
@@ -159,8 +162,10 @@ rho_second_perp20 <- rho_optim_bst(x_2, 20)
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
-Y <- psc_sne(X=x_2, d=1, rho_psc_list = rho_second_perp20, num_iteration=500,
-             colors=colors, visualize_prog = TRUE)
+res_pscsne <- psc_sne(X=x_2, d=1, rho_psc_list = rho_second_perp20, 
+                      num_iteration=500, colors=colors, show_prog = TRUE)
+Y <- res_pscsne$best_Y
+
 ```
 
 ```{r}
@@ -179,8 +184,9 @@ polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
-Y <- psc_sne(X=x_2, d=2, rho_psc_list = rho_second_perp20, num_iteration=500,
-             colors=colors, visualize_prog = TRUE)
+res_pscsne <- psc_sne(X=x_2, d=2, rho_psc_list = rho_second_perp20, 
+                      num_iteration=500, colors=colors, show_prog = TRUE)
+Y <- res_pscsne$best_Y
 ```
 
 
@@ -250,8 +256,9 @@ rho_third_perp25 <- rho_optim_bst(x_3, 25)
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
-Y <- psc_sne(X=x_3, d=1, rho_psc_list = rho_third_perp25, num_iteration=500,
-             colors=colors, visualize_prog = TRUE)
+res_pscsne <- psc_sne(X=x_3, d=1, rho_psc_list = rho_third_perp25, 
+                      num_iteration=500, colors=colors, show_prog = TRUE)
+Y <- res_pscsne$best_Y
 ```
 
 ```{r fig.asp=1}
@@ -270,8 +277,10 @@ polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
-Y <- psc_sne(X=x_3, d=2, rho_psc_list = rho_third_perp25, num_iteration=500,
-             colors=colors, visualize_prog = TRUE)
+res_pscsne <- psc_sne(X=x_3, d=2, rho_psc_list = rho_third_perp25, 
+                      num_iteration = 500, colors = colors, show_prog = TRUE)
+
+Y <- res_pscsne$best_Y
 ```
 
 ```{r fig.asp=1}
@@ -305,8 +314,9 @@ rho_four_perp20 <- rho_optim_bst(x_4, 20)
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
-Y <- psc_sne(X=x_4, d=1, rho_psc_list = rho_four_perp20, num_iteration=500, 
-             visualize_prog = TRUE)
+res_pscsne <- psc_sne(X=x_4, d=1, rho_psc_list = rho_four_perp20, 
+                      num_iteration=500, show_prog = TRUE)
+Y <- res_pscsne$best_Y
 ```
 
 ```{r fig.asp=1}
@@ -324,8 +334,10 @@ polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
-Y <- psc_sne(X=x_4, d=2, rho_psc_list = rho_four_perp20, num_iteration=500,
-             visualize_prog = TRUE)
+res_pscsne <- psc_sne(X=x_4, d=2, rho_psc_list = rho_four_perp20, 
+                      num_iteration=500, show_prog = TRUE)
+
+Y <- res_pscsne$best_Y
 ```
 
 ```{r fig.asp=1}
@@ -435,8 +447,10 @@ rho_five_perp20 <- rho_optim_bst(x_5, 50)
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r fig.height=10, fig.width=10}
-Y <- psc_sne(X=x_5, d=1, rho_psc_list = rho_five_perp20, num_iteration=500, eta = 20,
-             visualize_prog = TRUE, colors = colors)
+res_pscsne <- psc_sne(X=x_5, d=1, rho_psc_list = rho_five_perp20, num_iteration=500, 
+                      eta = 20, show_prog = TRUE, colors = colors)
+
+Y <- res_pscsne$best_Y
 ```
 
 ```{r fig.asp=1}
@@ -455,8 +469,11 @@ polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r fig.height=10, fig.width=10}
-Y <- psc_sne(X=x_5, d=2, rho_psc_list = rho_five_perp20, num_iteration=500, eta = 400,
-             visualize_prog = TRUE, colors = colors)
+res_pscsne <- psc_sne(X=x_5, d=2, rho_psc_list = rho_five_perp20, 
+                      num_iteration=500, eta = 400, show_prog = TRUE, 
+                      colors = colors)
+
+Y <- res_pscsne$best_Y
 ```
 
 ```{r fig.asp=1}
