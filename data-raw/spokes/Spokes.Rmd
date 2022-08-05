@@ -1,6 +1,6 @@
 ---
 title: "Spokes"
-author: "Luis Ángel Rodríguez García"
+author: "Luis Ángel Rodríguez García" 
 date: '2022-05-31'
 output: pdf_document
 ---
@@ -12,6 +12,8 @@ library(here)
 print(here())
 library(knitr)
 library(pscsne)
+library(rgl)
+rgl::setupKnitr()
 ```
 
 ## Spokes
@@ -54,37 +56,43 @@ rho_spokes_perp25 <- rho_optim_bst(spokes, 25)
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE}
-Y <- psc_sne(spokes, d=1, rho_psc_list = rho_spokes_perp25, 
-             colors = ifelse(ids_labs, 2, 1), num_iteration=5000, eta = 10)
+res_pscsne <- psc_sne(spokes, d = 1, rho_psc_list = rho_spokes_perp25, 
+             colors = ifelse(ids_labs, 2, 1), num_iteration = 500, show_prog = T)
+
+Y <- res_pscsne$best_Y
 ```
 
+Let's apply the kernel means shift function to see what clusters identifies.
+
 ```{r}
+res_kms_dir_Y_1 <- kms_dir(x = Y, data = Y)
+
 Y_rad <- DirStats::to_rad(Y)
 r <- 1
 theta <<- Y_rad
-plot(r*sin(theta),
-     r*cos(theta),
-     col=ifelse(ids_labs, 2, 1),
-     xlim=c(-max(r),max(r)),
-     ylim=c(-max(r),max(r)))
+plot(r * sin(theta), r * cos(theta), col = res_kms_dir_Y_1$cluster, 
+     xlim = c(-max(r), max(r)), ylim = c(-max(r), max(r)))
 
-polygon(max(r)*sin(seq(0,2*pi,length.out=100)),max(r)*cos(seq(0,2*pi,length.out=100)))
+polygon(max(r) * sin(seq(0,2 * pi, length.out = 100)),
+        max(r) * cos(seq(0,2 * pi, length.out = 100)))
 ```
 
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE}
-Y <- psc_sne(spokes, d=2, rho_psc_list = rho_spokes_perp25, 
-             colors = ifelse(ids_labs, 2, 1), num_iteration=1000, eta=10)
+res_pscsne <- psc_sne(spokes, d = 2, rho_psc_list = rho_spokes_perp25, 
+             colors = ifelse(ids_labs, 2, 1), num_iteration = 500, show_prog = T)
+
+Y <- res_pscsne$best_Y
 ```
 
+Let's do the same applying the kms onto the sphere.
 
 ```{r}
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "lightgray",
-             lit = FALSE)
-rgl::points3d(Y, col = ifelse(ids_labs, 2, 1))
-scatterplot3d::scatterplot3d(Y,xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1), 
-                             color = ifelse(ids_labs, 2, 1))
+res_kms_dir_Y <- kms_dir(x = Y, data = Y)
+
+colors <- res_kms_dir_Y$cluster
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1), 
+                             color = colors)
 ```
 

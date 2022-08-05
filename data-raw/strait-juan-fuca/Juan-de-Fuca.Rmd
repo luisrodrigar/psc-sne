@@ -84,8 +84,10 @@ load(paste(here("data-raw", "strait-juan-fuca"), "pscsne.rda", sep = "/"))
 Now we are ready to reduce the dimension using the polyspherical Cauchy SNE. First, optimized rho is based on a perplexity of 30, $d=1$ and initializing the resultant reduced data with optimized evenly space points:
 
 ```{r cache=TRUE}
-Y_1 <- psc_sne(X = jdf_pscsne, d = 1, rho_psc_list = rho_30, num_iteration = 500, 
+res_pscsne <- psc_sne(X = jdf_pscsne, d = 1, rho_psc_list = rho_30, num_iteration = 500, 
              init = "equispaced")
+
+Y_1 <- res_pscsne$best_Y
 ```
 
 ```{r fig.asp=1}
@@ -106,8 +108,10 @@ Let's now reduced the dimension onto the sphere, $d=2$, of radius 1, with an opt
 Let's do the same but initializing the resultant reduced dimension data with optimized evenly space points:
 
 ```{r cache=TRUE}
-Y <- psc_sne(X = jdf_pscsne, d = 2, rho_psc_list = rho_30, num_iteration = 500, 
+res_pscsne <- psc_sne(X = jdf_pscsne, d = 2, rho_psc_list = rho_30, num_iteration = 500, 
              init = "equispaced")
+
+Y <- res_pscsne$best_Y
 ```
 
 And plot the results in an sphere:

@@ -87,7 +87,7 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 #' exaggerated by this factor (optional, default value \code{4.0}).
 #' @param colors list with as many elements as observations are, only valid
 #' when visualization is true (optional, default value \code{NULL}).
-#' @param visualize_prog defines whether the progression plots are shown or
+#' @param show_prog defines whether the progression plots are shown or
 #' not (optional, default value \code{FALSE}).
 #' @param tol is the tolerance, when is below this value it is considered that
 #' a good solution has been obtained (optional, default value \code{1e-9}).
@@ -108,7 +108,7 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
                     num_iteration = 200, initial_momentum = 0.5,
                     final_momentum = 0.8, eta = 200, early_exaggeration = 4.0,
-                    colors = NULL, visualize_prog = FALSE, tol = 1e-9,
+                    colors = NULL, show_prog = FALSE, tol = 1e-9,
                     check = TRUE, parallel_cores = parallel::detectCores() - 1,
                     init = c("equispaced", "random")[1]) {
 
@@ -228,6 +228,11 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
   }
 
+  # Initialize those object to store the best configuration
+  # with the lowest value of the objective function
+  best_Y_i <- NULL
+  best_obj_i <- +Inf
+  best_i <- NULL
 
   # Generate low-dimension probabilities for the data generated
   Q_i <- low_dimension_Q(Y[, , 2], rho)
@@ -235,8 +240,22 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   # Initial momentum
   momentum <- initial_momentum
 
-  # Visualizing the plots in a 4 x 4 grid
-  old_par <- par(mfrow = c(4, 4))
+  old_par <- NULL
+  if (show_prog) {
+
+    if (d == 2) {
+
+      # Visualizing the plots in a 2 x 2 grid for d = 2
+      old_par <- par(mfrow = c(1, 1), mar = c(2, 2, 2, 2))
+
+    } else if (d == 1) {
+
+      # Visualizing the plots in a 4 x 4 grid for d = 1
+      old_par <- par(mfrow = c(4, 4), mar = c(1.5, 1.5, 1.5, 1.5))
+
+    }
+
+  }
 
   # Interval from 2 to number of iterations + 2
   range_iterations <- seq_len(num_iteration) + 2
@@ -264,9 +283,12 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
       cos_sim = Y_cos_sim, Q = Q_i
     )))
 
+    # Moment
+    moment_i <- momentum * (Y[, , 2] - Y[, , 1])
+
     # Gradient descent
-    Y_i <- Y[, , 2] + (eta * -grad) +
-      momentum * (Y[, , 2] - Y[, , 1])
+    Y_i <- Y[, , 2] + (eta * -grad) + moment_i
+
 
     # Projecting iteration solution onto the sphere/circumference of radio 1
     Y_i <- radial_projection(Y_i)
@@ -288,17 +310,26 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     }
     gradient_norms[i - 2] <- norm(grad, "2")
 
+    # When the objective function value just calculated is smaller than the best
+    if (obj_func_iter[i - 2] < best_obj_i) {
+
+      best_i <- i - 2
+      best_obj_i <- obj_func_iter[best_i]
+      best_Y_i <- Y[ , , 2]
+
+    }
+
     # Progress
     cat(sprintf(
-      "It: %d; obj: %.3e; abs: %.3e; rel: %.3e; norm: %.3e\n",
+      "It: %d; obj: %.3e; abs: %.3e; rel: %.3e; norm: %.3e; mom: %.3e;\nbest it: %d; best obj: %.3e\n",
       i - 2, obj_func_iter[i - 2], absolute_errors[i - 2],
-      relative_errors[i - 2], gradient_norms[i - 2]
+      relative_errors[i - 2], gradient_norms[i - 2], norm(moment_i, "2"),
+      best_i, best_obj_i
     ))
 
-    if (visualize_prog && (i == 3 || (i - 2) %% 25 == 0 ||
-                           i == num_iteration + 2)) {
+    if (show_prog && (i == 3 || (i - 2) %% 25 == 0 || i == num_iteration + 2)) {
 
-      visualize_iter_sol(Y, i, d, colors)
+      show_iter_sol(Y[ , , 2], i, d, colors)
 
     }
 
@@ -322,10 +353,16 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     }
   }
 
-  # Visualize the solution
-  par(old_par)
-  visualize_iter_sol(Y, i, d, colors)
-  return(Y_i)
+  if (show_prog) {
+
+    # Visualize the solution
+    par(old_par)
+    show_iter_sol(best_Y_i, best_i + 2, d, colors)
+
+  }
+
+  return(list("best_Y" = best_Y_i, "last_Y" = Y[, , 2],
+              "obj_seq" = obj_func_iter, "norm_seq" = gradient_norms))
 
 }
 
@@ -340,7 +377,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 #' @param d the dimension to reduce the original data.
 #' @param colors defines the group colors in the plot. Optional parameter,
 #' default value set to \code{NULL}.
-visualize_iter_sol <- function(Y, i, d, colors = NULL) {
+show_iter_sol <- function(Y, i, d, colors = NULL) {
 
   # If colors is null, set all of them to black
   if (is.null(colors)) {
@@ -353,7 +390,7 @@ visualize_iter_sol <- function(Y, i, d, colors = NULL) {
   # Plot on a circumference
   if (d == 1) {
 
-    Y_rad <- DirStats::to_rad(Y[, , 2])
+    Y_rad <- DirStats::to_rad(Y)
     r <- 1
     theta <- Y_rad
     plot(r * sin(theta),
@@ -371,7 +408,7 @@ visualize_iter_sol <- function(Y, i, d, colors = NULL) {
   else if (d == 2) {
 
     scatterplot3d::scatterplot3d(
-      Y[, , 2], xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+      Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
       color = colors, main = paste("Iteration", i - 2)
     )
 
