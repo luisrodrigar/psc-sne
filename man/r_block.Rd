@@ -4,7 +4,7 @@
 \alias{r_block}
 \title{Sample correlation matrices with block structure}
 \usage{
-r_block(n, g = 5, p = 20, rho = rep(c(-0.9, 0.9), times = g)[1:g])
+r_block(n, g = 5, p = 20, rho = rep(c(0.9, 0.9), times = g)[1:g])
 }
 \arguments{
 \item{n}{sample size.}
@@ -31,7 +31,8 @@ n <- 200
 g <- 10
 p <- 10
 x <- r_block(n = n, g = g, p = p)
-pairs(x[, c(1:2, p + 1:2)])
+pairs(x[, c(1:2, p + 1:2)],
+labels = c("Var 1", "Var 2", paste("Var", p + 1), paste("Var", p + 2)))
 
 # Standardize variables -- now the vectors of observations for each variable
 # (the columns) live on \sqrt{n - 1} * S^{n - 1}!

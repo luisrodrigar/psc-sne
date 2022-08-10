@@ -187,7 +187,8 @@ r_path_s2r <- function(n, r, t = 0, c = 1,
 #' g <- 10
 #' p <- 10
 #' x <- r_block(n = n, g = g, p = p)
-#' pairs(x[, c(1:2, p + 1:2)])
+#' pairs(x[, c(1:2, p + 1:2)],
+#' labels = c("Var 1", "Var 2", paste("Var", p + 1), paste("Var", p + 2)))
 #'
 #' # Standardize variables -- now the vectors of observations for each variable
 #' # (the columns) live on \sqrt{n - 1} * S^{n - 1}!
@@ -205,7 +206,7 @@ r_path_s2r <- function(n, r, t = 0, c = 1,
 #' # cols <- rep(1:g, each = p)
 #' # psc_sne(X = feat, d = 1, colors = cols)
 #' @export
-r_block <- function(n, g = 5, p = 20, rho = rep(c(-0.9, 0.9), times = g)[1:g]) {
+r_block <- function(n, g = 5, p = 20, rho = rep(c(0.9, 0.9), times = g)[1:g]) {
 
   # Check rho
   if (length(rho) != g) {
