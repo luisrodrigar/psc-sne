@@ -90,6 +90,12 @@ res_pscsne <- psc_sne(X = jdf_pscsne, d = 1, rho_psc_list = rho_30, num_iteratio
 Y_1 <- res_pscsne$best_Y
 ```
 
+Unit: seconds
+                                                                                                                                               expr
+ {     res_pscsne <- psc_sne(X = jdf_pscsne, d = 1, rho_psc_list = rho_30,          num_iteration = 500, init = "equispaced", parallel_cores = 1) }
+      min       lq     mean   median       uq      max neval
+ 2434.701 2434.701 2434.701 2434.701 2434.701 2434.701    
+
 ```{r fig.asp=1}
 Y_rad <- DirStats::to_rad(Y_1)
 r <- 1

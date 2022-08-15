@@ -42,11 +42,11 @@ The following method apply the formula above:
 ```{r iris}
 x_diff <- function(X) {
   n <- nrow(X)
-  sum_x <- apply(X^2, MARGIN=1, FUN=sum)
-  sum_x_m <- t(matrix(replicate(n, sum_x), byrow=T, nrow=n))
+  sum_x <- apply(X^2, MARGIN = 1, FUN = sum)
+  sum_x_m <- t(matrix(replicate(n, sum_x), byrow = TRUE, nrow = n))
   cross_times_minus_2 <- -2 * (X %*% t(X))
   D <- t(cross_times_minus_2 + sum_x_m) + sum_x_m
-  D <- round(D, digits=4) 
+  D <- round(D, digits = 4) 
 }
 ```
 
@@ -77,12 +77,12 @@ Where $S_i=\sum_{k\neq i}e^{-||x_i-x_j||^2/2\sigma^2}$ and $\sum_{j\neq i}p_{j|i
 In order to proceed with the optimization of the variance, we are going to define this term $\frac{1}{2\sigma^2}$ as the parameter $\beta$.
 
 ```{r}
-entropy_beta <- function(D_i, beta=1) {
+entropy_beta <- function(D_i, beta = 1) {
   P_i <- exp(-D_i * beta)
   sum_p_i <- sum(P_i)
-  H_i <- log(sum_p_i) + (beta * sum(D_i * P_i) /sum_p_i) 
+  H_i <- log(sum_p_i) + (beta * sum(D_i * P_i) / sum_p_i) 
   P_i <- P_i / sum_p_i
-  return(list(entropy=H_i, probs=P_i))
+  return(list(entropy = H_i, probs = P_i))
 }
 ```
 
@@ -90,54 +90,52 @@ The goal is to adjust the variability so that the perplexity at each point is th
 
 ```{r}
 index_except_i <- function(i, n) {
-  index <- c(seq(1,i-1),seq(i+1,n))
+  index <- c(seq(1, i-1), seq(i+1, n))
   if (i == 1) {
     index <- 2:n
   } else if (i == n) {
-    index <- 1:(n-1)
+    index <- 1:(n - 1)
   }
   return(index)
 }
 
 binary_search <- function(h_diff, beta, i, beta_min, beta_max) {
-  if(h_diff > 0) {
-    beta_min = beta[i]
-    if(beta_max == -Inf || beta_max == Inf) {
+  if (h_diff > 0) {
+    beta_min <- beta[i]
+    if (beta_max == -Inf || beta_max == Inf) {
       beta[i] <- beta[i] * 2
     } else {
       beta[i] <- (beta[i] + beta_max) / 2
     }
   } else {
-    beta_max = beta[i]
-    if(beta_min == -Inf || beta_min == Inf) {
+    beta_max <- beta[i]
+    if (beta_min == -Inf || beta_min == Inf) {
       beta[i] <- beta[i] / 2
     } else {
       beta[i] <- (beta[i] + beta_min) / 2
     }
   }
-  return(list(beta=beta, min=beta_min, max=beta_max))
+  return(list(beta = beta, min = beta_min, max = beta_max))
 }
 
-binary_search_optimization <- function(D_i, i, beta, h_star, prob_star, log_perp, 
-                                       tolerance=1e-5) {
+binary_search_optimization <- function(D_i, i, beta, h_star, prob_star,
+                                       log_perp, tolerance=1e-5) {
   beta_min <- -Inf
   beta_max <- Inf
   tries <- 0
   h_diff <- h_star - log_perp
-  
-  while(abs(h_diff) > tolerance && tries < 50) {
+  while (abs(h_diff) > tolerance && tries < 50) {
     beta_opt <- binary_search(h_diff, beta, i, beta_min, beta_max)
-    beta <- beta_opt$beta; beta_min <- beta_opt$min; beta_max <- beta_opt$max
-    
+    beta <- beta_opt$beta; beta_min <- beta_opt$min
+    beta_max <- beta_opt$max
     res_loop <- entropy_beta(D_i, beta[i])
-    h_star <- res_loop$entropy; prob_star <- res_loop$probs
-    
+    h_star <- res_loop$entropy
+    prob_star <- res_loop$probs
     h_diff <- h_star - log_perp
     tries <- tries + 1 
   }
   return(list(probs=prob_star, beta=beta))
 }
-
 ```
 
 Once we have defined these two methods, we are able to obtain the high dimensional properties:
@@ -147,13 +145,10 @@ Once we have defined these two methods, we are able to obtain the high dimension
 high_dimension_probs <- function(X=matrix(), tolerance=1e-5, perplexity=30) {
   n <- nrow(X)
   p <- ncol(X)
-  
   D <- x_diff(X)
-  
   P <- matrix(0, nrow=150, ncol=150)
   beta <- rep(1, n)
   log_perp <- log(perplexity)
-  
   for(i in seq_len(n)) {
     column_index <- index_except_i(i, n)
     D_i <- D[i, column_index]

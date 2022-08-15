@@ -206,7 +206,7 @@ r_path_s2r <- function(n, r, t = 0, c = 1,
 #' # cols <- rep(1:g, each = p)
 #' # psc_sne(X = feat, d = 1, colors = cols)
 #' @export
-r_block <- function(n, g = 5, p = 20, rho = rep(c(0.9, 0.9), times = g)[1:g]) {
+r_block <- function(n, g = 5, p = 20, rho = rep(0.9, times = g)) {
 
   # Check rho
   if (length(rho) != g) {

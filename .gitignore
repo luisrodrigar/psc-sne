@@ -56,3 +56,5 @@ src/*.so
 src/*.dll
 img/
 *.mp4
+inst/doc
+/Meta/
