@@ -23,7 +23,7 @@ library(mvtnorm)
 num_cores_param <- 7
 ```
 
-Numerical experiments are important for testing the effectiveness of psc-sne algorithm since it can be identify whether the function is providing good results or not. Then, this document contains information about the simulation of high-dimensional data and defines different cases in each point.
+Numerical experiments are important for testing the effectiveness of psc-sne algorithm since it can be identified whether the function is providing good results or not. Then, this document contains information about the simulation of high-dimensional data and defines different cases in each point.
 
 First, we start with $p = 100$ and $r = 1$ where $(\mathbb{S}^{p})^r$.
 

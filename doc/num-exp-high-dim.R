@@ -152,10 +152,6 @@ rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
              radius = 1, type = "s", col = "lightblue", lit = FALSE)
 rgl::points3d(psc_sne_res_42$best_Y, col = cols)
 
-## ----cache = TRUE-------------------------------------------------------------
-rho_30_s2_100 <- rho_optim_bst(x = x_s2_100, perp_fixed = 30,
-                               num_cores = num_cores_param)
-
 ## -----------------------------------------------------------------------------
 psc_sne_res_51 <- psc_sne(X = x_s2_100, d = 1, rho_psc_list = rho_30_s2_100,
                           colors = cols, show_prog = TRUE, num_iteration = 775,
