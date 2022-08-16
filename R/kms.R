@@ -141,11 +141,9 @@ kms_dir <- function(x, data, h = NULL, N = 500, eps = 1e-3, tol = 1e-1,
   modes <- sapply(seq_len(max(labels)), function(i) {
     rotasym::spherical_mean(data = y[labels == i, ])
   })
-  modes <- rbind(modes)
+  modes <- t(modes)
 
   # Return end points
   return(list(end_points = y, cluster = labels, modes = modes, paths = paths))
 
 }
-
-
