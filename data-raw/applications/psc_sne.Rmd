@@ -227,22 +227,22 @@ Recall that $\frac{\partial}{\partial x}\sqrt{g(x)}=\frac{1}{2\sqrt{g(x)}}g'(x)$
 ```{r}
 
 dij.1 <- function(i, j) {
-  sqrt(norm(i, type="2")^2 + norm(j, type="2")^2 - 2 * (t(i) %*% j))
+  sqrt(sqrt(sum(i^2))^2 + sqrt(sum(j^2))^2 - 2 * (t(i) %*% j))
 }
 
 dij.2 <- function(i, j) {
-  norm(i-j, type="2")
+  sqrt(sum((i-j)^2))
 }
 
 y <- data.matrix(iris)[, -5]
 
 # For rows 2 and 3
 result1 <- as.numeric(round(jacobian(func=dij.2, x=y[2,], j=y[3,]), digits=7))
-result2 <- as.numeric((y[2,]-y[3,])/norm(y[2,]-y[3,], type="2"))
+result2 <- as.numeric((y[2,] - y[3,]) / sqrt(sum((y[2,] - y[3,])^2)))
 all.equal(result2, result1) # checked
 # For row 3 and 2
 result3 <- as.numeric(round(jacobian(func=dij.2, x=y[3,], i=y[2,]), digits=7))
-result4 <- as.numeric((y[3,]-y[2,])/norm(y[2,]-y[3,], type="2"))
+result4 <- as.numeric((y[3,] - y[2,]) / sqrt(sum((y[2,] - y[3,])^2)))
 all.equal(result4, result3) # checked
 # Checked that both d(d_ij)/dy_i = d(d_ji)/dy_i
 ```
@@ -657,7 +657,7 @@ print(all.equal(cost_result_expected[1,], cost_result))
 ```{r}
 
 radial_projection <- function(x) {
-  x/norm(x, type="2")
+  x/sqrt(sum(x^2))
 }
 z <- runif(n = (d+1), min = 1, max = 10)
 z=Y[1, ]
