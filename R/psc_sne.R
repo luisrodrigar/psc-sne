@@ -308,7 +308,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
       relative_errors[i - 2] <- absolute_errors[i - 2] / obj_func_iter[i - 3]
 
     }
-    gradient_norms[i - 2] <- norm(grad, "2")
+    gradient_norms[i - 2] <- sqrt(sum(grad^2))
 
     # When the objective function value just calculated is smaller than the best
     if (obj_func_iter[i - 2] < best_obj_i) {
@@ -323,7 +323,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     cat(sprintf(
       "It: %d; obj: %.3e; abs: %.3e; rel: %.3e; norm: %.3e; mom: %.3e;\nbest it: %d; best obj: %.3e\n",
       i - 2, obj_func_iter[i - 2], absolute_errors[i - 2],
-      relative_errors[i - 2], gradient_norms[i - 2], norm(moment_i, "2"),
+      relative_errors[i - 2], gradient_norms[i - 2], sqrt(sum(moment_i^2)),
       best_i, best_obj_i
     ))
 
