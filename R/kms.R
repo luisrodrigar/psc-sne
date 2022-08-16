@@ -138,7 +138,7 @@ kms_dir <- function(x, data, h = NULL, N = 500, eps = 1e-3, tol = 1e-1,
   # Cluster end points
   tree <- hclust(dist(y))
   labels <- cutree(tree, h = tol)
-  modes <- sapply(levels(labels), function(i) {
+  modes <- sapply(seq_len(max(labels)), function(i) {
     rotasym::spherical_mean(data = y[labels == i, ])
   })
 
@@ -146,4 +146,5 @@ kms_dir <- function(x, data, h = NULL, N = 500, eps = 1e-3, tol = 1e-1,
   return(list(end_points = y, cluster = labels, modes = modes, paths = paths))
 
 }
+
 
