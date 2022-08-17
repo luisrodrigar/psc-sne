@@ -12,7 +12,7 @@
 #' @param eps convergence tolerance. Defaults to \code{1e-3}.
 #' @param tol tolerance for equality of modes. Defaults to \code{1e-1}.
 #' @param keep_paths keep the ascending paths? Defaults to \code{FALSE}.
-#' @param show_prog display progress?
+#' @param show_prog display progress? Defaults to \code{TRUE}.
 #' @return A list with the following entries:
 #' \itemize{
 #'   \item \code{end_points}: end points of the Euler algorithm. A matrix of
@@ -22,6 +22,8 @@
 #'   \item \code{paths}: ascension paths, if \code{keep_paths = TRUE}. A list
 #'   of length \code{nx} with matrices of size \code{c(np, d + 1)}, where
 #'   \code{np} is at most \code{N + 1}.
+#'   \item \code{tree}: internal hierarchical clustering tree used to merge
+#'   modes.
 #' }
 #' @examples
 #' # Detection of three clusters in S^2
@@ -114,7 +116,7 @@ kms_dir <- function(x, data, h = NULL, N = 500, eps = 1e-3, tol = 1e-1,
       new_y <- step_ahead(y = old_y)
 
       # Convergence?
-      if (sqrt(sum((old_y - new_y)^2)) < eps) {
+      if (acos(sum(old_y * new_y)) < eps) {
 
         # Trim the saved path to the last iteration
         if (keep_paths) paths[[i]] <- paths[[i]][1:k, ]
@@ -136,14 +138,15 @@ kms_dir <- function(x, data, h = NULL, N = 500, eps = 1e-3, tol = 1e-1,
   }
 
   # Cluster end points
-  tree <- hclust(dist(y))
+  tree <- hclust(acos(1 - 0.5 * dist(y)^2))
   labels <- cutree(tree, h = tol)
   modes <- sapply(levels(labels), function(i) {
     rotasym::spherical_mean(data = y[labels == i, ])
   })
 
   # Return end points
-  return(list(end_points = y, cluster = labels, modes = modes, paths = paths))
+  return(list(end_points = y, cluster = labels, modes = modes, paths = paths,
+              tree = tree))
 
 }
 
