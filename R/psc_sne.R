@@ -30,13 +30,14 @@
 #' kl_divergence_grad(Y, 3, 0.5, 2, P, cos_sim, Q)
 #' @export
 kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
+
   # Radial project and compute cosine similarities
   Z <- radial_projection(Y)
   if (is.null(cos_sim)) {
 
     cos_sim <- vec2matrix(
       vec = drop(sphunif::Psi_mat(array(Z, dim = c(nrow(Z), ncol(Z), 1)),
-                                     scalar_prod = TRUE)),
+                                  scalar_prod = TRUE)),
       n = nrow(Z),
       diag_value = 1
     )
@@ -50,11 +51,16 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 
   }
 
-  # Applying the formula of the gradient:
-  # 4 d p \sum_{j=1}^n [y_i' / (1+rho^2-2rho*y_i'*y_j) * (q_{ij}-p_{ij})]
-  return(4 * d * rho *
+  # Applying the formula of the gradient for C
+  # 4 * d * rho \sum_{j = 1}^n [y_i' / (1 + rho^2 - 2 * rho * y_i' y_j) *
+  #                             (q_{ij} - p_{ij})]
+  grad <- 4 * d * rho *
     colSums(Z[-i, ] / (1 + rho^2 - 2 * rho * cos_sim[i, -i]) *
-              (Q[i, -i] - P[i, -i])))
+              (Q[i, -i] - P[i, -i]))
+
+  # Applying the formula of the gradient for C_bar
+  I <- diag(rep(1, ncol(Z)))
+  return(drop(grad %*% (I - tcrossprod(Z[i, ]))))
 
 }
 
@@ -216,7 +222,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   # Matrices to store the two previous Y's
   Y <- array(NA, c(n, d + 1, 2))
 
-  if(init == "equispaced") {
+  if (init == "equispaced") {
 
     # Generate points evenly spaced
     Y[, , 1] <- Y[, , 2] <- gen_opt_sphere(n, d)
@@ -288,7 +294,6 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     # Gradient descent
     Y_i <- Y[, , 2] + (eta * -grad) + moment_i
-
 
     # Projecting iteration solution onto the sphere/circumference of radio 1
     Y_i <- radial_projection(Y_i)
