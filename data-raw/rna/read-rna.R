@@ -21,10 +21,14 @@ plot(clusters_ordered[, 8:9], col = col) # Plot pseudotorsion angles
 small_rna_angles <- as.matrix(small_rna_angles)
 small_rna_angles <- (small_rna_angles / 180) * pi # Degrees to radians
 
+# Torsion angles
+small_rna_torsion <- (small_rna_torsion / 180) * pi # Degrees to radians
+
 # View data on (S^1)^7 = T^7
 pairs(small_rna_angles, col = col)
 
 # Construct data frame and save
-smallrna <- data.frame("angles" = small_rna_angles,
-                       "torsion" = small_rna_torsion, "clusters" = col)
+smallrna <- data.frame("angles" = I(small_rna_angles),
+                       "torsion" = I(small_rna_torsion),
+                       "clusters" = col)
 save(list = "smallrna", file = "smallrna.rda", compress = "bzip2")
