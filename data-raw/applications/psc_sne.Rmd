@@ -231,18 +231,20 @@ dij.1 <- function(i, j) {
 }
 
 dij.2 <- function(i, j) {
-  sqrt(sum((i-j)^2))
+  sqrt(sum((i - j)^2))
 }
 
 y <- data.matrix(iris)[, -5]
 
 # For rows 2 and 3
-result1 <- as.numeric(round(jacobian(func=dij.2, x=y[2,], j=y[3,]), digits=7))
-result2 <- as.numeric((y[2,] - y[3,]) / sqrt(sum((y[2,] - y[3,])^2)))
+result1 <- as.numeric(round(jacobian(func = dij.2, x = y[2, ], j = y[3, ]), 
+                            digits = 7))
+result2 <- as.numeric((y[2, ] - y[3, ]) / sqrt(sum((y[2, ] - y[3, ])^2)))
 all.equal(result2, result1) # checked
 # For row 3 and 2
-result3 <- as.numeric(round(jacobian(func=dij.2, x=y[3,], i=y[2,]), digits=7))
-result4 <- as.numeric((y[3,] - y[2,]) / sqrt(sum((y[2,] - y[3,])^2)))
+result3 <- as.numeric(round(jacobian(func = dij.2, x = y[3, ], i = y[2, ]), 
+                            digits = 7))
+result4 <- as.numeric((y[3, ] - y[2, ]) / sqrt(sum((y[2, ] - y[3, ])^2)))
 all.equal(result4, result3) # checked
 # Checked that both d(d_ij)/dy_i = d(d_ji)/dy_i
 ```
@@ -657,14 +659,16 @@ print(all.equal(cost_result_expected[1,], cost_result))
 ```{r}
 
 radial_projection <- function(x) {
-  x/sqrt(sum(x^2))
+  x / sqrt(sum(x^2))
 }
-z <- runif(n = (d+1), min = 1, max = 10)
-z=Y[1, ]
+z <- runif(n = (d + 1), min = 1, max = 10)
+z <- Y[1, ]
 result.radial = jacobian(radial_projection, z)
 
 
-result_excpected.radial = (as.numeric((t(z) %*% z)^(-1/2)) * (diag(length(z))-(radial_projection(z)%*%t(radial_projection(z)))))
+result_excpected.radial = (as.numeric((t(z) %*% z)^(-1 / 2)) 
+                           * (diag(length(z)) - (radial_projection(z)
+                                                 %*% t(radial_projection(z)))))
 
 all.equal(result.radial, result_excpected.radial)
 ```
