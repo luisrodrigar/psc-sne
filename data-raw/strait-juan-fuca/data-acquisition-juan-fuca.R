@@ -432,7 +432,9 @@ jdf_long_fmt <- jdf_long_fmt %>%
   select(-freq)
 
 # Save dataset in long format
+jdf <- jdf_long_fmt
 save(
-  list = "jdf_long_fmt",
-  file = paste(here("data-raw", "strait-juan-fuca"), "jdf.rda", sep = "/")
+  list = "jdf",
+  file = paste(here("data-raw", "strait-juan-fuca"), "jdf.rda", sep = "/"),
+  compress = "bzip2"
 )
