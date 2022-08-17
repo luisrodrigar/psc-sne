@@ -84,9 +84,9 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 #' @param num_iteration maximum number of iterations (optional, default value
 #' \code{200}).
 #' @param initial_momentum first value of the momentum of the first \code{250}
-#' iterations.
+#' iterations. Defaults to \code{0.5}.
 #' @param final_momentum momentum to take into account after the \code{250}
-#' iteration.
+#' iteration. Defaults to \code{0.8}.
 #' @param eta is the learning rate of the optimization algorithm (optional,
 #' default value \code{200}).
 #' @param early_exaggeration the first \code{100} iterations results are
@@ -184,6 +184,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   absolute_errors <- numeric(length = nrow(X))
   relative_errors <- numeric(length = nrow(X))
   gradient_norms <- numeric(length = nrow(X))
+  moment_norms <- numeric(length = nrow(X))
 
   # Sample size and sphere dimension within polysphere
   n <- nrow(X)
@@ -266,6 +267,8 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   # Interval from 2 to number of iterations + 2
   range_iterations <- seq_len(num_iteration) + 2
 
+  # Gradient descent
+  convergence <- FALSE
   for (i in range_iterations) {
 
     # Applying final momentum
@@ -305,7 +308,8 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     # Generate the Q matrix with the low-dimension probabilities
     Q_i <- low_dimension_Q(Y_i, rho)
 
-    # Objective func value, absolute and relative errors and the gradient norm
+    # Objective function value, absolute and relative errors, gradient norm,
+    # and moment norm
     obj_func_iter[i - 2] <- sum(P * log(P / Q_i), na.rm = TRUE)
     if (i > 3) {
 
@@ -314,6 +318,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     }
     gradient_norms[i - 2] <- sqrt(sum(grad^2))
+    moment_norms[i - 2] <- sqrt(sum(moment_i^2))
 
     # When the objective function value just calculated is smaller than the best
     if (obj_func_iter[i - 2] < best_obj_i) {
@@ -328,7 +333,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     cat(sprintf(
       "It: %d; obj: %.3e; abs: %.3e; rel: %.3e; norm: %.3e; mom: %.3e;\nbest it: %d; best obj: %.3e\n",
       i - 2, obj_func_iter[i - 2], absolute_errors[i - 2],
-      relative_errors[i - 2], gradient_norms[i - 2], sqrt(sum(moment_i^2)),
+      relative_errors[i - 2], gradient_norms[i - 2], moment_norms[i - 2],
       best_i, best_obj_i
     ))
 
@@ -351,6 +356,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
       if (all(c(relative_errors[i - 2], absolute_errors[i - 2],
                 gradient_norms[i - 2]) < tol)) {
 
+        convergence <- TRUE
         break
 
       }
@@ -366,8 +372,14 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
   }
 
+  # Return configurations and diagnstics
   return(list("best_Y" = best_Y_i, "last_Y" = Y[, , 2],
-              "obj_seq" = obj_func_iter, "norm_seq" = gradient_norms))
+              "diagnostics" = data.frame("obj" = obj_func_iter,
+                                         "abs" = absolute_errors,
+                                         "rel" = relative_errors,
+                                         "grad" = gradient_norms,
+                                         "mom" = moment_norms),
+              "convergence" = convergence))
 
 }
 
