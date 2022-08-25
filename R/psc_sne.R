@@ -268,10 +268,11 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   # Initial momentum
   momentum <- initial_momentum
 
-  old_par <- par()
   if (show_prog) {
 
-      # Visualizing the plots in a 3 x 3 grid for d = 1
+      # Visualizing the plots in a 3 x 3 grid
+      old_par <- par()
+      on.exit(par(old_par))
       old_par <- par(mfrow = c(3, 3), mar = c(0, 0, 2, 0))
 
   }
@@ -341,11 +342,11 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     }
 
+    # Progress trace
     if (show_prog && is.numeric(show_prog) && (((i - 2) %% show_prog == 0)
                                                || (i - 2 == 1)
                                                || i - 2 == maxit)  ) {
 
-      # Progress trace
       cat(sprintf(
         "It: %d; obj: %.3e; abs: %.3e; rel: %.3e; norm: %.3e; mom: %.3e;\nbest it: %d; best obj: %.3e\n",
         i - 2, obj_func_iter[i - 2], absolute_errors[i - 2],
@@ -360,7 +361,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     if (show_prog && (i - 2 == 1 || ((i - 2) %% (show_prog * 2) == 0)
                       || i - 2 == maxit)) {
 
-      show_iter_sol(Y[, , 2], i, d, colors)
+      show_iter_sol(Y = Y[, , 2], i = i, d = d, colors = colors)
 
     }
     # Reverse the early exaggeration made at the beginning
@@ -383,20 +384,14 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
           relative_errors[i - 2], gradient_norms[i - 2], sqrt(sum(moment_i^2)),
           best_i, best_obj_i
         ))
+
         # Show the last configuration
-        show_iter_sol(Y[, , 2], i, d, colors)
+        show_iter_sol(Y = Y[, , 2], i = i, d = d, colors = colors)
         convergence <- TRUE
         break
 
       }
     }
-  }
-
-  if (show_prog) {
-
-    # Restore the par configuration
-    par(old_par)
-
   }
 
   # Return configurations and diagnstics
