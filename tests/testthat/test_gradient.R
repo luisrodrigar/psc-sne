@@ -120,8 +120,11 @@ ii <- 1
 yi <- Y[ii, ]
 
 test_that("Checking value with gradient approximation", {
-  expect_equal(jacobian(kl_div_obj_func, Y = Y, P = P, rho = rho, d = d,
-                        x = yi, i = ii),
+  computation_grad <- jacobian(kl_div_obj_func, Y = Y, P = P, rho = rho, d = d,
+                               x = yi, i = ii)
+  I <- diag(rep(1, ncol(Y)))
+  computation_grad_bar <- computation_grad %*% (I - tcrossprod(Y[ii, ]))
+  expect_equal(computation_grad_bar,
     kl_divergence_grad(Y, ii, rho, d, P),
     tolerance = 1e-6, ignore_attr = TRUE
   )
