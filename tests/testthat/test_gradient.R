@@ -126,7 +126,7 @@ test_that("Checking value with gradient approximation", {
                     ii = ii)
   }, x = yi, method = "simple", method.args = list(eps = 1e-6))
   expect_equal(computation_grad_bar, kl_divergence_grad(Y, ii, rho, d, P),
-               tolerance = 1e-6)
+               tolerance = 1e-4)
 })
 
 test_that("Checking that the radial projection is done", {
