@@ -4,7 +4,7 @@
 \alias{r_block}
 \title{Sample correlation matrices with block structure}
 \usage{
-r_block(n, g = 5, p = 20, rho = rep(c(0.9, 0.9), times = g)[1:g])
+r_block(n, g = 5, p = 20, rho = rep(0.9, times = g))
 }
 \arguments{
 \item{n}{sample size.}

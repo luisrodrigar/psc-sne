@@ -46,11 +46,7 @@ x_diff <- function(X) {
   sum_x_m <- t(matrix(replicate(n, sum_x), byrow = TRUE, nrow = n))
   cross_times_minus_2 <- -2 * (X %*% t(X))
   D <- t(cross_times_minus_2 + sum_x_m) + sum_x_m
-<<<<<<< HEAD
-  D <- round(D, digits = 4) 
-=======
   D <- round(D, digits = 4)
->>>>>>> main
 }
 ```
 
@@ -84,11 +80,7 @@ In order to proceed with the optimization of the variance, we are going to defin
 entropy_beta <- function(D_i, beta = 1) {
   P_i <- exp(-D_i * beta)
   sum_p_i <- sum(P_i)
-<<<<<<< HEAD
-  H_i <- log(sum_p_i) + (beta * sum(D_i * P_i) / sum_p_i) 
-=======
   H_i <- log(sum_p_i) + (beta * sum(D_i * P_i) / sum_p_i)
->>>>>>> main
   P_i <- P_i / sum_p_i
   return(list(entropy = H_i, probs = P_i))
 }
@@ -98,11 +90,7 @@ The goal is to adjust the variability so that the perplexity at each point is th
 
 ```{r}
 index_except_i <- function(i, n) {
-<<<<<<< HEAD
-  index <- c(seq(1, i-1), seq(i+1, n))
-=======
   index <- c(seq(1, i - 1), seq(i + 1, n))
->>>>>>> main
   if (i == 1) {
     index <- 2:n
   } else if (i == n) {
@@ -131,23 +119,15 @@ binary_search <- function(h_diff, beta, i, beta_min, beta_max) {
 }
 
 binary_search_optimization <- function(D_i, i, beta, h_star, prob_star,
-<<<<<<< HEAD
-                                       log_perp, tolerance=1e-5) {
-=======
                                        log_perp, tolerance = 1e-5) {
->>>>>>> main
   beta_min <- -Inf
   beta_max <- Inf
   tries <- 0
   h_diff <- h_star - log_perp
   while (abs(h_diff) > tolerance && tries < 50) {
     beta_opt <- binary_search(h_diff, beta, i, beta_min, beta_max)
-<<<<<<< HEAD
-    beta <- beta_opt$beta; beta_min <- beta_opt$min
-=======
     beta <- beta_opt$beta
     beta_min <- beta_opt$min
->>>>>>> main
     beta_max <- beta_opt$max
     res_loop <- entropy_beta(D_i, beta[i])
     h_star <- res_loop$entropy
@@ -162,24 +142,15 @@ binary_search_optimization <- function(D_i, i, beta, h_star, prob_star,
 Once we have defined these two methods, we are able to obtain the high dimensional properties:
 
 ```{r}
-
+ 
 high_dimension_probs <- function(X = matrix(), tolerance = 1e-5,
                                  perplexity = 30) {
   n <- nrow(X)
-<<<<<<< HEAD
-  p <- ncol(X)
-  D <- x_diff(X)
-  P <- matrix(0, nrow=150, ncol=150)
-  beta <- rep(1, n)
-  log_perp <- log(perplexity)
-  for(i in seq_len(n)) {
-=======
   D <- x_diff(X)
   P <- matrix(0, nrow = 150, ncol = 150)
   beta <- rep(1, n)
   log_perp <- log(perplexity)
   for (i in seq_len(n)) {
->>>>>>> main
     column_index <- index_except_i(i, n)
     D_i <- D[i, column_index]
     res <- entropy_beta(D_i, beta[i])

@@ -50,7 +50,7 @@ sc_unif_mix <- function(n, p, w_sc, w_unif, kappa = 50) {
   cols <- cols[indexes]
   return(list("data" = data, "colors" = cols))
 }
-n <- 1200
+n <- 600
 p <- 101
 w_sc <- 0.5
 w_unif <- 0.5
@@ -70,25 +70,45 @@ rho_30_1 <- rho_optim_bst(x = sc_unif_mix_data, perp_fixed = 30,
 
 The next thing is to run the psc-sne algorithm with the parameter $d = 1$:
 
-```{r}
+```{r cache=TRUE}
 res_pscsne_11 <- psc_sne(X = sc_unif_mix_data, d = 1, rho_psc_list = rho_30_1,
                          show_prog = TRUE, colors = sc_unif_mix_colors,
-                         parallel_cores = num_cores_param)
+                         parallel_cores = num_cores_param, eta = 100)
+```
+
+The best result related with the smallest value of the objective function is:
+
+```{r fig.asp=1, fig.align='center'}
+Y <- res_pscsne_11$best_Y
+plot(Y[, 1], Y[, 2], col = sc_unif_mix_colors, xlim = c(-1, 1),
+     ylim = c(-1, 1))
+
+polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+        y = sin(seq(0, 2 * pi, length.out = 100)))
 ```
 
 After that, let's execute psc-sne with the parameter $d = 2$:
 
-```{r}
+```{r cache=TRUE, fig.height=8, fig.width=8}
 res_pscsne_12 <- psc_sne(X = sc_unif_mix_data, d = 2, rho_psc_list = rho_30_1,
                          show_prog = TRUE, colors = sc_unif_mix_colors,
-                         parallel_cores = num_cores_param)
+                         parallel_cores = num_cores_param, eta = 10)
 ```
 
-```{r}
+```{r fig.asp=1, fig.align='center'}
+seq_rad <- seq(-pi, pi, by = pi / 30)
+meridian <- do.call(rbind, lapply(seq_rad, function(i) c(0, i)))
+equator <- do.call(rbind, lapply(seq_rad, function(i) c(i, pi/2)))
 Y <- res_pscsne_12$best_Y
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-            radius = 1, type = "s", col = "lightblue", alpha = 0.8, lit = FALSE)
-rgl::points3d(Y, col = sc_unif_mix_colors)
+sd3 <- scatterplot3d::scatterplot3d(
+  Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+  color = sc_unif_mix_colors, xlab = "", ylab = "", zlab = "", axis = FALSE,
+  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+)
+sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+             type = "l", lty = 3)
+sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+             type = "l", lty = 3)
 ```
 
 
@@ -148,9 +168,20 @@ res_pscsne_21 <- psc_sne(X = feat_data, d = 1, rho_psc_list = rho_list,
                       eta = 35, parallel_cores = num_cores_param)
 ```
 
+The best result related with the smallest value of the objective function is:
+
+```{r fig.asp=1, fig.align='center'}
+Y <- res_pscsne_21$best_Y
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1),
+     ylim = c(-1, 1))
+
+polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+        y = sin(seq(0, 2 * pi, length.out = 100)))
+```
+
 The psc-sne algorithm identifies in the reduced dimension on the circumference the five groups that are in this case strongly positive correlated within each group's variables. Let's do the same for $d = 2$:
 
-```{r}
+```{r cache=TRUE, fig.height=8, fig.width=8}
 psc_sne_res_22 <- psc_sne(feat_data, d = 2, rho_psc_list = rho_list,
                           colors = cols, show_prog = TRUE,
                           eta = 35, parallel_cores = num_cores_param)
@@ -158,10 +189,17 @@ psc_sne_res_22 <- psc_sne(feat_data, d = 2, rho_psc_list = rho_list,
 
 In case of the scores projected onto the sphere, results are good since the five groups are clearly separated along the sphere. Let's see the points in the interactive sphere using the package `rgl`.
 
-```{r}
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-            radius = 1, type = "s", col = "lightblue", alpha = 0.8, lit = FALSE)
-rgl::points3d(psc_sne_res_22$best_Y, col = cols)
+```{r fig.asp=1}
+Y <- psc_sne_res_22$best_Y
+sd3 <- scatterplot3d::scatterplot3d(
+  Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+  color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
+  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+)
+sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+             type = "l", lty = 3)
+sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+             type = "l", lty = 3)
 ```
 
 Let's do the same but taking now negative and positive correlations for each group. For example, for the first group we are going to take a significant negative correlation, for the second a large correlation and so on.
@@ -208,20 +246,38 @@ res_pscsne_21_neg <- psc_sne(X = feat_data_2, d = 1, rho_psc_list = rho_list_2,
                       parallel_cores = num_cores_param)
 ```
 
+The best result related with the smallest value of the objective function is:
+
+```{r fig.asp=1, fig.align='center'}
+Y <- res_pscsne_21_neg$best_Y
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1),
+     ylim = c(-1, 1))
+
+polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+        y = sin(seq(0, 2 * pi, length.out = 100)))
+```
+
 In this case, the negative correlation in some groups has an effect on the results produced by psc-sne. Each group with negative correlation is split in two where they look like being distributed more or less antipodal. Later on, reduced on the sphere $d = 2$.
 
-```{r}
+```{r cache=TRUE, fig.height=8, fig.width=8}
 psc_sne_res_22_neg <- psc_sne(feat_data_2, d = 2, rho_psc_list = rho_list_2,
                               colors = cols, show_prog = TRUE, eta = 35,
                               parallel_cores = num_cores_param)
 ```
 
-In case of the reduced dimension $d = 2$, we can confirm the results obtained in the circumference. Let's see these results on the interactive sphere.
+In case of the reduced dimension $d = 2$, we can confirm the results obtained in the circumference. Let's see these results on the sphere.
 
-```{r}
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-            radius = 1, type = "s", col = "lightblue", alpha = 0.8, lit = FALSE)
-rgl::points3d(psc_sne_res_22_neg$best_Y, col = cols)
+```{r fig.asp=1}
+Y <- psc_sne_res_22_neg$best_Y
+sd3 <- scatterplot3d::scatterplot3d(
+  Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+  color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
+  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+)
+sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+             type = "l", lty = 3)
+sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+             type = "l", lty = 3)
 ```
 
 ## \boldmath $(\mathbb{S}^{1})^{100}$ \unboldmath
@@ -267,20 +323,38 @@ psc_sne_res_31 <- psc_sne(X = x_s1_100, d = 1, rho_psc_list = rho_30_s1_100,
                           parallel_cores = num_cores_param)
 ```
 
+The best result related with the smallest value of the objective function is:
+
+```{r fig.asp=1, fig.align='center'}
+Y <- psc_sne_res_31$best_Y
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1),
+     ylim = c(-1, 1))
+
+polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+        y = sin(seq(0, 2 * pi, length.out = 100)))
+```
+
 We can see the two different antipodal groups defined in the first five circumferences so the psc-sne algorithm can detect these von Misses-Fisher distributions even with the noise added with the remainder 95 uniform distributions onto the circumference. Later on, let's reduce the dimension to the sphere:
 
-```{r}
+```{r cache=TRUE, fig.height=8, fig.width=8}
 psc_sne_res_32 <- psc_sne(X = x_s1_100, d = 2, rho_psc_list = rho_30_s1_100,
                           colors = cols, show_prog = TRUE, eta = 25,
                           parallel_cores = num_cores_param)
 ```
 
-In this case, results show two groups antipodal in the sphere. There are some not well identified points but this is something expected since there are 95 points distributed uniformly. Let's visualize the results in the interactive sphere using `rgl`:
+In this case, results show two groups antipodal in the sphere. There are some not well identified points but this is something expected since there are 95 points distributed uniformly. Let's visualize the results on the sphere:
 
-```{r}
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "lightblue", lit = FALSE)
-rgl::points3d(psc_sne_res_32$best_Y, col = cols)
+```{r fig.asp=1}
+Y <- psc_sne_res_32$best_Y
+sd3 <- scatterplot3d::scatterplot3d(
+  Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+  color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
+  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+)
+sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+             type = "l", lty = 3)
+sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+             type = "l", lty = 3)
 ``` 
 
 ### A path in \boldmath $(\mathbb{S}^1)^{100}$ \unboldmath indexed by time.
@@ -318,9 +392,20 @@ psc_sne_res_41 <- psc_sne(X = x_s1_100_path, d = 1,
                           parallel_cores = num_cores_param)
 ```
 
+The best result related with the smallest value of the objective function is:
+
+```{r fig.asp=1, fig.align='center'}
+Y <- psc_sne_res_41$best_Y
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1),
+     ylim = c(-1, 1))
+
+polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+        y = sin(seq(0, 2 * pi, length.out = 100)))
+```
+
 We can see that the points in the circumference are more or less well arranged. Nevertheless, it looks like this reduced dimension is not appropriate since results are not as satisfactory as other cases. Let's see if results onto the sphere are better:
 
-```{r}
+```{r cache=TRUE, fig.height=8, fig.width=8}
 psc_sne_res_42 <- psc_sne(X = x_s1_100_path, d = 2,
                           rho_psc_list = rho_30_s1_100_path, colors = cols,
                           show_prog = TRUE, eta = 25,
@@ -329,10 +414,17 @@ psc_sne_res_42 <- psc_sne(X = x_s1_100_path, d = 2,
 
 In this case, results are well sorted along the sphere since the gradient of the rainbow colors are well defined. Let's visualize the results in the interactive sphere:
 
-```{r}
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "lightblue", lit = FALSE)
-rgl::points3d(psc_sne_res_42$best_Y, col = cols)
+```{r fig.asp=1}
+Y <- psc_sne_res_42$best_Y
+sd3 <- scatterplot3d::scatterplot3d(
+  Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+  color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
+  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+)
+sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+             type = "l", lty = 3)
+sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+             type = "l", lty = 3)
 ```
 
 ## \boldmath $(\mathbb{S}^2)^{100}$ \unboldmath
@@ -398,18 +490,36 @@ psc_sne_res_51 <- psc_sne(X = x_s2_100, d = 1, rho_psc_list = rho_30_s2_100,
                           parallel_cores = num_cores_param)
 ```
 
+The best result related with the smallest value of the objective function is:
+
+```{r fig.asp=1, fig.align='center'}
+Y <- psc_sne_res_51$best_Y
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1),
+     ylim = c(-1, 1))
+
+polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+        y = sin(seq(0, 2 * pi, length.out = 100)))
+```
+
 Results shows more or less the structure of the first 5 spheres even with the noise included with the remainder spheres. Afterwards, let's get the results on the sphere:
 
-```{r}
+```{r cache=TRUE, fig.height=8, fig.width=8}
 psc_sne_res_52 <- psc_sne(X = x_s2_100, d = 2, rho_psc_list = rho_30_s2_100,
                           colors = cols, show_prog = TRUE, eta = 25,
                           parallel_cores = num_cores_param)
 ```
 
-In this case results show again the insights obtained in the reduced dimension to the circumference. Let's visualize the results in the sphere:
+In this case results show again the insights obtained in the reduced dimension to the circumference. Let's visualize the results on the sphere:
 
-```{r}
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "lightblue", lit = FALSE)
-rgl::points3d(psc_sne_res_52$best_Y, col = cols)
+```{r fig.asp=1}
+Y <- psc_sne_res_52$best_Y
+sd3 <- scatterplot3d::scatterplot3d(
+  Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+  color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
+  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+)
+sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+             type = "l", lty = 3)
+sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+             type = "l", lty = 3)
 ```
