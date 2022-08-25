@@ -19,7 +19,7 @@ Let's begin by importing the data.
 ```{r load, cache = TRUE, fig.asp = 1}
 # Load package
 library(pscsne)
-stopifnot(packageVersion("pscsne") >= "0.0.1.900002")
+stopifnot(packageVersion("pscsne") >= "0.0.1.900003")
 
 # Load dataset
 data("smallrna")
@@ -78,10 +78,10 @@ Let's see the recovery of the clusters.
 # Kernel mean shift clustering
 n <- nrow(fit_2$best_Y)
 d <- ncol(fit_2$best_Y) - 1
-fit_mix <- DirStats::bic_vmf_mix(fit_2$best_Y, kappa_max = 1e3)
+fit_mix <- DirStats::bic_vmf_mix(data = fit_2$best_Y, kappa_max = 1e3)
 h <- DirStats::bw_dir_emi(data = fit_2$best_Y, fit_mix = fit_mix)$h_opt *
       n^(1 / (d + 4)) * n^(-1 / (d + 6))
-kms <- kms_dir(x = fit_2$best_Y, data = fit_2$best_Y, h = h)
+kms <- kms_dir(data = fit_2$best_Y, h = h)
 
 # Detects 8 clusters by splitting the 3 original clusters
 length(unique(kms$cluster))
