@@ -15,7 +15,8 @@ jcondi_sph(y, i, j, rho, d_i_sph_cauchy = NULL)
 
 \item{rho}{concentration parameter must be in [0, 1).}
 
-\item{d_i_sph_cauchy}{the marginal probability of the \eqn{i}-th observation. Optional, default value to \code{NULL}.}
+\item{d_i_sph_cauchy}{the marginal probability of the \eqn{i}-th observation.
+Optional, defaults to \code{NULL}.}
 }
 \value{
 Spherical marginal Cauchy density probability given the parameters.

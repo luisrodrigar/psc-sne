@@ -7,7 +7,11 @@
 cos_sim_i(cos_sim_psh, i, r, n)
 }
 \arguments{
-\item{cos_sim_psh}{cosine similarities array of dimension \code{c(n, n, r)} for the polysphere.}
+\item{cos_sim_psh}{a vector of size \code{n/2} with the cosine
+similarities in high-dimension for the polysphere \eqn{(\mathcal{S}^p)^r}.
+The way that the cosine similarities matrix is treated makes the calculus
+faster since it is flat in a vector object. Optional parameter, defaults to
+\code{NULL}.}
 
 \item{i}{corresponds to the \eqn{i}-th observation index.}
 
@@ -16,8 +20,8 @@ cos_sim_i(cos_sim_psh, i, r, n)
 \item{n}{the sample size.}
 }
 \description{
-Obtain the index of an element within a vector for the equivalent in
-the upper triangular matrix without diagonal
+Obtain the index of an element within a vector
+for the equivalent in the upper triangular matrix without diagonal
 }
 \examples{
 n <- 6

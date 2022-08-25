@@ -7,7 +7,8 @@
 vec2matrix(vec, n, diag_value)
 }
 \arguments{
-\item{vec}{vector containing all non-repeated values of the cosine similarity matrix (upper triangular matrix).}
+\item{vec}{vector containing all non-repeated values of the cosine
+similarity matrix (upper triangular matrix).}
 
 \item{n}{sample size of the original data.}
 
@@ -17,7 +18,8 @@ vec2matrix(vec, n, diag_value)
 Matrix formed by the \code{vec}.
 }
 \description{
-Convert the vector into a symmetric matrix with diagonal equal to a specific value.
+Convert the vector into a symmetric matrix with diagonal
+equal to a specific value.
 }
 \examples{
 n <- 6

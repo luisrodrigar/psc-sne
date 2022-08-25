@@ -14,8 +14,8 @@ index_upper_trian(i, j, n)
 \item{n}{the sample size of the symmetric matrix (n x n)}
 }
 \description{
-Obtain the index of an element within a vector for the equivalent in
-the upper triangular matrix without diagonal
+Obtain the index of an element within a vector
+for the equivalent in the upper triangular matrix without diagonal
 }
 \examples{
 mat <- rbind(c(0, 1, 2), c(0, 0, 1), c(0, 0, 0))

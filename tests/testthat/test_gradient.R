@@ -19,7 +19,6 @@ q_i_not_j <- function(Y, i, j, rho, d) {
 }
 
 q_ij <- function(Y, s_ij, i, j, rho, d, has_deriv_num) {
-  n <- nrow(Y)
   qij <- simple_dspcauchy_ld(Y, i, j, rho, d)
   if (has_deriv_num) {
     qij <- simple_dspcauchy_sim(s_ij, rho, d)
@@ -95,7 +94,8 @@ kl_div_obj_func <- function(Y, P, rho, d, yi, ii) {
       if (i == j) {
         return(0)
       } else {
-        (P[i, j] * log(P[i, j]) - P[i, j] * log(q_ij_yi(Y, yi, i, j, rho, d, ii)))
+        (P[i, j] * log(P[i, j]) - P[i, j] *
+           log(q_ij_yi(Y, yi, i, j, rho, d, ii)))
       }
     })
   }))
@@ -114,13 +114,14 @@ optim_hat <- rho_optim_bst(X, perplexity, num_cores = 2)
 rho_hat <- optim_hat$rho_values
 P <- optim_hat$P
 P <- symmetric_probs(P)
-Y <- sphunif::r_unif_sph(n, (d + 1))[ , , 1]
+Y <- sphunif::r_unif_sph(n, (d + 1))[, , 1]
 
 ii <- 1
 yi <- Y[ii, ]
 
 test_that("Checking value with gradient approximation", {
-  expect_equal(jacobian(kl_div_obj_func, Y = Y, P = P, rho = rho, d = d, x = yi, i = ii),
+  expect_equal(jacobian(kl_div_obj_func, Y = Y, P = P, rho = rho, d = d,
+                        x = yi, i = ii),
     kl_divergence_grad(Y, ii, rho, d, P),
     tolerance = 1e-6, ignore_attr = TRUE
   )
