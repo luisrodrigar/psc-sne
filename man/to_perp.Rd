@@ -31,5 +31,5 @@ Calculate the perplexity of each observations for a given
 \examples{
 x <- sphunif::r_unif_sph(25, 3, 3)
 to_perp(x, rep(0.5, 25))
-to_perp(x, rep(1 - 1e-4, 25), drop(sphunif::Psi_mat(x, scalar_prod = TRUE)))
+to_perp(x, rep(1 - 1e-4, 25), sphunif::Psi_mat(x, scalar_prod = TRUE))
 }
