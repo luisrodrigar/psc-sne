@@ -31,6 +31,5 @@ polyspherical Cauchy distribution. Matrix version algorithm.
 \examples{
 x <- sphunif::r_unif_sph(100, 3, 3)
 high_dimension(x, rep(0.5, 100))
-high_dimension(x, rep(0.5, 100),
-               drop(sphunif::Psi_mat(x, scalar_prod = TRUE)))
+high_dimension(x, rep(0.5, 100), sphunif::Psi_mat(x, scalar_prod = TRUE))
 }
