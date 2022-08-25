@@ -82,7 +82,7 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 #' is a list, then it contains the vector \code{rho_values} and the matrix
 #' \code{P}, the second scenario when the type is a vector, then this object
 #' contains the rho values, within this function the
-#' \code{\link{high_dimension}} function is called to get the \matrix{P}.
+#' \code{\link{high_dimension}} function is called to get the matrix \code{P}.
 #' The last scenario that is when this object is set to \code{NULL}, i.e., the
 #' \code{\link{rho_optim_bst}} function is called to get the rho values
 #' (given a fixed perplexity) and the probabilities matrix. Optional parameter,
