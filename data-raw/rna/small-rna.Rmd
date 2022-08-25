@@ -5,7 +5,7 @@ date: "25-05-2022"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 knitr::opts_knit$set(echo = TRUE, root.dir = rprojroot::find_rstudio_root_file())
 library(pscsne)
 knitr::opts_chunk$set(echo = TRUE)
@@ -16,16 +16,16 @@ The objective in this case study is to recover clusters identified in `smallrna$
 
 Let's begin by importing the data.
 
-```{r load, cache = TRUE}
+```{r load, cache = TRUE, fig.asp = 1}
 # Load package
 library(pscsne)
-stopifnot(packageVersion("pscsne") >= "0.0.1.900001")
+stopifnot(packageVersion("pscsne") >= "0.0.1.900002")
 
 # Load dataset
 data("smallrna")
 
 # Visualize original data
-pairs(smallrna$angles, col = smallrna$clusters + 1)
+pairs(smallrna$angles, col = smallrna$clusters + 1, cex = 0.5)
 ```
 
 We can now run psc-SNE. First, we transform the data and obtain the $\rho$'s giving the prescribed perplexity.
@@ -44,8 +44,8 @@ We run psc-SNE for $d = 1$ with its default $\eta$.
 # Default
 void_1 <- capture.output(
   fit_1 <- psc_sne(X = smallrna_X, d = 1, rho_psc_list = rho_psc_list,
-                   eta = 200, num_iteration = 1e3, tol = 1e-6,
-                   show_prog = FALSE, colors = smallrna$clusters))
+                   eta = 200, maxit = 1e3, tol = 1e-6, show_prog = 10,
+                   colors = smallrna$clusters))
 
 # Does not converge
 fit_1$convergence
@@ -61,8 +61,8 @@ The employed $\eta$ seems to be too large. Let's reduce it.
 # Lower eta
 void_2 <- capture.output(
   fit_2 <- psc_sne(X = smallrna_X, d = 1, rho_psc_list = rho_psc_list,
-                   eta = 10, num_iteration = 1e3, tol = 1e-6,
-                   show_prog = FALSE, colors = smallrna$clusters))
+                   eta = 10, maxit = 1e3, tol = 1e-6, show_prog = 10,
+                   colors = smallrna$clusters))
 
 # Converges
 fit_2$convergence
