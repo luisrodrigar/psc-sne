@@ -299,8 +299,8 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     # Gradient of the objective function for all the observations
     grad <- t(simplify2array(parallel::mclapply(
-      mc.cores = parallel_cores, 1:n,
-      kl_divergence_grad, Y = Y[, , 2], rho = rho, d = d, P = P,
+      mc.cores = parallel_cores, X = seq_len(n),
+      FUN = kl_divergence_grad, Y = Y[, , 2], rho = rho, d = d, P = P,
       cos_sim = Y_cos_sim, Q = Q_i
     )))
 
