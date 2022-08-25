@@ -32,13 +32,14 @@
 #' kl_divergence_grad(Y, 3, 0.5, 2, P, cos_sim, Q)
 #' @export
 kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
+
   # Radial project and compute cosine similarities
   Z <- radial_projection(Y)
   if (is.null(cos_sim)) {
 
     cos_sim <- vec2matrix(
       vec = drop(sphunif::Psi_mat(array(Z, dim = c(nrow(Z), ncol(Z), 1)),
-                                     scalar_prod = TRUE)),
+                                  scalar_prod = TRUE)),
       n = nrow(Z),
       diag_value = 1
     )
@@ -52,11 +53,16 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 
   }
 
-  # Applying the formula of the gradient:
-  # 4 d p \sum_{j=1}^n [y_i' / (1+rho^2-2rho*y_i'*y_j) * (q_{ij}-p_{ij})]
-  return(4 * d * rho *
+  # Applying the formula of the gradient for C
+  # 4 * d * rho \sum_{j = 1}^n [y_i' / (1 + rho^2 - 2 * rho * y_i' y_j) *
+  #                             (q_{ij} - p_{ij})]
+  grad <- 4 * d * rho *
     colSums(Z[-i, ] / (1 + rho^2 - 2 * rho * cos_sim[i, -i]) *
-              (Q[i, -i] - P[i, -i])))
+              (Q[i, -i] - P[i, -i]))
+
+  # Applying the formula of the gradient for C_bar
+  I <- diag(rep(1, ncol(Z)))
+  return(drop(grad %*% (I - tcrossprod(Z[i, ]))))
 
 }
 
@@ -193,6 +199,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   absolute_errors <- numeric(length = nrow(X))
   relative_errors <- numeric(length = nrow(X))
   gradient_norms <- numeric(length = nrow(X))
+  moment_norms <- numeric(length = nrow(X))
 
   # Sample size and sphere dimension within polysphere
   n <- nrow(X)
@@ -291,6 +298,8 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   # Interval from 3 to number of iterations + 2
   range_iterations <- seq_len(maxit) + 2
 
+  # Gradient descent
+  convergence <- FALSE
   for (i in range_iterations) {
 
     # Applying final momentum
@@ -320,7 +329,6 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     # Gradient descent
     Y_i <- Y[, , 2] + (eta * -grad) + moment_i
 
-
     # Projecting iteration solution onto the sphere/circumference of radio 1
     Y_i <- radial_projection(Y_i)
 
@@ -331,7 +339,8 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     # Generate the Q matrix with the low-dimension probabilities
     Q_i <- low_dimension_Q(Y_i, rho)
 
-    # Objective func value, absolute and relative errors and the gradient norm
+    # Objective function value, absolute and relative errors, gradient norm,
+    # and moment norm
     obj_func_iter[i - 2] <- sum(P * log(P / Q_i), na.rm = TRUE)
     if (i > 3) {
 
@@ -340,6 +349,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     }
     gradient_norms[i - 2] <- sqrt(sum(grad^2))
+    moment_norms[i - 2] <- sqrt(sum(moment_i^2))
 
     # When the objective function value just calculated is smaller than the best
     if (obj_func_iter[i - 2] < best_obj_i) {
@@ -396,6 +406,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
         par(old_par)
         # Show the last configuration
         show_iter_sol(Y[, , 2], i, d, colors)
+        convergence <- TRUE
         break
 
       }
@@ -411,8 +422,14 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
   }
 
+  # Return configurations and diagnstics
   return(list("best_Y" = best_Y_i, "last_Y" = Y[, , 2],
-              "obj_seq" = obj_func_iter, "norm_seq" = gradient_norms))
+              "diagnostics" = data.frame("obj" = obj_func_iter,
+                                         "abs" = absolute_errors,
+                                         "rel" = relative_errors,
+                                         "grad" = gradient_norms,
+                                         "mom" = moment_norms),
+              "convergence" = convergence))
 
 }
 
