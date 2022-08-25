@@ -104,8 +104,7 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 #' when visualization is true. Optional parameter, defaults to \code{NULL}).
 #' @param show_prog defines the number of iterations skipped when reporting
 #' the progress. Defaults to \code{100}, i.e., only multiples of \code{100}
-#' are reported, otherwise the closer multiple of \code{100} is taking into
-#' account. \code{show_prog} also controls the frequency a plot is shown:
+#' are reported. \code{show_prog} also controls the frequency a plot is shown:
 #' after \code{2 * show_prog} iterations. If \code{FALSE}, no progress is
 #' shown at all.
 #' @param tol is the tolerance, when is below this value it is considered that
@@ -213,24 +212,6 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     # Set the print trace each 100 iterations
     show_prog <- 100
 
-  } else if (is.numeric(show_prog) && (show_prog %% 100 != 0)) {
-
-    # Set the print trace to the closest multiple of 100
-    # Value of 100 in case of a small value
-    if (show_prog < 50) {
-
-      show_prog <- 100
-
-    } else if (show_prog %% 100 >= 50) {
-
-      show_prog <- show_prog + 100 - (show_prog %% 100)
-
-    } else if (show_prog %% 100 > 0) {
-
-      show_prog <- show_prog - (show_prog %% 100)
-
-    }
-
   }
 
   # Based on the rho values parameter, do different things
@@ -287,11 +268,11 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   # Initial momentum
   momentum <- initial_momentum
 
-  old_par <- NULL
+  old_par <- par()
   if (show_prog) {
 
       # Visualizing the plots in a 3 x 3 grid for d = 1
-      old_par <- par(mfrow = c(3, 3), mar = c(0, 0, 0, 0))
+      old_par <- par(mfrow = c(3, 3), mar = c(0, 0, 2, 0))
 
   }
 
@@ -318,8 +299,8 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     # Gradient of the objective function for all the observations
     grad <- t(simplify2array(parallel::mclapply(
-      mc.cores = parallel_cores, 1:n,
-      kl_divergence_grad, Y = Y[, , 2], rho = rho, d = d, P = P,
+      mc.cores = parallel_cores, X = seq_len(n),
+      FUN = kl_divergence_grad, Y = Y[, , 2], rho = rho, d = d, P = P,
       cos_sim = Y_cos_sim, Q = Q_i
     )))
 
@@ -402,8 +383,6 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
           relative_errors[i - 2], gradient_norms[i - 2], sqrt(sum(moment_i^2)),
           best_i, best_obj_i
         ))
-        # Restore the par configuration
-        par(old_par)
         # Show the last configuration
         show_iter_sol(Y[, , 2], i, d, colors)
         convergence <- TRUE
@@ -417,8 +396,6 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     # Restore the par configuration
     par(old_par)
-    # Show the best configuration
-    show_iter_sol(best_Y_i, best_i + 2, d, colors)
 
   }
 

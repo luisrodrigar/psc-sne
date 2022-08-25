@@ -8,13 +8,13 @@ library(here)
 # Package name
 pkg <- "pscsne"
 
-# Install from GitHub
-remove.packages(pkg)
-devtools::install_github("https://github.com/luisrodrigar/psc-sne/",
-                          auth_token = paste0("ghp_GmbcUYxjKPJaDez5e",
-                                              "5hTf8TC0BdTzO0qZJJX"),
-                         ref = "create-package")
-packageVersion(pkg)
+# # Install from GitHub
+# remove.packages(pkg)
+# devtools::install_github("https://github.com/luisrodrigar/psc-sne/",
+#                           auth_token = paste0("ghp_GmbcUYxjKPJaDez5e",
+#                                               "5hTf8TC0BdTzO0qZJJX"),
+#                          ref = "create-package")
+# packageVersion(pkg)
 
 # Set wd
 setwd(here())
@@ -23,34 +23,34 @@ setwd(here())
 devtools::load_all(path = ".")
 
 # Documentation
-document(pkg = pkg)
+document(pkg = ".")
 
 # Tests
-test(pkg = pkg)
+test(pkg = ".")
 
 # Run examples
-run_examples(pkg, run_dontrun = TRUE, run_donttest = TRUE, fresh = TRUE)
+run_examples(".", run_dontrun = TRUE, run_donttest = TRUE, fresh = TRUE)
 
 # Check
-check(pkg = pkg, cran = TRUE)
-check(pkg = pkg, cran = TRUE, args = c("--no-tests")) # No tests
+check(pkg = ".", cran = TRUE)
+check(pkg = ".", cran = TRUE, args = c("--no-tests")) # No tests
 # check(pkg = pkg, args = "--no-examples", vignettes = FALSE) # No examples nor vignettes
 # check(pkg = pkg, document = FALSE) # Examples and vignettes
 # check(pkg = pkg, document = FALSE, args = "--run-donttest") # Extended examples
 
 # R CMD check
-chk <- rcmdcheck(pkg)
+chk <- rcmdcheck(".")
 
 # lintr for flagging issues
-lint_package(path = pkg,
+lint_package(path = ".",
              exclusions = list(paste0(pkg, "/R/RcppExports.R")))
 
 # Tests coverage
-(covr_pkg <- package_coverage(path = pkg))
+(covr_pkg <- package_coverage(path = "."))
 report(covr_pkg)
 
 # Check spelling
-spell_check(pkg = pkg)
+spell_check(pkg = ".")
 
 # Build pdf
 path <- find.package(pkg)
@@ -60,10 +60,10 @@ system(paste(shQuote(file.path(R.home("bin"), "R")),
 build_manual(pkg)
 
 # Build
-build(pkg, vignettes = TRUE)
+build(".", vignettes = FALSE)
 
 # Install locally
-install(pkg, args = c("--no-multiarch", "--no-test-load"),
+install(".", args = c("--no-multiarch", "--no-test-load"),
         build_vignettes = TRUE)
 packageVersion(pkg)
 
