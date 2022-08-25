@@ -7,7 +7,8 @@
 low_dimension_Q(Y, rho)
 }
 \arguments{
-\item{Y}{matrix of size \code{c(n, d)}, where \code{n} is the number of observation, with the points onto the sphere \eqn{\mathcal{S}^d}.}
+\item{Y}{matrix of size \code{c(n, d)}, where \code{n} is the number of
+observation, with the points onto the sphere \eqn{\mathcal{S}^d}.}
 
 \item{rho}{concentration parameter must be in [0, 1).}
 }

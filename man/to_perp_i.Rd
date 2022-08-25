@@ -7,19 +7,27 @@
 to_perp_i(x, i, rho, cos_sim_psh = NULL)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
+where \code{n} is the number of observations, \code{d} is the dimension of
+each sphere, and \code{r} is the number of spheres.}
 
 \item{i}{corresponds to the \eqn{i}-th observation index.}
 
 \item{rho}{concentration parameter must be in [0, 1).}
 
-\item{cos_sim_psh}{cosine similarities array of dimension \code{c(n, n, r)} for the polysphere.}
+\item{cos_sim_psh}{a vector of size \code{n/2} with the cosine
+similarities in high-dimension for the polysphere \eqn{(\mathcal{S}^p)^r}.
+The way that the cosine similarities matrix is treated makes the calculus
+faster since it is flat in a vector object. Optional parameter, defaults to
+\code{NULL}.}
 }
 \value{
-Perplexity of the \eqn{i}-th observation for all the remainder observations.
+Perplexity of the \eqn{i}-th observation for all
+the remainder observations.
 }
 \description{
-Calculate the perplexity of the i-th observation for a given \eqn{\mathbf{\rho}} parameters list. Vector version algorithm.
+Calculate the perplexity of the i-th observation for a given
+\eqn{\mathbf{\rho}} parameters list. Vector version algorithm.
 }
 \examples{
 x <- sphunif::r_unif_sph(25, 3, 3)

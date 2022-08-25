@@ -2,24 +2,34 @@
 % Please edit documentation in R/high_dimension.R
 \name{high_dimension_i}
 \alias{high_dimension_i}
-\title{Polyspherical i-th Cauchy conditional probability vector (matrix version)}
+\title{Polyspherical i-th Cauchy conditional probability vector
+(matrix version)}
 \usage{
 high_dimension_i(x, i, rho, cos_sim_psh = NULL)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
+where \code{n} is the number of observations, \code{d} is the dimension of
+each sphere, and \code{r} is the number of spheres.}
 
 \item{i}{corresponds to the \eqn{i}-th observation index.}
 
 \item{rho}{concentration parameter must be in [0, 1).}
 
-\item{cos_sim_psh}{cosine similarities array of dimension \code{c(n, n, r)} for the polysphere.}
+\item{cos_sim_psh}{a vector of size \code{n/2} with the cosine
+similarities in high-dimension for the polysphere \eqn{(\mathcal{S}^p)^r}.
+The way that the cosine similarities matrix is treated makes the calculus
+faster since it is flat in a vector object. Optional parameter, defaults to
+\code{NULL}.}
 }
 \value{
-An vector of size \code{n} with the high-dimension conditional probabilities of the \eqn{i}-th observation in \code{x}.
+An vector of size \code{n} with the high-dimension conditional
+probabilities of the \eqn{i}-th observation in \code{x}.
 }
 \description{
-Calculates the high-dimension conditional probabilities of a polyspherical Cauchy distribution for the i-th observation. Matrix version algorithm.
+Calculates the high-dimension conditional probabilities of a
+polyspherical Cauchy distribution for the i-th observation.
+Matrix version algorithm.
 }
 \examples{
 x <- sphunif::r_unif_sph(100, 3, 3)

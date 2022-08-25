@@ -7,7 +7,8 @@
 show_iter_sol(Y, i, d, colors = NULL)
 }
 \arguments{
-\item{Y}{matrix of size \code{c(n, d)}, where \code{n} is the number of observation, with the points onto the sphere \eqn{\mathcal{S}^d}.}
+\item{Y}{matrix of size \code{c(n, d)}, where \code{n} is the number of
+observation, with the points onto the sphere \eqn{\mathcal{S}^d}.}
 
 \item{i}{the \eqn{i}-th iteration.}
 
