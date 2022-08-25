@@ -72,8 +72,7 @@ The next thing is to run the psc-sne algorithm with the parameter $d = 1$:
 
 ```{r}
 res_pscsne_11 <- psc_sne(X = sc_unif_mix_data, d = 1, rho_psc_list = rho_30_1,
-                         num_iteration = 500, show_prog = TRUE,
-                         colors = sc_unif_mix_colors,
+                         show_prog = TRUE, colors = sc_unif_mix_colors,
                          parallel_cores = num_cores_param)
 ```
 
@@ -81,8 +80,7 @@ After that, let's execute psc-sne with the parameter $d = 2$:
 
 ```{r}
 res_pscsne_12 <- psc_sne(X = sc_unif_mix_data, d = 2, rho_psc_list = rho_30_1,
-                         num_iteration = 500, show_prog = TRUE,
-                         colors = sc_unif_mix_colors,
+                         show_prog = TRUE, colors = sc_unif_mix_colors,
                          parallel_cores = num_cores_param)
 ```
 
@@ -146,7 +144,7 @@ Run psc_sne() with colors being the groups of variables for $d = 1$:
 
 ```{r}
 res_pscsne_21 <- psc_sne(X = feat_data, d = 1, rho_psc_list = rho_list,
-                      colors = cols, show_prog = TRUE, num_iteration = 775,
+                      colors = cols, show_prog = TRUE,
                       eta = 35, parallel_cores = num_cores_param)
 ```
 
@@ -154,7 +152,7 @@ The psc-sne algorithm identifies in the reduced dimension on the circumference t
 
 ```{r}
 psc_sne_res_22 <- psc_sne(feat_data, d = 2, rho_psc_list = rho_list,
-                          colors = cols, num_iteration = 775, show_prog = TRUE,
+                          colors = cols, show_prog = TRUE,
                           eta = 35, parallel_cores = num_cores_param)
 ```
 
@@ -206,16 +204,15 @@ Run psc_sne() with colors being the groups of variables. First, reduced the data
 
 ```{r}
 res_pscsne_21_neg <- psc_sne(X = feat_data_2, d = 1, rho_psc_list = rho_list_2,
-                      colors = cols, show_prog = TRUE, num_iteration = 775,
-                      eta = 35, parallel_cores = num_cores_param)
+                      colors = cols, show_prog = TRUE, eta = 35,
+                      parallel_cores = num_cores_param)
 ```
 
 In this case, the negative correlation in some groups has an effect on the results produced by psc-sne. Each group with negative correlation is split in two where they look like being distributed more or less antipodal. Later on, reduced on the sphere $d = 2$.
 
 ```{r}
 psc_sne_res_22_neg <- psc_sne(feat_data_2, d = 2, rho_psc_list = rho_list_2,
-                              colors = cols, num_iteration = 775,
-                              show_prog = TRUE, eta = 35,
+                              colors = cols, show_prog = TRUE, eta = 35,
                               parallel_cores = num_cores_param)
 ```
 
@@ -266,16 +263,16 @@ First, let's reduce the dimension to the circumference:
 ```{r}
 cols <- ifelse(gen_data <= n / 2, 2, 3)
 psc_sne_res_31 <- psc_sne(X = x_s1_100, d = 1, rho_psc_list = rho_30_s1_100,
-                          colors = cols, show_prog = TRUE, num_iteration = 775,
-                          eta = 25, parallel_cores = num_cores_param)
+                          colors = cols, show_prog = TRUE, eta = 25,
+                          parallel_cores = num_cores_param)
 ```
 
 We can see the two different antipodal groups defined in the first five circumferences so the psc-sne algorithm can detect these von Misses-Fisher distributions even with the noise added with the remainder 95 uniform distributions onto the circumference. Later on, let's reduce the dimension to the sphere:
 
 ```{r}
 psc_sne_res_32 <- psc_sne(X = x_s1_100, d = 2, rho_psc_list = rho_30_s1_100,
-                          colors = cols, show_prog = TRUE, num_iteration = 775,
-                          eta = 25, parallel_cores = num_cores_param)
+                          colors = cols, show_prog = TRUE, eta = 25,
+                          parallel_cores = num_cores_param)
 ```
 
 In this case, results show two groups antipodal in the sphere. There are some not well identified points but this is something expected since there are 95 points distributed uniformly. Let's visualize the results in the interactive sphere using `rgl`:
@@ -317,7 +314,7 @@ First, let's reduce the dimension to the circumference:
 ```{r}
 psc_sne_res_41 <- psc_sne(X = x_s1_100_path, d = 1,
                           rho_psc_list = rho_30_s1_100_path, colors = cols,
-                          show_prog = TRUE, num_iteration = 775, eta = 25,
+                          show_prog = TRUE, eta = 25,
                           parallel_cores = num_cores_param)
 ```
 
@@ -326,7 +323,7 @@ We can see that the points in the circumference are more or less well arranged. 
 ```{r}
 psc_sne_res_42 <- psc_sne(X = x_s1_100_path, d = 2,
                           rho_psc_list = rho_30_s1_100_path, colors = cols,
-                          show_prog = TRUE, num_iteration = 775, eta = 25,
+                          show_prog = TRUE, eta = 25,
                           parallel_cores = num_cores_param)
 ```
 
@@ -397,16 +394,16 @@ First, let's reduce the dimension to the circumference:
 
 ```{r}
 psc_sne_res_51 <- psc_sne(X = x_s2_100, d = 1, rho_psc_list = rho_30_s2_100,
-                          colors = cols, show_prog = TRUE, num_iteration = 775,
-                          eta = 25, parallel_cores = num_cores_param)
+                          colors = cols, show_prog = TRUE, eta = 25,
+                          parallel_cores = num_cores_param)
 ```
 
 Results shows more or less the structure of the first 5 spheres even with the noise included with the remainder spheres. Afterwards, let's get the results on the sphere:
 
 ```{r}
 psc_sne_res_52 <- psc_sne(X = x_s2_100, d = 2, rho_psc_list = rho_30_s2_100,
-                          colors = cols, show_prog = TRUE, num_iteration = 775,
-                          eta = 25, parallel_cores = num_cores_param)
+                          colors = cols, show_prog = TRUE, eta = 25,
+                          parallel_cores = num_cores_param)
 ```
 
 In this case results show again the insights obtained in the reduced dimension to the circumference. Let's visualize the results in the sphere:

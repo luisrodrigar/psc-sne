@@ -56,6 +56,10 @@ src/*.so
 src/*.dll
 img/
 *.mp4
+<<<<<<< HEAD
 inst/doc
 /Meta/
 /doc/
+=======
+Meta/
+>>>>>>> main

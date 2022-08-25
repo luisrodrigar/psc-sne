@@ -5,17 +5,27 @@
 
 #' @title Polyspherical Cauchy conditional probability matrix (matrix version)
 #'
-#' @description Calculates the high-dimension conditional probabilities of a polyspherical Cauchy distribution. Matrix version algorithm.
+#' @description Calculates the high-dimension conditional probabilities of a
+#' polyspherical Cauchy distribution. Matrix version algorithm.
 #'
-#' @param x an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.
-#' @param rho_list rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.
-#' @param cos_sim_psh cosine similarities array of dimension \code{c(n, n, r)} for the polysphere.
-#' @return An array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
+#' @param x an array of size \code{c(n, d + 1, r)} with the polyspherical data,
+#' where \code{n} is the number of observations, \code{d} is the dimension of
+#' each sphere, and \code{r} is the number of spheres.
+#' @param rho_list rho list of size \code{n} for each \code{i}-th observation
+#' that stands for the concentration parameter.
+#' @param cos_sim_psh a vector of size \code{n/2} with the cosine
+#' similarities in high-dimension for the polysphere \eqn{(\mathcal{S}^p)^r}.
+#' The way that the cosine similarities matrix is treated makes the calculus
+#' faster since it is flat in a vector object. Optional parameter, defaults to
+#' \code{NULL}.
+#' @return An array of size \code{c(n, n)} with the high-dimension conditional
+#' probabilities of \code{x}.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(100, 3, 3)
 #' high_dimension(x, rep(0.5, 100))
-#' high_dimension(x, rep(0.5, 100), drop(sphunif::Psi_mat(x, scalar_prod = TRUE)))
+#' high_dimension(x, rep(0.5, 100),
+#'                drop(sphunif::Psi_mat(x, scalar_prod = TRUE)))
 high_dimension <- function(x, rho_list, cos_sim_psh = NULL) {
   if (!rlang::is_vector(rho_list)) {
     stop("rho_list must be a vector")
@@ -27,8 +37,6 @@ high_dimension <- function(x, rho_list, cos_sim_psh = NULL) {
   n <- nrow(x)
   # Number of columns
   p <- ncol(x) - 1
-  # Number of spheres
-  r <- dim(x)[3]
 
   # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
   if (is.null(cos_sim_psh)) {
@@ -64,13 +72,17 @@ high_dimension <- function(x, rho_list, cos_sim_psh = NULL) {
 }
 
 
-#' @title Polyspherical i-th Cauchy conditional probability vector (matrix version)
+#' @title Polyspherical i-th Cauchy conditional probability vector
+#' (matrix version)
 #'
-#' @description Calculates the high-dimension conditional probabilities of a polyspherical Cauchy distribution for the i-th observation. Matrix version algorithm.
+#' @description Calculates the high-dimension conditional probabilities of a
+#' polyspherical Cauchy distribution for the i-th observation.
+#' Matrix version algorithm.
 #'
 #' @inheritParams high_dimension
 #' @inheritParams d_sph_cauchy
-#' @return An vector of size \code{n} with the high-dimension conditional probabilities of the \eqn{i}-th observation in \code{x}.
+#' @return An vector of size \code{n} with the high-dimension conditional
+#' probabilities of the \eqn{i}-th observation in \code{x}.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(100, 3, 3)
@@ -81,7 +93,7 @@ high_dimension_i <- function(x, i, rho, cos_sim_psh = NULL) {
   # sample size
   n <- nrow(x)
   # Dimension of each sphere
-  p <- ncol(x)-1
+  p <- ncol(x) - 1
   # number of spheres
   r <- dim(x)[3]
 
@@ -97,7 +109,7 @@ high_dimension_i <- function(x, i, rho, cos_sim_psh = NULL) {
   # Applying formula of the polyspherical Cauchy density
   P <- (1 + rho^2 - 2 * rho * cos_sim_i)^(-p)
   # Set zero to the i-th observation
-  P[i, ] = 0
+  P[i, ] <- 0
 
   # Product operator by matrices of the 3d-array
   P_i_r <- apply(P, MARGIN = 1, prod)
@@ -111,10 +123,12 @@ high_dimension_i <- function(x, i, rho, cos_sim_psh = NULL) {
 
 #' @title Polyspherical Cauchy conditional probability matrix (scalar version)
 #'
-#' @description Calculates the high-dimension conditional probabilities of a polyspherical Cauchy distribution. Scalar version algorithm.
+#' @description Calculates the high-dimension conditional probabilities of a
+#' polyspherical Cauchy distribution. Scalar version algorithm.
 #'
 #' @inheritParams high_dimension
-#' @return An array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
+#' @return An array of size \code{c(n, n)} with the high-dimension conditional
+#' probabilities of \code{x}.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(100, 3, 3)
@@ -128,11 +142,13 @@ high_dimension_p <- function(x, rho_list) {
   }
   # Marginal conditional probability of the i-th observation
   d_total_psph <- d_total_psph_cauchy(x, rho_list)
-  # Function that calculates the probability of the j-th observation given the i-th one
+  # Function that calculates the probability of the j-th observation
+  # given the i-th one
   jcondi <- function(i) {
-    sapply(1:nrow(x), function(j) jcondi_psph(x, i, j, rho_list, d_total_psph[i]))
+    sapply(seq_len(nrow(x)), function(j) {
+      jcondi_psph(x, i, j, rho_list, d_total_psph[i])
+    })
   }
   # Apply the previous function for each observation
-  return(t(sapply(1:nrow(x), jcondi)))
+  return(t(sapply(seq_len(nrow(x)), jcondi)))
 }
-

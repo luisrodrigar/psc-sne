@@ -31,10 +31,18 @@ vmf11 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 10)
 vmf12 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi)), kappa = 10)
 x1 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf11),
                               DirStats::to_rad(vmf12)))
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
 vmf21 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi / 2)),
                         kappa = 5)
 vmf22 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 5)
 x2 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf21), DirStats::to_rad(vmf22)))
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
 x <- rbind(x1, x2)
 # Cartesian coordinates
 n <- 400
@@ -47,8 +55,12 @@ x_array <- x_array[indexes, , ]
 colors <- rep(c(1, 2), each = n / 2)[indexes]
 
 plot(x, xlim = c(-pi, pi), ylim = c(-pi, pi), axes = FALSE,
+<<<<<<< HEAD
      col = rep(c(1, 2), each = n / 2), pch = 16,
      xlab = "x", ylab = "y")
+=======
+     col = rep(c(1, 2), each = n / 2), pch = 16, xlab = "x", ylab = "y")
+>>>>>>> main
 sdetorus::torusAxis()
 
 ```
@@ -62,6 +74,7 @@ rho_first_20 <- rho_optim_bst(x_array, 20)
 
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
+<<<<<<< HEAD
 ```{r cache=TRUE, fig.asp=1}
 res_pscsne <- psc_sne(X = x_array, d = 1, rho_psc_list = rho_first_20,
                       num_iteration = 500, colors = colors, show_prog = TRUE)
@@ -81,12 +94,28 @@ plot(r * sin(theta),
 
 polygon(max(r) * sin(seq(0, 2 * pi, length.out = 100)),
         max(r) * cos(seq(0, 2 * pi, length.out = 100)))
+=======
+```{r cache=TRUE, fig.asp=1, fig.align='center'}
+res_pscsne <- psc_sne(X = x_array, d = 1, rho_psc_list = rho_first_20,
+                      colors = colors, eta = 20, show_prog = TRUE)
+Y <- res_pscsne$best_Y
+```
+
+```{r fig.asp=1, fig.align='center'}
+plot(Y[, 1], Y[, 2],
+     col = colors,
+     xlim = c(-1, 1), ylim = c(-1, 1))
+
+polygon(cos(seq(0, 2 * pi, length.out = 100)),
+        sin(seq(0, 2 * pi, length.out = 100)))
+>>>>>>> main
 ```
 
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE, fig.asp=1}
 res_pscsne <- psc_sne(X = x_array, d = 2, rho_psc_list = rho_first_20,
+<<<<<<< HEAD
                       num_iteration = 500, colors = colors, show_prog = TRUE,
                       eta = 100, check = FALSE)
 Y <- res_pscsne$best_Y
@@ -95,6 +124,16 @@ Y <- res_pscsne$best_Y
 ```{r fig.asp=1}
 scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
                              zlim = c(-1, 1), color = colors)
+=======
+                      colors = colors, eta = 50, show_prog = TRUE)
+Y <- res_pscsne$best_Y
+```
+
+```{r fig.asp=1, fig.align='center'}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
+                             zlim = c(-1, 1), color = colors,
+                             pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)])
+>>>>>>> main
 ```
 
 It's clearly clustered the two groups we had in the original generated data.
@@ -119,6 +158,10 @@ x1 <- rbind(samp1, samp2, samp3)
 scatterplot3d::scatterplot3d(x1,
                              xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
                              color = rep(1:3, each = n), main = "Sphere 1")
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
 rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
              radius = 1, type = "s", col = "lightblue", alpha = 0.25,
              lit = FALSE)
@@ -140,6 +183,10 @@ rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
              radius = 1, type = "s", col = "lightblue", alpha = 0.25,
              lit = FALSE)
 rgl::points3d(x2, col = rep(c(1, 2, 3), each = n))
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
 
 x_2 <- array(dim = c(n * 3, 3, 2))
 x_2[, , 1] <- x1
@@ -161,11 +208,16 @@ First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_2, d = 1, rho_psc_list = rho_second_perp20,
+<<<<<<< HEAD
                       num_iteration = 500, colors = colors, show_prog = TRUE)
+=======
+                      eta = 20, colors = colors, show_prog = TRUE)
+>>>>>>> main
 Y <- res_pscsne$best_Y
 
 ```
 
+<<<<<<< HEAD
 ```{r}
 Y_rad <- DirStats::to_rad(Y)
 r <- 1
@@ -178,20 +230,38 @@ plot(r * sin(theta),
 
 polygon(max(r) * sin(seq(0, 2 * pi, length.out = 100)),
         max(r) * cos(seq(0, 2 * pi, length.out = 100)))
+=======
+```{r fig.asp=1, fig.align='center'}
+plot(Y[, 1], Y[, 2], col = colors, xlim = c(-1, 1), ylim = c(-1, 1))
+
+polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+        y = sin(seq(0, 2 * pi, length.out = 100)))
+>>>>>>> main
 ```
 
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_2, d = 2, rho_psc_list = rho_second_perp20,
+<<<<<<< HEAD
                       num_iteration = 500, colors = colors, show_prog = TRUE)
+=======
+                      eta = 50, colors = colors, show_prog = TRUE)
+>>>>>>> main
 Y <- res_pscsne$best_Y
 ```
 
 
+<<<<<<< HEAD
 ```{r fig.asp=1}
 scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
                              zlim = c(-1, 1), color = colors)
+=======
+```{r fig.asp=1, fig.align='center'}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
+                             zlim = c(-1, 1), color = colors,
+                             pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)])
+>>>>>>> main
 ```
 
 It's clearly clustered the three groups we had in the original generated data.
@@ -204,16 +274,26 @@ Sample on the $(\mathbb{S}^1)^3$ where $p=1$ and $r=3$.
 ```{r cache=TRUE}
 # Sample on the (S^1)^2
 n_ori <- 200
+<<<<<<< HEAD
 vmf11 <- rotasym::r_vMF(n = n_ori,
                         mu = drop(DirStats::to_cir(th = 0)), kappa = 10)
 vmf12 <- rotasym::r_vMF(n = n_ori,
                         mu = drop(DirStats::to_cir(th = pi)), kappa = 10)
 vmf13 <- rotasym::r_vMF(n = n_ori,
                         mu = drop(DirStats::to_cir(th = pi / 2)), kappa = 10)
+=======
+vmf11 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = 0)),
+                        kappa = 10)
+vmf12 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi)),
+                        kappa = 10)
+vmf13 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi / 2)),
+                        kappa = 10)
+>>>>>>> main
 x1 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf11),
                               DirStats::to_rad(vmf12),
                               DirStats::to_rad(vmf13)))
 
+<<<<<<< HEAD
 vmf21 <- rotasym::r_vMF(n = n_ori,
                         mu = drop(DirStats::to_cir(th = pi / 2)), kappa = 5)
 vmf22 <- rotasym::r_vMF(n = n_ori,
@@ -229,6 +309,23 @@ vmf32 <- rotasym::r_vMF(n = n_ori,
                         mu = drop(DirStats::to_cir(th = 0)), kappa = 30)
 vmf33 <- rotasym::r_vMF(n = n_ori,
                         mu = drop(DirStats::to_cir(th = pi / 2)), kappa = 30)
+=======
+vmf21 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi / 2)),
+                        kappa = 5)
+vmf22 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = 0)),
+                        kappa = 5)
+vmf23 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi)),
+                        kappa = 5)
+x2 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf21), DirStats::to_rad(vmf22),
+                              DirStats::to_rad(vmf23)))
+
+vmf31 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi)),
+                        kappa = 30)
+vmf32 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = 0)),
+                        kappa = 30)
+vmf33 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi / 2)),
+                        kappa = 30)
+>>>>>>> main
 x3 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf31), DirStats::to_rad(vmf32),
                               DirStats::to_rad(vmf33)))
 
@@ -265,6 +362,7 @@ First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_3, d = 1, rho_psc_list = rho_third_perp25,
+<<<<<<< HEAD
                       num_iteration = 500, colors = colors, show_prog = TRUE)
 Y <- res_pscsne$best_Y
 ```
@@ -278,20 +376,42 @@ plot(r * sin(theta), r * cos(theta), col = colors, xlim = c(-max(r), max(r)),
 
 polygon(max(r) * sin(seq(0, 2 * pi, length.out = 100)),
         max(r) * cos(seq(0, 2 * pi, length.out = 100)))
+=======
+                      eta = 20, colors = colors, show_prog = TRUE)
+Y <- res_pscsne$best_Y
+```
+
+```{r fig.asp=1, fig.align='center'}
+plot(Y[, 1], Y[, 2], col = colors, xlim = c(-1, 1), ylim = c(-1, 1))
+
+polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+        y = sin(seq(0, 2 * pi, length.out = 100)))
+>>>>>>> main
 ```
 
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_3, d = 2, rho_psc_list = rho_third_perp25,
+<<<<<<< HEAD
                       num_iteration = 500, colors = colors, show_prog = TRUE)
+=======
+                      eta = 20, colors = colors, show_prog = TRUE)
+>>>>>>> main
 
 Y <- res_pscsne$best_Y
 ```
 
+<<<<<<< HEAD
 ```{r fig.asp=1}
 scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
                              zlim = c(-1, 1), color = colors)
+=======
+```{r fig.asp=1, fig.align='center'}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
+                             zlim = c(-1, 1), color = colors,
+                             pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)])
+>>>>>>> main
 ```
 
 
@@ -322,6 +442,7 @@ First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_4, d = 1, rho_psc_list = rho_four_perp20,
+<<<<<<< HEAD
                       num_iteration = 500, show_prog = TRUE)
 Y <- res_pscsne$best_Y
 ```
@@ -335,12 +456,24 @@ plot(r * sin(theta), r * cos(theta), xlim = c(-max(r), max(r)),
 
 polygon(max(r) * sin(seq(0, 2 * pi, length.out = 100)),
         max(r) * cos(seq(0, 2 * pi, length.out = 100)))
+=======
+                      eta = 20, show_prog = TRUE)
+Y <- res_pscsne$best_Y
+```
+
+```{r fig.asp=1, fig.align='center'}
+plot(Y[, 1], Y[, 2], xlim = c(-1, 1), ylim = c(-1, 1))
+
+polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+        y = sin(seq(0, 2 * pi, length.out = 100)))
+>>>>>>> main
 ```
 
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_4, d = 2, rho_psc_list = rho_four_perp20,
+<<<<<<< HEAD
                       num_iteration = 500, show_prog = TRUE)
 Y <- res_pscsne$best_Y
 ```
@@ -348,6 +481,17 @@ Y <- res_pscsne$best_Y
 ```{r fig.asp=1}
 scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
                              zlim = c(-1, 1))
+=======
+                      eta = 20, show_prog = TRUE)
+
+Y <- res_pscsne$best_Y
+```
+
+```{r fig.asp=1, fig.align='center'}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
+                             zlim = c(-1, 1),
+                             pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)])
+>>>>>>> main
 ```
 
 
@@ -357,8 +501,14 @@ Playing with belts of points onto the sphere. First, let's generate the data
 
 ```{r}
 deg2rad <- function(deg) {
+<<<<<<< HEAD
   (deg * pi) / (180)
 }
+=======
+  deg * pi / 180
+}
+
+>>>>>>> main
 rotate_matrix_z_axis <- function(alpha) {
   rads <- deg2rad(alpha)
   matrix(c(cos(rads), -sin(rads), 0,
@@ -369,7 +519,11 @@ rotate_matrix_z_axis <- function(alpha) {
 
 rotate_matrix_x_axis <- function(alpha) {
   rads <- deg2rad(alpha)
+<<<<<<< HEAD
   matrix(c(1,                 0, 0,
+=======
+  matrix(c(1,         0, 0,
+>>>>>>> main
            0, cos(rads), -sin(rads),
            0, sin(rads),  cos(rads)),
          byrow = TRUE, nrow = 3)
@@ -432,8 +586,12 @@ scatterplot3d::scatterplot3d(x_belt3, xlim = c(-1, 1),
                              color = rep(c(1, 2, 3), each = n))
 
 rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+<<<<<<< HEAD
             radius = 1, type = "s", col = "lightblue",
             lit = FALSE)
+=======
+            radius = 1, type = "s", col = "lightblue", lit = FALSE)
+>>>>>>> main
 rgl::points3d(x_belt3, col = rep(c(1, 2, 3), each = n))
 
 n <- n * 3
@@ -457,12 +615,17 @@ First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_5, d = 1, rho_psc_list = rho_five_perp20,
+<<<<<<< HEAD
                       num_iteration = 500, eta = 20, show_prog = TRUE,
                       colors = colors)
+=======
+                      eta = 20, show_prog = TRUE, colors = colors)
+>>>>>>> main
 
 Y <- res_pscsne$best_Y
 ```
 
+<<<<<<< HEAD
 ```{r fig.asp=1}
 Y_rad <- DirStats::to_rad(Y)
 r <- 1
@@ -472,12 +635,20 @@ plot(r * sin(theta), r * cos(theta), col = colors, xlim = c(-max(r), max(r)),
 
 polygon(max(r) * sin(seq(0, 2 * pi, length.out = 100)),
         max(r) * cos(seq(0, 2 * pi, length.out = 100)))
+=======
+```{r fig.asp=1, fig.align='center'}
+plot(Y[, 1], Y[, 2], col = colors, xlim = c(-1, 1), ylim = c(-1, 1))
+
+polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+        y = sin(seq(0, 2 * pi, length.out = 100)))
+>>>>>>> main
 ```
 
 Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_5, d = 2, rho_psc_list = rho_five_perp20,
+<<<<<<< HEAD
                       num_iteration = 500, eta = 400, show_prog = TRUE,
                       colors = colors)
 Y <- res_pscsne$best_Y
@@ -486,4 +657,15 @@ Y <- res_pscsne$best_Y
 ```{r fig.asp=1}
 scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), 
                              zlim = c(-1, 1), color = colors)
+=======
+                      eta = 20, show_prog = TRUE, colors = colors)
+
+Y <- res_pscsne$best_Y
+```
+
+```{r fig.asp=1, fig.align='center'}
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
+                             zlim = c(-1, 1), color = colors,
+                             pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)])
+>>>>>>> main
 ```

@@ -46,7 +46,11 @@ x_diff <- function(X) {
   sum_x_m <- t(matrix(replicate(n, sum_x), byrow = TRUE, nrow = n))
   cross_times_minus_2 <- -2 * (X %*% t(X))
   D <- t(cross_times_minus_2 + sum_x_m) + sum_x_m
+<<<<<<< HEAD
   D <- round(D, digits = 4) 
+=======
+  D <- round(D, digits = 4)
+>>>>>>> main
 }
 ```
 
@@ -80,7 +84,11 @@ In order to proceed with the optimization of the variance, we are going to defin
 entropy_beta <- function(D_i, beta = 1) {
   P_i <- exp(-D_i * beta)
   sum_p_i <- sum(P_i)
+<<<<<<< HEAD
   H_i <- log(sum_p_i) + (beta * sum(D_i * P_i) / sum_p_i) 
+=======
+  H_i <- log(sum_p_i) + (beta * sum(D_i * P_i) / sum_p_i)
+>>>>>>> main
   P_i <- P_i / sum_p_i
   return(list(entropy = H_i, probs = P_i))
 }
@@ -90,7 +98,11 @@ The goal is to adjust the variability so that the perplexity at each point is th
 
 ```{r}
 index_except_i <- function(i, n) {
+<<<<<<< HEAD
   index <- c(seq(1, i-1), seq(i+1, n))
+=======
+  index <- c(seq(1, i - 1), seq(i + 1, n))
+>>>>>>> main
   if (i == 1) {
     index <- 2:n
   } else if (i == n) {
@@ -119,22 +131,31 @@ binary_search <- function(h_diff, beta, i, beta_min, beta_max) {
 }
 
 binary_search_optimization <- function(D_i, i, beta, h_star, prob_star,
+<<<<<<< HEAD
                                        log_perp, tolerance=1e-5) {
+=======
+                                       log_perp, tolerance = 1e-5) {
+>>>>>>> main
   beta_min <- -Inf
   beta_max <- Inf
   tries <- 0
   h_diff <- h_star - log_perp
   while (abs(h_diff) > tolerance && tries < 50) {
     beta_opt <- binary_search(h_diff, beta, i, beta_min, beta_max)
+<<<<<<< HEAD
     beta <- beta_opt$beta; beta_min <- beta_opt$min
+=======
+    beta <- beta_opt$beta
+    beta_min <- beta_opt$min
+>>>>>>> main
     beta_max <- beta_opt$max
     res_loop <- entropy_beta(D_i, beta[i])
     h_star <- res_loop$entropy
     prob_star <- res_loop$probs
     h_diff <- h_star - log_perp
-    tries <- tries + 1 
+    tries <- tries + 1
   }
-  return(list(probs=prob_star, beta=beta))
+  return(list(probs = prob_star, beta = beta))
 }
 ```
 
@@ -142,32 +163,37 @@ Once we have defined these two methods, we are able to obtain the high dimension
 
 ```{r}
 
-high_dimension_probs <- function(X=matrix(), tolerance=1e-5, perplexity=30) {
+high_dimension_probs <- function(X = matrix(), tolerance = 1e-5,
+                                 perplexity = 30) {
   n <- nrow(X)
+<<<<<<< HEAD
   p <- ncol(X)
   D <- x_diff(X)
   P <- matrix(0, nrow=150, ncol=150)
   beta <- rep(1, n)
   log_perp <- log(perplexity)
   for(i in seq_len(n)) {
+=======
+  D <- x_diff(X)
+  P <- matrix(0, nrow = 150, ncol = 150)
+  beta <- rep(1, n)
+  log_perp <- log(perplexity)
+  for (i in seq_len(n)) {
+>>>>>>> main
     column_index <- index_except_i(i, n)
     D_i <- D[i, column_index]
-    
     res <- entropy_beta(D_i, beta[i])
     h_star <- res$entropy
     prob_star <- res$probs
-    
-    h_diff <- h_star - log_perp
-    
-    res_opt = binary_search_optimization(D_i, i, beta, h_star, prob_star, 
+    res_opt <- binary_search_optimization(D_i, i, beta, h_star, prob_star,
                                            log_perp, tolerance)
-    prob_star = res_opt$probs; beta = res_opt$beta
-    
+    prob_star <- res_opt$probs
+    beta <- res_opt$beta
     P[i, column_index] <- prob_star
   }
   print("Values of sigma for each x_i")
-  print(sqrt(1/beta))
-  print(sprintf("Mean value of sigma: %01.2f", mean(sqrt(1/beta))))
+  print(sqrt(1 / beta))
+  print(sprintf("Mean value of sigma: %01.2f", mean(sqrt(1 / beta))))
   return(P)
 }
 ```
@@ -176,7 +202,7 @@ The version of the t-SNE is the symmetric one, that has the property that $p_{ij
 
 ```{r}
 symmetric_probs <- function(P) {
-  P = (P + t(P)) / (2*nrow(P))
+  P <- (P + t(P)) / (2 * nrow(P))
   return(P)
 }
 ```
@@ -222,22 +248,24 @@ Recall that $\frac{\partial}{\partial x}\sqrt{g(x)}=\frac{1}{2\sqrt{g(x)}}g'(x)$
 ```{r}
 
 dij.1 <- function(i, j) {
-  sqrt(norm(i, type="2")^2 + norm(j, type="2")^2 - 2 * (t(i) %*% j))
+  sqrt(sqrt(sum(i^2))^2 + sqrt(sum(j^2))^2 - 2 * (t(i) %*% j))
 }
 
 dij.2 <- function(i, j) {
-  norm(i-j, type="2")
+  sqrt(sum((i - j)^2))
 }
 
 y <- data.matrix(iris)[, -5]
 
 # For rows 2 and 3
-result1 <- as.numeric(round(jacobian(func=dij.2, x=y[2,], j=y[3,]), digits=7))
-result2 <- as.numeric((y[2,]-y[3,])/norm(y[2,]-y[3,], type="2"))
+result1 <- as.numeric(round(jacobian(func = dij.2, x = y[2, ], j = y[3, ]),
+                            digits = 7))
+result2 <- as.numeric((y[2, ] - y[3, ]) / sqrt(sum((y[2, ] - y[3, ])^2)))
 all.equal(result2, result1) # checked
 # For row 3 and 2
-result3 <- as.numeric(round(jacobian(func=dij.2, x=y[3,], i=y[2,]), digits=7))
-result4 <- as.numeric((y[3,]-y[2,])/norm(y[2,]-y[3,], type="2"))
+result3 <- as.numeric(round(jacobian(func = dij.2, x = y[3, ], i = y[2, ]),
+                            digits = 7))
+result4 <- as.numeric((y[3, ] - y[2, ]) / sqrt(sum((y[2, ] - y[3, ])^2)))
 all.equal(result4, result3) # checked
 # Checked that both d(d_ij)/dy_i = d(d_ji)/dy_i
 ```
@@ -283,46 +311,44 @@ f(\mathbf{y}; \boldsymbol{\mu}, \rho) = \frac{\Gamma\{(d+1)/2\}}{2\pi^{(d+1)/2}}
 $$ where $\mathbf{y} \in S^d$, the location parameter $\boldsymbol{\mu} \in S^d$, the concentration parameter $\rho \in [0, 1)$ and the unit sphere in $\mathbb{R}^{d+1}$ denoted by $S^d = \{\mathbf{y} \in \mathbb{R}^{d+1}; \|\mathbf{y}\|=1\}$. When $d=1$ the case is the well-known Wrapped Cauchy or circular Cauchy family.
 
 ```{r}
-dsphcauchy <- function(y, mu, rho, d=2) {
-  (gamma(((d+1)/2))/(2*pi^((d+1)/2))*((1-rho^2)/(1+rho^2-2*rho*(t(mu) %*% y)))^d)
+dsphcauchy <- function(y, mu, rho, d = 2) {
+  (gamma(((d + 1) / 2)) / (2 * pi^((d + 1) / 2)) *
+     ((1 - rho^2) / (1 + rho^2 - 2 * rho * (t(mu) %*% y)))^d)
 }
-
 library(Directional)
 library(Rcpp)
 library(rotasym)
-
 sunspots_births$X <-
   cbind(cos(sunspots_births$phi) * cos(sunspots_births$theta),
         cos(sunspots_births$phi) * sin(sunspots_births$theta),
         sin(sunspots_births$phi))
-
 theta_params <- spcauchy.mle(sunspots_births$X)
-dsphcauchy(sunspots_births$X[1,], theta_params$mu, theta_params$rho)
-
+dsphcauchy(sunspots_births$X[1, ], theta_params$mu, theta_params$rho)
 library(DirStats)
 library(ivdoctr)
 n <- nrow(sunspots_births$X)
 q <- 2
 x <- rbind(diag(1, nrow = q + 1), diag(-1, nrow = q + 1))
 bw_rot <- bw_dir_rot(sunspots_births$X)
-
-polysphere <- array(NA, dim=c(100,3, 120))
-for(i in seq_len(120)) {
-  th <- sample(seq(0, pi/2, l=200), size=100)
-  ph <- sample(seq(0, 2*pi, l=200), size=100)
-  polysphere[,,i] <- to_sph(th, ph)
+polysphere <- array(NA, dim = c(100, 3, 120))
+for (i in seq_len(120)) {
+  th <- sample(seq(0, pi / 2, l = 200), size = 100)
+  ph <- sample(seq(0, 2 * pi, l = 200), size = 100)
+  polysphere[, , i] <- to_sph(th, ph)
 }
 
 rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
              radius = 1, type = "s", col = "lightblue", alpha = 0.25,
              lit = FALSE)
-# dens <- apply(x, MARGIN=1, FUN=dsphcauchy, mu=theta_params$mu, rho=theta_params$rho)
-dens <- apply(x, MARGIN=1, FUN=kde_dir, data = sunspots_births$X, h = bw_rot, L = NULL)
-map2color <- function(x, pal, limits = range(x)){
-  pal[findInterval(x, seq(limits[1], limits[2], length.out = length(pal) + 1), 
-                   all.inside=TRUE)]
+# dens <- apply(x, MARGIN=1, FUN=dsphcauchy, mu=theta_params$mu,
+#               rho=theta_params$rho)
+dens <- apply(x, MARGIN = 1, FUN = kde_dir, data = sunspots_births$X,
+              h = bw_rot, L = NULL)
+map2color <- function(x, pal, limits = range(x)) {
+  pal[findInterval(x, seq(limits[1], limits[2], length.out = length(pal) + 1),
+                   all.inside = TRUE)]
 }
-rgl::points3d(x, col = map2color(dens, pal=heat.colors(10, alpha=0.8)))
+rgl::points3d(x, col = map2color(dens, pal = heat.colors(10, alpha = 0.8)))
 ```
 
 ### Cauchy-SNE
@@ -357,34 +383,37 @@ $$
 
 ```{r}
 simple_dspcauchy <- function(x, l, i, rho, k, d) {
-  ((1 + rho^2 - 2 * rho * t(x[l,,k]) %*% x[i,,k])^(-d))
+  ((1 + rho^2 - 2 * rho * t(x[l, , k]) %*% x[i, , k])^(-d))
 }
 
-prob_i_spcauchy <- function(x, i, rho, d){
+prob_i_spcauchy <- function(x, i, rho, d) {
   r <<- dim(x)[3]
   n <<- nrow(x)
   probi_k_spcauchy <- function(j) {
-    prod(sapply(X=seq_len(r), FUN=simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d))
+    prod(sapply(X = seq_len(r), FUN = simple_dspcauchy, x = x, i = i, l = j,
+                rho = rho, d = d))
   }
   sum(sapply(seq_len(n)[-i], probi_k_spcauchy))
 }
 
-jcondi_spcauchy <- function(x, i, j, rho, d, prob_is=NULL) {
+jcondi_spcauchy <- function(x, i, j, rho, d, prob_is = NULL) {
   r <- dim(x)[3]
-  if(!is.null(prob_is) && !is.null(prob_is[i])) {
-    prob_i <<- prob_is[i]
+  prob_i <- NULL
+  if (!is.null(prob_is) && !is.null(prob_is[i])) {
+    prob_i <- prob_is[i]
   } else {
-    prob_i <<- prob_i_spcauchy(x, i, rho, d)
+    prob_i <- prob_i_spcauchy(x, i, rho, d)
   }
-  (prod(sapply(1:r, simple_dspcauchy, x=x, i=i, l=j, rho=rho, d=d)) / prob_i)
+  (prod(sapply(1:r, simple_dspcauchy, x = x, i = i, l = j, rho = rho, d = d)) /
+      prob_i)
 }
 
-to_perplexity <- function(X, i, rho, d=2, prob_is=NULL) {
+to_perplexity <- function(X, i, rho, d = 2, prob_is = NULL) {
   entropy <- function(j) {
     jcondi_value <- jcondi_spcauchy(X, i, j, rho, d, prob_is)
     (jcondi_value * log2(jcondi_value))
   }
-  return(2^(-1*sum(sapply(seq_len(nrow(X))[-i], entropy))))
+  return(2^(-1 * sum(sapply(seq_len(nrow(X))[-i], entropy))))
 }
 ```
 
@@ -414,9 +443,9 @@ s.ji <- function(i, j) {
     t(i) %*% j
 }
 
-y_j <- jacobian(func=s.ji, x=Y[2,], j=Y[3,])
+y_j <- jacobian(func = s.ji, x = Y[2, ], j = Y[3, ])
 
-all.equal(y_j, rbind(Y[3,]))
+all.equal(y_j, rbind(Y[3, ]))
 
 ```
 
@@ -442,44 +471,44 @@ simple_dspcauchy_sim <- function(s_ij, rho, d) {
 }
 
 simple_dspcauchy_ld <- function(Y, i, j, rho, d) {
-  ((1 + rho^2 - 2 * rho * t(Y[i,]) %*% Y[j,])^(-d))
+  ((1 + rho^2 - 2 * rho * t(Y[i, ]) %*% Y[j, ])^(-d))
 }
 
 q_i_not_j <- function(Y, i, j, rho, d) {
   n <- nrow(Y)
-  qijs <- sapply(1:n, function(k){
+  qijs <- sapply(1:n, function(k) {
     sapply(1:n, function(l) {
       return(simple_dspcauchy_ld(Y, l, k, rho, d))
     })
-  }, simplify = 'array')
+  }, simplify = "array")
   diag(qijs) <- 0
   qijs[i, j] <- 0
   sum(qijs)
 }
 
 q_ij <- function(Y, s_ij, i, j, rho, d, has_deriv_num) {
-  n <- nrow(Y)
   qij <- simple_dspcauchy_ld(Y, i, j, rho, d)
-  if(has_deriv_num)
+  if (has_deriv_num) {
     qij <- simple_dspcauchy_sim(s_ij, rho, d)
+  }
   return(qij / Z(Y, s_ij, i, j, rho, d))
 }
 
 Z <- function(Y, s_ij, i, j, rho, d) {
   qij <- simple_dspcauchy_sim(s_ij, rho, d)
   q_inotj <- q_i_not_j(Y, i, j, rho, d)
-  return(qij+q_inotj)
+  return(qij + q_inotj)
 }
 
-log_q_ij <- function(Y, s_ij, i, j, rho, d, has_deriv_num){
+log_q_ij <- function(Y, s_ij, i, j, rho, d, has_deriv_num) {
   log(q_ij(Y, s_ij, i, j, rho, d, has_deriv_num))
 }
 
-log_q_ij_prod_Z <- function(Y, s_ij, i, j, rho, d, has_deriv_num){
-  log(q_ij(Y, s_ij, i, j, rho, d, has_deriv_num)*Z(Y, s_ij, i, j, rho, d))
+log_q_ij_prod_Z <- function(Y, s_ij, i, j, rho, d, has_deriv_num) {
+  log(q_ij(Y, s_ij, i, j, rho, d, has_deriv_num) * Z(Y, s_ij, i, j, rho, d))
 }
 
-log_Z <- function(Y, s_ij, i, j, rho, d){
+log_Z <- function(Y, s_ij, i, j, rho, d) {
   log(Z(Y, s_ij, i, j, rho, d))
 }
 
@@ -494,29 +523,31 @@ s_ij <- cos_sim_ij(Y[i, ], Y[j, ])
 log_q_ij_prod_Z(Y, s_ij, i, j, rho, d, TRUE)
 
 s_ij <- 0
-eval(D(expression((1 + rho^2 - 2 * rho * s_ij)^(-d)), 's_ij'))
-grad(simple_dspcauchy_sim, x=0, rho=.5, d=2)
+eval(D(expression((1 + rho^2 - 2 * rho * s_ij)^(-d)), "s_ij"))
+grad(simple_dspcauchy_sim, x = 0, rho = .5, d = 2)
 
 s_ij <- cos_sim_ij(Y[i, ], Y[j, ])
-q_2_1 <- q_ij(Y, s_ij, i, j, rho, d, TRUE)*Z(Y, s_ij, i, j, rho, d)
-sim_dspcauchy_2_1 <- simple_dspcauchy_sim(s_ij, rho, -(-d-1))
-num_d_2_rho <- -d*-2*rho 
+q_2_1 <- q_ij(Y, s_ij, i, j, rho, d, TRUE) * Z(Y, s_ij, i, j, rho, d)
+sim_dspcauchy_2_1 <- simple_dspcauchy_sim(s_ij, rho, -(-d - 1))
+num_d_2_rho <- -d * -2 * rho
 Z_2_1 <- Z(Y, s_ij, i, j, rho, d)
 
 
-first_term <- grad(func=log_q_ij_prod_Z, x=s_ij, Y=Y, i=i, j=j, rho=rho, d=d, has_deriv_num=TRUE) 
-first_term_analytically <- (num_d_2_rho/q_2_1*sim_dspcauchy_2_1)
-print(round(first_term,8) == round(first_term_analytically, 8))
+first_term <- grad(func = log_q_ij_prod_Z, x = s_ij, Y = Y, i = i, j = j,
+                   rho = rho, d = d, has_deriv_num = TRUE)
+first_term_analytically <- (num_d_2_rho / q_2_1 * sim_dspcauchy_2_1)
+print(round(first_term, 8) == round(first_term_analytically, 8))
 
 ## check diff/diff(s_ij) * log(Z)
 
-second_term <- grad(func=log_Z, x=s_ij, Y=Y, i=i, j=j, rho=rho, d=d) 
-second_term_analytically <- (num_d_2_rho/Z_2_1*sim_dspcauchy_2_1)
+second_term <- grad(func = log_Z, x = s_ij, Y = Y, i = i, j = j, rho = rho,
+                    d = d)
+second_term_analytically <- (num_d_2_rho / Z_2_1 * sim_dspcauchy_2_1)
 print(round(second_term, 8) == round(second_term_analytically, 8))
 
 ## check diff/diff(s_ij)
-diff_Z <- grad(func=Z, x=s_ij, Y=Y, i=i, j=j, rho=rho, d=d)
-diff_Z_analytically <- 2*d*rho*sim_dspcauchy_2_1
+diff_Z <- grad(func = Z, x = s_ij, Y = Y, i = i, j = j, rho = rho, d = d)
+diff_Z_analytically <- 2 * d * rho * sim_dspcauchy_2_1
 print(round(diff_Z, 6) == round(diff_Z_analytically, 6))
 
 
@@ -534,19 +565,21 @@ diff_C_wr_sij <- function(Y, i, j, rho, d, P) {
   result <- -sum(
   sapply(1:n, function(k) {
     sapply(1:n, function(l) {
-      if(k!=l) {
+      if (k != l) {
         has_deriv_numerator <- FALSE
-        if(k == i && l == j) {
+        if (k == i && l == j) {
           has_deriv_numerator <- TRUE
         }
-        return(P[k,l] * 
-               (grad(func=log_q_ij_prod_Z, x=s_ij, Y=Y, i=k, j=l, rho=rho, d=d, has_deriv_num=has_deriv_numerator) 
-                - grad(func=log_Z, x=s_ij, Y=Y, i=k, j=l, rho=rho, d=d)))
+        return(P[k, l] *
+               (grad(func = log_q_ij_prod_Z, x = s_ij, Y = Y, i = k, j = l,
+                     rho = rho, d = d, has_deriv_num = has_deriv_numerator)
+                - grad(func = log_Z, x = s_ij, Y = Y, i = k, j = l, rho = rho,
+                       d = d)))
       } else {
         return(0)
       }
-    }, simplify = 'array')
-  }, simplify = 'array'))
+    }, simplify = "array")
+  }, simplify = "array"))
   return(result)
 }
 
@@ -556,14 +589,14 @@ result_should_be <- diff_C_wr_sij(Y, i, j, rho, d, P)
 
 Q <- low_dimension_Q(Y, rho)
 
-numerator <- 2*d*rho
-denominator <- (1+rho^2-2*rho*s_ij)
-difference <- (Q[i,j]-P[i,j])
+numerator <- 2 * d * rho
+denominator <- (1 + rho^2 - 2 * rho * s_ij)
+difference <- (Q[i, j] - P[i, j])
 
-result <- (numerator/denominator) * (difference)
+result <- (numerator / denominator) * (difference)
 
 ## with 5 digits of significance, with 6 it fails
-print((trunc(result_should_be*1e4)/1e4)==(trunc(result*1e4)/1e4))
+print((trunc(result_should_be * 1e4) / 1e4) == (trunc(result * 1e4) / 1e4))
 
 
 ```
@@ -576,7 +609,7 @@ $$
 ```{r, cache=TRUE}
 
 simple_dspcauchy_yi <- function(Y, yi, j, rho, d) {
-  ((1 + rho^2 - 2 * rho * t(yi) %*% Y[j,])^(-d))
+  ((1 + rho^2 - 2 * rho * t(yi) %*% Y[j, ])^(-d))
 }
 
 simple_dspcauchy_yj <- function(Y, yi, i, rho, d) {
@@ -585,27 +618,27 @@ simple_dspcauchy_yj <- function(Y, yi, i, rho, d) {
 
 Z_yi <- function(Y, rho, d, yi, diff_i) {
   n <- nrow(Y)
-  qijs <- sapply(1:n, function(k){
+  qijs <- sapply(1:n, function(k) {
     sapply(1:n, function(l) {
-      if(k==l) { 
+      if (k == l) {
         return(0)
-      } else if(k == diff_i) {
+      } else if (k == diff_i) {
         return(simple_dspcauchy_yi(Y, yi, l, rho, d))
-      } else if(l == diff_i) {
+      } else if (l == diff_i) {
         return(simple_dspcauchy_yj(Y, yi, k, rho, d))
       } else {
         return(simple_dspcauchy_ld(Y, k, l, rho, d))
       }
     })
-  }, simplify = 'array')
+  }, simplify = "array")
   return(sum(qijs))
 }
 
 q_ij_yi <- function(Y, yi, i, j, rho, d, diff_i) {
   qij <- NULL
-  if(diff_i == i) {
+  if (diff_i == i) {
     qij <- simple_dspcauchy_yi(Y, yi, j, rho, d)
-  } else if(diff_i == j) {
+  } else if (diff_i == j) {
     qij <- simple_dspcauchy_yj(Y, yi, i, rho, d)
   } else {
     qij <- simple_dspcauchy_ld(Y, i, j, rho, d)
@@ -615,12 +648,13 @@ q_ij_yi <- function(Y, yi, i, j, rho, d, diff_i) {
 
 kl_cost_i <- function(Y, P, rho, d, yi, ii) {
   n <- nrow(Y)
-  total <- sum(sapply(1:n, function(i){
+  total <- sum(sapply(1:n, function(i) {
     sapply((1:n), function(j) {
-      if(i==j) {
+      if (i == j) {
         return(0)
       } else {
-        (P[i,j]*log(P[i,j])-P[i,j] * log(q_ij_yi(Y, yi, i, j, rho, d, ii)))
+        (P[i, j] * log(P[i, j]) - P[i, j] *
+           log(q_ij_yi(Y, yi, i, j, rho, d, ii)))
       }
     })
   }))
@@ -628,23 +662,24 @@ kl_cost_i <- function(Y, P, rho, d, yi, ii) {
 }
 
 kl_cost_analytic <- function(Y, i,  rho, d, P, Q) {
-  (4*d*rho*colSums(t(sapply((1:nrow(Y))[-i], function(j) {
-    s_ij <- cos_sim_ij(Y[i,], Y[j,])
-    diff_Q_P <- (Q[i,j]-P[i,j])
-    div <- (1+rho^2-2*rho*s_ij)
-    return(Y[j,]/div*diff_Q_P)
+  (4 * d * rho * colSums(t(sapply((seq_len(nrow(Y)))[-i], function(j) {
+    s_ij <- cos_sim_ij(Y[i, ], Y[j, ])
+    diff_Q_P <- (Q[i, j] - P[i, j])
+    div <- (1 + rho^2 - 2 * rho * s_ij)
+    return(Y[j, ] / div * diff_Q_P)
   }))))
 }
 
 ii <- 1
-yi <- Y[ii,]
+yi <- Y[ii, ]
 d <- 2
 rho <- 0.5
-cost_result_expected <- jacobian(kl_cost_i, Y=Y, P=P, rho=rho, d=d, x=yi, i=ii)
+cost_result_expected <- jacobian(kl_cost_i, Y = Y, P = P, rho = rho, d = d,
+                                 x = yi, i = ii)
 
 cost_result <- kl_cost_analytic(Y, ii, rho, d, P, Q)
 
-print(all.equal(cost_result_expected[1,], cost_result))
+print(all.equal(cost_result_expected[1, ], cost_result))
 
 ```
 
@@ -652,14 +687,15 @@ print(all.equal(cost_result_expected[1,], cost_result))
 ```{r}
 
 radial_projection <- function(x) {
-  x/norm(x, type="2")
+  x / sqrt(sum(x^2))
 }
-z <- runif(n = (d+1), min = 1, max = 10)
-z=Y[1, ]
-result.radial = jacobian(radial_projection, z)
+z <- runif(n = (d + 1), min = 1, max = 10)
+z <- Y[1, ]
+result.radial <- jacobian(radial_projection, z)
 
-
-result_excpected.radial = (as.numeric((t(z) %*% z)^(-1/2)) * (diag(length(z))-(radial_projection(z)%*%t(radial_projection(z)))))
+result_excpected.radial <- (as.numeric((t(z) %*% z)^(-1 / 2))
+                           * (diag(length(z)) - (radial_projection(z)
+                                                 %*% t(radial_projection(z)))))
 
 all.equal(result.radial, result_excpected.radial)
 ```

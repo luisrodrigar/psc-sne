@@ -7,13 +7,16 @@
 symmetric_probs(P)
 }
 \arguments{
-\item{P}{matrix of probabilities \eqn{(P_{i|j})_{ij}} with size \code{c(n, n)} where \code{n} is the number of observations of the original array \code{x}.}
+\item{P}{matrix of probabilities \eqn{(P_{i|j})_{ij}} with size
+\code{c(n, n)} where \code{n} is the number of observations of the original
+array \code{x}.}
 }
 \value{
 The sum of \code{P} and \code{t(P)} divided by twice the sample size.
 }
 \description{
-Calculate the symmetric probabilities of a given conditional polyspherical Cauchy probability matrix.
+Calculate the symmetric probabilities of a given conditional
+polyspherical Cauchy probability matrix.
 }
 \examples{
 symmetric_probs(matrix(runif(3 * 3), nrow = 3, ncol = 3))

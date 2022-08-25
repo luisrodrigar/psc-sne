@@ -7,7 +7,9 @@
 d_sph_cauchy(x, i, j, rho, k, p)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
+where \code{n} is the number of observations, \code{d} is the dimension of
+each sphere, and \code{r} is the number of spheres.}
 
 \item{i}{corresponds to the \eqn{i}-th observation index.}
 

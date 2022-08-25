@@ -14,7 +14,8 @@
 clusterFactory <- function(num_cores, outfile = "") {
   cl <- NULL
   if (tolower(.Platform$OS.type) != "windows") {
-    cl <- parallel::makeCluster(spec = num_cores, type = "FORK", outfile = outfile)
+    cl <- parallel::makeCluster(spec = num_cores, type = "FORK",
+                                outfile = outfile)
   } else {
     cl <- parallel::makeCluster(spec = num_cores, outfile = outfile)
   }
@@ -23,9 +24,11 @@ clusterFactory <- function(num_cores, outfile = "") {
 
 #' @title Reconstruct the symmetric matrix without diagonal
 #'
-#' @description Convert the vector into a symmetric matrix with diagonal equal to a specific value.
+#' @description Convert the vector into a symmetric matrix with diagonal
+#' equal to a specific value.
 #'
-#' @param vec vector containing all non-repeated values of the cosine similarity matrix (upper triangular matrix).
+#' @param vec vector containing all non-repeated values of the cosine
+#' similarity matrix (upper triangular matrix).
 #' @param n sample size of the original data.
 #' @param diag_value value for the diagonal of the resultant matrix.
 #' @return Matrix formed by the \code{vec}.
@@ -49,8 +52,8 @@ vec2matrix <- function(vec, n, diag_value) {
 
 #' @title Vector index of an upper triangular matrix withou diagonal
 #'
-#' @description Obtain the index of an element within a vector for the equivalent in
-#' the upper triangular matrix without diagonal
+#' @description Obtain the index of an element within a vector
+#' for the equivalent in the upper triangular matrix without diagonal
 #'
 #' @inheritParams d_sph_cauchy
 #' @param n the sample size of the symmetric matrix (n x n)
@@ -78,8 +81,8 @@ index_upper_trian <- function(i, j, n) {
 
 #' @title Cosine similarities vector for the i-th observation
 #'
-#' @description Obtain the index of an element within a vector for the equivalent in
-#' the upper triangular matrix without diagonal
+#' @description Obtain the index of an element within a vector
+#' for the equivalent in the upper triangular matrix without diagonal
 #'
 #' @inheritParams high_dimension
 #' @inheritParams d_sph_cauchy
@@ -93,16 +96,16 @@ index_upper_trian <- function(i, j, n) {
 #' cos_sim_psh <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
 #' cos_sim_i(cos_sim_psh, 4, r, n)
 cos_sim_i <- function(cos_sim_psh, i, r, n) {
-  sapply(1:r, function(k) {
-    sapply(1:n, function(j) {
-      if(j == i) {
+  sapply(seq_len(r), function(k) {
+    sapply(seq_len(n), function(j) {
+      if (j == i) {
 
         # Cosine similarity when the i-th and j-th observation are the same
         return(1)
 
       }
 
-      if(i > j) {
+      if (i > j) {
 
         # Since it is an upper triangular matrix what represents the vector
         # If the i-th observation is greater than the j-th observation
@@ -112,7 +115,7 @@ cos_sim_i <- function(cos_sim_psh, i, r, n) {
 
       }
 
-      # Get the cosine similarity for the i-th with respect the j-th observations
+      # Get the cosine similarity for the i-th with respect the j-th obs
       return(cos_sim_psh[index_upper_trian(i, j, n), k])
     })
   })
@@ -121,10 +124,12 @@ cos_sim_i <- function(cos_sim_psh, i, r, n) {
 
 #' @title Cosine similarity for the poly-sphere
 #'
-#' @description Calculates the cosine similarity for each sphere of the 3 dimensional array.
+#' @description Calculates the cosine similarity for each sphere of
+#' the 3 dimensional array.
 #'
 #' @inheritParams high_dimension
-#' @return An array of size \code{c(n, n, r)} with the cosine similarities of each sphere \eqn{\mathcal{S}^d} from \code{x}.
+#' @return An array of size \code{c(n, n, r)} with the cosine similarities of
+#' each sphere \eqn{\mathcal{S}^d} from \code{x}.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(100, 3, 3)
@@ -134,14 +139,18 @@ cosine_polysph <- function(x) {
   n <- nrow(x)
   # applying the cosine function to each third dimension of the array
   cos_sim_vec <- sphunif::Psi_mat(x, scalar_prod = TRUE)
-  sapply(1:r, function(k) vec2matrix(drop(cos_sim_vec[, k]), n, 1), simplify = "array")
+  sapply(1:r, function(k) vec2matrix(drop(cos_sim_vec[, k]), n, 1),
+         simplify = "array")
 }
 
 #' @title Symmetric probabilities
 #'
-#' @description Calculate the symmetric probabilities of a given conditional polyspherical Cauchy probability matrix.
+#' @description Calculate the symmetric probabilities of a given conditional
+#' polyspherical Cauchy probability matrix.
 #'
-#' @param P matrix of probabilities \eqn{(P_{i|j})_{ij}} with size \code{c(n, n)} where \code{n} is the number of observations of the original array \code{x}.
+#' @param P matrix of probabilities \eqn{(P_{i|j})_{ij}} with size
+#' \code{c(n, n)} where \code{n} is the number of observations of the original
+#' array \code{x}.
 #' @return The sum of \code{P} and \code{t(P)} divided by twice the sample size.
 #' @export
 #' @examples
@@ -155,12 +164,14 @@ symmetric_probs <- function(P) {
 
 #' @title Set each object's diagonal of a 3d-array
 #'
-#' @description Set a specific value to the diagonal of a each matrix of a 3 dimensional array.
+#' @description Set a specific value to the diagonal of a each matrix of a
+#' 3 dimensional array.
 #'
 #' @inheritParams high_dimension
 #' @param k the \code{k}-th sphere from \eqn{(\mathcal{S}^p)^r}.
 #' @param val value to set to each array's diagonal of the poly-sphere \code{x}.
-#' @return The \code{k}-th matrix of \code{x} with the diagonal set to \code{val}.
+#' @return The \code{k}-th matrix of \code{x} with the diagonal set to
+#' \code{val}.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(100, 3, 3)
@@ -192,11 +203,14 @@ radial_projection <- function(y) {
 
 #' @title Generate optimum evenly separated points
 #'
-#' @description Generated optimal evenly separated points onto the sphere \eqn{\mathcal{S}^d}.
+#' @description Generated optimal evenly separated points onto the sphere
+#' \eqn{\mathcal{S}^d}.
 #'
 #' @param n positive integer that defines the size of the sample to generate.
-#' @param d size of the low-dimension which defines the sphere \eqn{\mathcal{S}^d}.
-#' @return Evenly optimal separated points onto the low-dimension sphere \eqn{\mathcal{S}^d}.
+#' @param d size of the low-dimension which defines the sphere
+#' \eqn{\mathcal{S}^d}.
+#' @return Evenly optimal separated points onto the low-dimension sphere
+#' \eqn{\mathcal{S}^d}.
 #' @export
 #' @examples
 #' gen_opt_sphere(100, 1)
@@ -206,12 +220,12 @@ gen_opt_sphere <- function(n, d) {
   if (n < 1) {
     stop("n not valid, must be a positive integer")
   }
-  # Generate data for the circumference S^1
   if (d == 1) {
-    Y <- DirStats::to_cir(seq(0, 2 * pi, l = n + 1)[-(n + 1)]) # 0 == 2 * pi, so we exclude it
-  }
-  # Generate data for the sphere S^2
-  else if (d == 2) {
+    # Generate data for the circumference S^1
+    # 0 == 2 * pi, so we exclude it
+    Y <- DirStats::to_cir(seq(0, 2 * pi, l = n + 1)[-(n + 1)])
+  } else if (d == 2) {
+    # Generate data for the sphere S^2
     Y <- fibonacci_lattice(n)
   } else {
     stop("d not valid, only 1 or 2 are allowed")
@@ -221,10 +235,12 @@ gen_opt_sphere <- function(n, d) {
 
 #' @title Fibonacci lattice algorithm to generate evenly separated points
 #'
-#' @description Generated optimal evenly separated points onto the sphere \eqn{\mathcal{S}^2}.
+#' @description Generated optimal evenly separated points onto the sphere
+#' \eqn{\mathcal{S}^2}.
 #'
 #' @inheritParams gen_opt_sphere
-#' @return Evenly optimal separated points onto the low-dimension sphere \eqn{\mathcal{S}^2}.
+#' @return Evenly optimal separated points onto the low-dimension sphere
+#' \eqn{\mathcal{S}^2}.
 #' @export
 #' @examples
 #' fibonacci_lattice(100)

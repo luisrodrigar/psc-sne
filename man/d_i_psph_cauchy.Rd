@@ -7,18 +7,21 @@
 d_i_psph_cauchy(x, i, rho_list)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
+where \code{n} is the number of observations, \code{d} is the dimension of
+each sphere, and \code{r} is the number of spheres.}
 
 \item{i}{corresponds to the \eqn{i}-th observation index.}
 
-\item{rho_list}{rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.}
+\item{rho_list}{rho list of size \code{n} for each \code{i}-th observation
+that stands for the concentration parameter.}
 }
 \value{
 Polyspherical Cauchy density value given the parameters.
 }
 \description{
-Calculate the high-dimension polyspherical Cauchy density for the
-\eqn{i}-th observation.
+Calculate the high-dimension polyspherical Cauchy density for
+the \eqn{i}-th observation.
 }
 \examples{
 x <- sphunif::r_unif_sph(20, 3, 4)

@@ -17,5 +17,6 @@ d_i_sph_cauchy(y, i, rho)
 Spherical marginal Cauchy density probability given the parameters.
 }
 \description{
-Calculate the marginal low-dimension spherical Cauchy probability.
+Calculate the marginal low-dimension spherical
+Cauchy probability.
 }
