@@ -117,18 +117,16 @@ P <- optim_hat$P
 P <- symmetric_probs(P)
 Y <- sphunif::r_unif_sph(n, (d + 1))[, , 1]
 
-ii <- 1
+ii <- sample(n, size = 1)
 yi <- Y[ii, ]
 
 test_that("Checking value with gradient approximation", {
-  computation_grad <- jacobian(kl_div_obj_func, Y = Y, P = P, rho = rho, d = d,
-                               x = yi, i = ii)
-  I <- diag(rep(1, ncol(Y)))
-  computation_grad_bar <- computation_grad %*% (I - tcrossprod(Y[ii, ]))
-  expect_equal(computation_grad_bar,
-    kl_divergence_grad(Y, ii, rho, d, P),
-    tolerance = 1e-6, ignore_attr = TRUE
-  )
+  computation_grad_bar <- grad(func = function(x) {
+    kl_div_obj_func(Y = Y, P = P, rho = rho, d = d, yi = x / sqrt(sum(x^2)),
+                    ii = ii)
+  }, x = yi, method = "simple", method.args = list(eps = 1e-6))
+  expect_equal(computation_grad_bar, kl_divergence_grad(Y, ii, rho, d, P),
+               tolerance = 1e-6)
 })
 
 test_that("Checking that the radial projection is done", {
