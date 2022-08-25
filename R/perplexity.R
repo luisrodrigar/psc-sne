@@ -59,7 +59,7 @@ to_perplexity_P <- function(x, i, rho) {
 to_perp_i <- function(x, i, rho, cos_sim_psh = NULL) {
   # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
   if (is.null(cos_sim_psh)) {
-    cos_sim_psh <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
+    cos_sim_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
   }
   # Obtaining the high dimension probability vector for the i-th observation
   P_i <- high_dimension_i(x, i, rho, cos_sim_psh)
@@ -83,7 +83,7 @@ to_perp_i <- function(x, i, rho, cos_sim_psh = NULL) {
 #' @examples
 #' x <- sphunif::r_unif_sph(25, 3, 3)
 #' to_perp(x, rep(0.5, 25))
-#' to_perp(x, rep(1 - 1e-4, 25), drop(sphunif::Psi_mat(x, scalar_prod = TRUE)))
+#' to_perp(x, rep(1 - 1e-4, 25), sphunif::Psi_mat(x, scalar_prod = TRUE))
 to_perp <- function(x, rho_list, cos_sim_psh = NULL) {
   if (length(dim(x)) != 3) {
     stop("x must be an array of dimension c(n, p + 1, r), from (S^p)^r")
@@ -93,7 +93,7 @@ to_perp <- function(x, rho_list, cos_sim_psh = NULL) {
   }
   # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
   if (is.null(cos_sim_psh)) {
-    cos_sim_psh <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
+    cos_sim_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
   }
   # Calculate the high-dimension probabilities
   P <- high_dimension(x, rho_list, cos_sim_psh)
@@ -298,7 +298,7 @@ rho_optim_ineff <- function(x, perplexity) {
   # Time start
   start_time <- Sys.time()
   # Calculate the cosine similarities of (S^p)^r
-  cosine_polysph <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
+  cosine_polysph <- sphunif::Psi_mat(x, scalar_prod = TRUE)
   # For each observation, calculate the optimal value matrix way
   rho_opt <- sapply(1:n, function(i) {
     print(i)
@@ -352,7 +352,7 @@ rho_optimize_1 <- function(x, perplexity,
   if (is.null(cos_sim_psh)) {
 
     # Calculate the cosine similarities of (S^p)^r
-    cos_sim_psh <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
+    cos_sim_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
 
   }
 

@@ -24,8 +24,7 @@
 #' @examples
 #' x <- sphunif::r_unif_sph(100, 3, 3)
 #' high_dimension(x, rep(0.5, 100))
-#' high_dimension(x, rep(0.5, 100),
-#'                drop(sphunif::Psi_mat(x, scalar_prod = TRUE)))
+#' high_dimension(x, rep(0.5, 100), sphunif::Psi_mat(x, scalar_prod = TRUE))
 high_dimension <- function(x, rho_list, cos_sim_psh = NULL) {
   if (!rlang::is_vector(rho_list)) {
     stop("rho_list must be a vector")
@@ -40,7 +39,7 @@ high_dimension <- function(x, rho_list, cos_sim_psh = NULL) {
 
   # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
   if (is.null(cos_sim_psh)) {
-    cos_sim_psh <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
+    cos_sim_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
   }
 
   # Calculate -2 * rho_list * (Y[i,,] %*% Y[j,,]) by each row of the 3d-array
@@ -87,7 +86,7 @@ high_dimension <- function(x, rho_list, cos_sim_psh = NULL) {
 #' @examples
 #' x <- sphunif::r_unif_sph(100, 3, 3)
 #' high_dimension_i(x, 1, 0.5)
-#' high_dimension_i(x, 100, 0.5, drop(sphunif::Psi_mat(x, scalar_prod = TRUE)))
+#' high_dimension_i(x, 100, 0.5, sphunif::Psi_mat(x, scalar_prod = TRUE))
 high_dimension_i <- function(x, i, rho, cos_sim_psh = NULL) {
 
   # sample size
@@ -99,7 +98,7 @@ high_dimension_i <- function(x, i, rho, cos_sim_psh = NULL) {
 
   # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
   if (is.null(cos_sim_psh)) {
-    cos_sim_psh <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
+    cos_sim_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
   }
 
   # Create vector of each cosine similarity for the i-th observation
