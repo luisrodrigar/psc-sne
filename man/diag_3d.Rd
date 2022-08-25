@@ -7,17 +7,21 @@
 diag_3d(x, k, val)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
+where \code{n} is the number of observations, \code{d} is the dimension of
+each sphere, and \code{r} is the number of spheres.}
 
 \item{k}{the \code{k}-th sphere from \eqn{(\mathcal{S}^p)^r}.}
 
 \item{val}{value to set to each array's diagonal of the poly-sphere \code{x}.}
 }
 \value{
-The \code{k}-th matrix of \code{x} with the diagonal set to \code{val}.
+The \code{k}-th matrix of \code{x} with the diagonal set to
+\code{val}.
 }
 \description{
-Set a specific value to the diagonal of a each matrix of a 3 dimensional array.
+Set a specific value to the diagonal of a each matrix of a
+3 dimensional array.
 }
 \examples{
 x <- sphunif::r_unif_sph(100, 3, 3)

@@ -7,13 +7,17 @@
 cosine_polysph(x)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
+where \code{n} is the number of observations, \code{d} is the dimension of
+each sphere, and \code{r} is the number of spheres.}
 }
 \value{
-An array of size \code{c(n, n, r)} with the cosine similarities of each sphere \eqn{\mathcal{S}^d} from \code{x}.
+An array of size \code{c(n, n, r)} with the cosine similarities of
+each sphere \eqn{\mathcal{S}^d} from \code{x}.
 }
 \description{
-Calculates the cosine similarity for each sphere of the 3 dimensional array.
+Calculates the cosine similarity for each sphere of
+the 3 dimensional array.
 }
 \examples{
 x <- sphunif::r_unif_sph(100, 3, 3)

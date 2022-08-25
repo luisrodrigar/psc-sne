@@ -2,7 +2,8 @@
 % Please edit documentation in R/prob_distribution.R
 \name{prob_cond_i_sph}
 \alias{prob_cond_i_sph}
-\title{Conditional spherical Cauchy probabilities given the \eqn{i}-th observation}
+\title{Conditional spherical Cauchy probabilities given the
+\eqn{i}-th observation}
 \usage{
 prob_cond_i_sph(y, i, rho)
 }
@@ -17,8 +18,10 @@ prob_cond_i_sph(y, i, rho)
 Spherical marginal Cauchy density probability given the parameters.
 }
 \description{
-Calculate \eqn{n}, where it stands for the sample size, probabilities where each element is the probability of choosing the
-\eqn{i}-th and the \eqn{j}-th observations, the \eqn{i}-th element is a fixed element in the chosen pairs.
+Calculate \eqn{n}, where it stands for the sample size,
+probabilities where each element is the probability of choosing the
+\eqn{i}-th and the \eqn{j}-th observations, the \eqn{i}-th element is a
+fixed element in the chosen pairs.
 }
 \examples{
 y <- rotasym::r_unif_sphere(100, 2)
