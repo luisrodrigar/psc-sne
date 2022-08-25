@@ -23,7 +23,7 @@ the Euler algorithm.}
 
 \item{keep_paths}{keep the ascending paths? Defaults to \code{FALSE}.}
 
-\item{show_prog}{display progress?}
+\item{show_prog}{display progress? Defaults to \code{TRUE}.}
 }
 \value{
 A list with the following entries:
@@ -35,6 +35,8 @@ A list with the following entries:
   \item \code{paths}: ascension paths, if \code{keep_paths = TRUE}. A list
   of length \code{nx} with matrices of size \code{c(np, d + 1)}, where
   \code{np} is at most \code{N + 1}.
+  \item \code{tree}: internal hierarchical clustering tree used to merge
+  modes.
 }
 }
 \description{

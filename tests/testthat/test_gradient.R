@@ -1,3 +1,4 @@
+
 library(rotasym)
 library(numDeriv)
 library(mvtnorm)
@@ -130,7 +131,7 @@ test_that("Checking value with gradient approximation", {
   )
 })
 
-test_that("Checking that the radial projetion is done", {
+test_that("Checking that the radial projection is done", {
   Y_non_in_the_sphere <- mvtnorm::rmvnorm(n, c(1, 2, 3), diag(3))
   Y_sphere <- radial_projection(Y_non_in_the_sphere)
   expect_equal(
@@ -143,7 +144,7 @@ test_that("Checking that i is valid", {
   expect_error(kl_divergence_grad(Y, 120, rho, d, P))
 })
 
-test_that("Checking that the number of observation is according with the number of rows in P", {
+test_that("Checking that the number of observations coincides with the number of rows in P", {
   Y_wrong_rows <- r_unif_sphere(2, p)
   expect_error(kl_divergence_grad(Y_wrong_rows, ii, rho, d, P))
 })
