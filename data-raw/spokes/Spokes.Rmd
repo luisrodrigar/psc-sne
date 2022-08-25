@@ -57,7 +57,7 @@ First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE}
 res_pscsne <- psc_sne(spokes, d = 1, rho_psc_list = rho_spokes_perp25,
-             colors = ifelse(ids_labs, 2, 1), maxit = 500, show_prog = TRUE)
+             colors = ifelse(ids_labs, 2, 1), show_prog = TRUE)
 
 Y <- res_pscsne$best_Y
 ```
@@ -67,7 +67,8 @@ Let's apply the kernel means shift function to see what clusters identifies.
 ```{r}
 res_kms_dir_Y_1 <- kms_dir(x = Y, data = Y)
 
-plot(Y[, 1], Y[, 2], col = res_kms_dir_Y_1$cluster, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = res_kms_dir_Y_1$cluster, xlim = c(-1, 1), 
+     ylim = c(-1, 1))
 
 polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
         y = sin(seq(0, 2 * pi, length.out = 100)))
@@ -77,7 +78,7 @@ Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE}
 res_pscsne <- psc_sne(spokes, d = 2, rho_psc_list = rho_spokes_perp25,
-             colors = ifelse(ids_labs, 2, 1), maxit = 500, show_prog = TRUE)
+             colors = ifelse(ids_labs, 2, 1), show_prog = TRUE)
 
 Y <- res_pscsne$best_Y
 ```
@@ -86,9 +87,21 @@ Let's do the same applying the kms onto the sphere.
 
 ```{r}
 res_kms_dir_Y <- kms_dir(x = Y, data = Y)
-
 colors <- res_kms_dir_Y$cluster
-scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
-                             zlim = c(-1, 1), color = colors)
+
+# Sequence from -180 to 180 by an step of 15 in radians
+seq_rad <- seq(-pi, pi, by = pi / 30)
+# Meridian calculates as theta = 0 and phi = i
+# where i is the radians
+meridian <- do.call(rbind, lapply(seq_rad, function(i) c(0, i)))
+equator <- do.call(rbind, lapply(seq_rad, function(i) c(i, pi/2)))
+
+sd3 <- scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
+                             zlim = c(-1, 1), color = colors,
+                             pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)])
+sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+             type = "l", lty = 3)
+sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+             type = "l", lty = 3)
 ```
 
