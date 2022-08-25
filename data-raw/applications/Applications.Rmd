@@ -64,13 +64,13 @@ rho_first_20 <- rho_optim_bst(x_array, 20)
 
 First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
-```{r cache=TRUE, fig.asp=1}
+```{r cache=TRUE, fig.asp=1, fig.align='center'}
 res_pscsne <- psc_sne(X = x_array, d = 1, rho_psc_list = rho_first_20,
-                      maxit = 500, colors = colors, show_prog = TRUE)
+                      colors = colors, eta = 20, show_prog = TRUE)
 Y <- res_pscsne$best_Y
 ```
 
-```{r fig.asp=1}
+```{r fig.asp=1, fig.align='center'}
 plot(Y[, 1], Y[, 2],
      col = colors,
      xlim = c(-1, 1), ylim = c(-1, 1))
@@ -83,15 +83,14 @@ Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE, fig.asp=1}
 res_pscsne <- psc_sne(X = x_array, d = 2, rho_psc_list = rho_first_20,
-                      maxit = 500, colors = colors, show_prog = TRUE,
-                      eta = 100)
+                      colors = colors, eta = 50, show_prog = TRUE)
 Y <- res_pscsne$best_Y
 ```
 
-```{r fig.asp=1}
+```{r fig.asp=1, fig.align='center'}
 scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
                              zlim = c(-1, 1), color = colors,
-                             pch = ifelse(sign(Y[, 2]) == 1, 1, 2))
+                             pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)])
 ```
 
 It's clearly clustered the two groups we had in the original generated data.
@@ -160,12 +159,12 @@ First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_2, d = 1, rho_psc_list = rho_second_perp20,
-                      maxit = 500, colors = colors, show_prog = TRUE)
+                      eta = 20, colors = colors, show_prog = TRUE)
 Y <- res_pscsne$best_Y
 
 ```
 
-```{r}
+```{r fig.asp=1, fig.align='center'}
 plot(Y[, 1], Y[, 2], col = colors, xlim = c(-1, 1), ylim = c(-1, 1))
 
 polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
@@ -176,14 +175,15 @@ Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_2, d = 2, rho_psc_list = rho_second_perp20,
-                      maxit = 500, colors = colors, show_prog = TRUE)
+                      eta = 50, colors = colors, show_prog = TRUE)
 Y <- res_pscsne$best_Y
 ```
 
 
-```{r fig.asp=1}
+```{r fig.asp=1, fig.align='center'}
 scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
-                             zlim = c(-1, 1), color = colors)
+                             zlim = c(-1, 1), color = colors,
+                             pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)])
 ```
 
 It's clearly clustered the three groups we had in the original generated data.
@@ -257,11 +257,11 @@ First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_3, d = 1, rho_psc_list = rho_third_perp25,
-                      maxit = 500, colors = colors, show_prog = TRUE)
+                      eta = 20, colors = colors, show_prog = TRUE)
 Y <- res_pscsne$best_Y
 ```
 
-```{r fig.asp=1}
+```{r fig.asp=1, fig.align='center'}
 plot(Y[, 1], Y[, 2], col = colors, xlim = c(-1, 1), ylim = c(-1, 1))
 
 polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
@@ -272,14 +272,15 @@ Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_3, d = 2, rho_psc_list = rho_third_perp25,
-                      maxit = 500, colors = colors, show_prog = TRUE)
+                      eta = 20, colors = colors, show_prog = TRUE)
 
 Y <- res_pscsne$best_Y
 ```
 
-```{r fig.asp=1}
+```{r fig.asp=1, fig.align='center'}
 scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
-                             zlim = c(-1, 1), color = colors)
+                             zlim = c(-1, 1), color = colors,
+                             pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)])
 ```
 
 
@@ -310,11 +311,11 @@ First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_4, d = 1, rho_psc_list = rho_four_perp20,
-                      maxit = 500, show_prog = TRUE)
+                      eta = 20, show_prog = TRUE)
 Y <- res_pscsne$best_Y
 ```
 
-```{r fig.asp=1}
+```{r fig.asp=1, fig.align='center'}
 plot(Y[, 1], Y[, 2], xlim = c(-1, 1), ylim = c(-1, 1))
 
 polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
@@ -325,14 +326,15 @@ Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r cache=TRUE, fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_4, d = 2, rho_psc_list = rho_four_perp20,
-                      maxit = 500, show_prog = TRUE)
+                      eta = 20, show_prog = TRUE)
 
 Y <- res_pscsne$best_Y
 ```
 
-```{r fig.asp=1}
+```{r fig.asp=1, fig.align='center'}
 scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
-                             zlim = c(-1, 1))
+                             zlim = c(-1, 1),
+                             pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)])
 ```
 
 
@@ -442,12 +444,12 @@ First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 
 ```{r fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_5, d = 1, rho_psc_list = rho_five_perp20,
-                      maxit = 500, eta = 20, show_prog = TRUE, colors = colors)
+                      eta = 20, show_prog = TRUE, colors = colors)
 
 Y <- res_pscsne$best_Y
 ```
 
-```{r fig.asp=1}
+```{r fig.asp=1, fig.align='center'}
 plot(Y[, 1], Y[, 2], col = colors, xlim = c(-1, 1), ylim = c(-1, 1))
 
 polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
@@ -458,13 +460,13 @@ Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 
 ```{r fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_5, d = 2, rho_psc_list = rho_five_perp20,
-                      maxit = 500, eta = 400, show_prog = TRUE,
-                      colors = colors)
+                      eta = 20, show_prog = TRUE, colors = colors)
 
 Y <- res_pscsne$best_Y
 ```
 
-```{r fig.asp=1}
+```{r fig.asp=1, fig.align='center'}
 scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
-                             zlim = c(-1, 1), color = colors)
+                             zlim = c(-1, 1), color = colors,
+                             pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)])
 ```

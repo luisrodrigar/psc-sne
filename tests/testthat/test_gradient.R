@@ -1,3 +1,4 @@
+
 library(rotasym)
 library(numDeriv)
 library(mvtnorm)
@@ -116,21 +117,19 @@ P <- optim_hat$P
 P <- symmetric_probs(P)
 Y <- sphunif::r_unif_sph(n, (d + 1))[, , 1]
 
-ii <- 1
+ii <- sample(n, size = 1)
 yi <- Y[ii, ]
 
 test_that("Checking value with gradient approximation", {
-  computation_grad <- jacobian(kl_div_obj_func, Y = Y, P = P, rho = rho, d = d,
-                               x = yi, i = ii)
-  I <- diag(rep(1, ncol(Y)))
-  computation_grad_bar <- computation_grad %*% (I - tcrossprod(Y[ii, ]))
-  expect_equal(computation_grad_bar,
-    kl_divergence_grad(Y, ii, rho, d, P),
-    tolerance = 1e-6, ignore_attr = TRUE
-  )
+  computation_grad_bar <- grad(func = function(x) {
+    kl_div_obj_func(Y = Y, P = P, rho = rho, d = d, yi = x / sqrt(sum(x^2)),
+                    ii = ii)
+  }, x = yi, method = "simple", method.args = list(eps = 1e-6))
+  expect_equal(computation_grad_bar, kl_divergence_grad(Y, ii, rho, d, P),
+               tolerance = 1e-6)
 })
 
-test_that("Checking that the radial projetion is done", {
+test_that("Checking that the radial projection is done", {
   Y_non_in_the_sphere <- mvtnorm::rmvnorm(n, c(1, 2, 3), diag(3))
   Y_sphere <- radial_projection(Y_non_in_the_sphere)
   expect_equal(
@@ -143,7 +142,7 @@ test_that("Checking that i is valid", {
   expect_error(kl_divergence_grad(Y, 120, rho, d, P))
 })
 
-test_that("Checking that the number of observation is according with the number of rows in P", {
+test_that("Checking that the number of observations coincides with the number of rows in P", {
   Y_wrong_rows <- r_unif_sphere(2, p)
   expect_error(kl_divergence_grad(Y_wrong_rows, ii, rho, d, P))
 })
