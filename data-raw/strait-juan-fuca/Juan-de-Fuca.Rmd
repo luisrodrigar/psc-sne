@@ -6,7 +6,8 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_knit$set(echo = TRUE, root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_knit$set(echo = TRUE,
+                     root.dir = rprojroot::find_rstudio_root_file())
 library(rprojroot)
 library(here)
 library(knitr)
@@ -30,36 +31,38 @@ Transform the original data set into an array of dimension `c(n, d+1, r)`, where
 
 ```{r}
 # Get long format data from strait of Juan de Fuca
-juanfuca_pkg <-  paste(here("data-raw", "strait-juan-fuca"), "jdf.rda", sep = "/")
+juanfuca_pkg <-  paste(here("data-raw", "strait-juan-fuca"), "jdf.rda",
+                       sep = "/")
 load(juanfuca_pkg)
 
 # Obtain other data frame
 # Transform into coordinates (value formed by lat and lon separated by a comma)
 # Remove speed from the dataset
-jdf_coor <- jdf_long_fmt %>% 
-  unite(col = "coordinates", lat, lon, sep = ",", remove = FALSE) %>% 
-  dplyr::select(-"speed") 
-  
+jdf_coor <- jdf_long_fmt %>%
+  unite(col = "coordinates", lat, lon, sep = ",", remove = FALSE) %>%
+  dplyr::select(-"speed")
 # Transform the data frame into a 3-dimensional array
 jdf_coor <- abind(split(jdf_coor, jdf_coor$coordinates), along = 3)
 
-
 # Sum the number of NA's by each row
-to_remove <- colSums(t(sapply(1:dim(jdf_coor)[3], 
-                              function(k) is.na(jdf_coor[ , 5, k]))))
+to_remove <- colSums(t(sapply(seq_len(dim(jdf_coor)[3]),
+                              function(k) {
+                                is.na(jdf_coor[, 5, k])
+                              })))
 # Indexes of the rows without NA's
 index_to_not_remove <- to_remove == 0
 
 # Select only those rows without NA's
-jdf_coor <- jdf_coor[index_to_not_remove , , ]
+jdf_coor <- jdf_coor[index_to_not_remove, , ]
 
 ```
 
 ```{r eval = FALSE}
 # Calculate the Cartesian angles
-jdf_pscsne <- sapply(1:dim(jdf_coor)[3], 
-                     function(k) DirStats::to_cir(as.numeric(jdf_coor[ , 3, k])), 
-                     simplify = 'array')
+jdf_pscsne <- sapply(seq_len(dim(jdf_coor)[3]),
+                     function(k) {
+                       DirStats::to_cir(as.numeric(jdf_coor[, 3, k]))
+                     }, simplify = "array")
 
 # Get the rho values for a specific perplexity
 perplexity <- 30
@@ -68,7 +71,8 @@ rho_30 <- rho_optim_bst(jdf_pscsne, perplexity, 7)
 
 # Save dataset in long format
 save(
-  list = c("jdf_coor", "index_to_not_remove", "jdf_pscsne", "perplexity", "rho_30"),
+  list = c("jdf_coor", "index_to_not_remove", "jdf_pscsne", "perplexity",
+           "rho_30"),
   file = paste(here("data-raw", "strait-juan-fuca"), "pscsne.rda", sep = "/")
 )
 
@@ -84,21 +88,16 @@ load(paste(here("data-raw", "strait-juan-fuca"), "pscsne.rda", sep = "/"))
 Now we are ready to reduce the dimension using the polyspherical Cauchy SNE. First, optimized rho is based on a perplexity of 30, $d=1$ and initializing the resultant reduced data with optimized evenly space points:
 
 ```{r cache=TRUE}
-res_pscsne <- psc_sne(X = jdf_pscsne, d = 1, rho_psc_list = rho_30, num_iteration = 500, 
-             init = "equispaced")
+res_pscsne <- psc_sne(X = jdf_pscsne, d = 1, rho_psc_list = rho_30,
+                      maxit = 500, init = "equispaced")
 
 Y_1 <- res_pscsne$best_Y
 ```
 
 ```{r fig.asp=1}
-Y_rad <- DirStats::to_rad(Y_1)
-r <- 1
-theta <<- Y_rad
-plot(r * sin(theta), r * cos(theta), xlim = c(-max(r), max(r)), 
-     ylim = c(-max(r), max(r)))
-
-polygon(max(r) * sin(seq(0,2 * pi, length.out = 100)),
-        max(r) * cos(seq(0,2 * pi, length.out = 100)))
+plot(Y_1[, 1], Y_1[, 2], xlim = c(-1, 1), ylim = c(-1, 1))
+graphics::polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+                  y = sin(seq(0, 2 * pi, length.out = 100)))
 ```
 
 We can not get so many insights from the previous plot, all the points are around the circumference. Let's see reducing the data to a sphere.
@@ -108,8 +107,8 @@ Let's now reduced the dimension onto the sphere, $d=2$, of radius 1, with an opt
 Let's do the same but initializing the resultant reduced dimension data with optimized evenly space points:
 
 ```{r cache=TRUE}
-res_pscsne <- psc_sne(X = jdf_pscsne, d = 2, rho_psc_list = rho_30, num_iteration = 500, 
-             init = "equispaced")
+res_pscsne <- psc_sne(X = jdf_pscsne, d = 2, rho_psc_list = rho_30,
+                      maxit = 500, init = "equispaced")
 
 Y <- res_pscsne$best_Y
 ```
@@ -117,15 +116,16 @@ Y <- res_pscsne$best_Y
 And plot the results in an sphere:
 
 ```{r}
-scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1), 
-                             color = rep(1, nrow(Y)))
+scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
+                             zlim = c(-1, 1), color = rep(1, nrow(Y)))
 ```
 
 Onto the 3d sphere. Here we can see a well-defined belt which separates observations.
 
 ```{r, fig.height=5, fig.width=5, fig.align='center', rgl=TRUE, dev='png'}
 rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "lightblue", alpha = 0.8, lit = FALSE)
+            radius = 1, type = "s", col = "lightblue", alpha = 0.8,
+            lit = FALSE)
 rgl::points3d(Y, col = rep(1, nrow(Y)))
 rgl.viewpoint(theta = -90, phi = -90, zoom = .9)
 ```
@@ -135,7 +135,8 @@ Nevertheless, as you can see in the next plot, there is some continuity so the b
 
 ```{r, fig.height=5, fig.width=5, fig.align='center', rgl=TRUE, dev='png'}
 rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "lightblue", alpha = 0.8, lit = FALSE)
+            radius = 1, type = "s", col = "lightblue", alpha = 0.8,
+            lit = FALSE)
 rgl::points3d(Y, col = rep(1, nrow(Y)))
 rgl.viewpoint(theta = 180, phi = 90, zoom = .9)
 ```
@@ -145,7 +146,7 @@ Let's see what are the rows located in both sides of the belt, to figure out why
 ```{r}
 rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
             radius = 1, type = "s", col = "lightblue", alpha = 1, lit = FALSE)
-rgl::text3d(Y, text = 1:nrow(Y), cex = 0.8)
+rgl::text3d(Y, text = seq_len(nrow(Y)), cex = 0.8)
 ```
 
 As it is shown in the previous plot (which is a zoom-in in the zone around the belt), there are two groups:
@@ -160,19 +161,14 @@ below_group <- c(988, 288, 1848, 467, 188, 671, 173)
 total <- c(up_group, below_group)
 colors <- c(rep(2, length(up_group)), rep(3, length(below_group)))
 
-data_groups <- jdf_pscsne[ total, , ]
+data_groups <- jdf_pscsne[total, , ]
 
 par(mfrow = c(3, 5))
-for(k in 1:dim(jdf_pscsne)[3]) {
-  
-  Y_rad <- DirStats::to_rad(data_groups[ , , k])
-  r <- 1
-  theta <<- Y_rad
-  plot(r*sin(theta), r*cos(theta), col = colors, xlim = c(-max(r), max(r)),
-       ylim = c(-max(r), max(r)))
-  polygon(max(r) * sin(seq(0,2 * pi, length.out = 100)), 
-          max(r) * cos(seq(0,2 * pi,length.out = 100)))
-  
+for (k in seq_len(dim(jdf_pscsne)[3])) {
+  plot(data_groups[, 1, k], data_groups[, 2, k], col = colors, xlim = c(-1, 1),
+       ylim = c(-1, 1))
+  graphics::polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+                    y = sin(seq(0, 2 * pi, length.out = 100)))
 }
 
 ```
@@ -186,7 +182,7 @@ fitted <- movMF(x = Y_rad, k = 2, nruns = 10)
 colors <- predict(fitted)
 
 rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "lightblue", alpha = 1, lit = FALSE)
+            radius = 1, type = "s", col = "lightblue", alpha = 1, lit = FALSE)
 rgl::points3d(Y, col = colors)
 rgl.viewpoint(theta = 0, phi = 0, zoom = .7)
 ```
@@ -196,14 +192,10 @@ It didn't succeed, we can run the circular/spherical-adapted kernel mean shift v
 ```{r cache = TRUE}
 res_kms_dir_Y_1 <- kms_dir(x = Y_1, data = Y_1)
 
-Y_rad <- DirStats::to_rad(Y_1)
-r <- 1
-theta <<- Y_rad
-plot(r * sin(theta), r * cos(theta), col = res_kms_dir_Y_1$cluster, 
-     xlim = c(-max(r), max(r)), ylim = c(-max(r), max(r)))
-
-polygon(max(r) * sin(seq(0,2 * pi, length.out = 100)),
-        max(r) * cos(seq(0,2 * pi, length.out = 100)))
+plot(Y_1[, 1], Y_1[, 2], col = res_kms_dir_Y_1$cluster, xlim = c(-1, 1),
+     ylim = c(-1, 1))
+graphics::polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+                  y = sin(seq(0, 2 * pi, length.out = 100)))
 
 ```
 
@@ -215,7 +207,7 @@ Other option is to pick up two points that represent the north and the south pol
 north_point <- 3609
 south_point <- 2088
 
-cos_sim_sph <- drop(sphunif::Psi_mat(array(Y, dim = c(nrow(Y), ncol(Y), 1)), 
+cos_sim_sph <- drop(sphunif::Psi_mat(array(Y, dim = c(nrow(Y), ncol(Y), 1)),
                                      scalar_prod = TRUE))
 cos_sim_mat <- vec2matrix(cos_sim_sph, n = nrow(Y), diag_value = 1)
 
@@ -237,14 +229,9 @@ rgl.viewpoint(theta = 0, phi = 0, zoom = .7)
 Let's use this color to see if it could split the two groups in the first reduction dimension we have done, where $d = 1$:
 
 ```{r}
-Y_rad <- DirStats::to_rad(Y_1)
-r <- 1
-theta <<- Y_rad
-plot(r * sin(theta), r * cos(theta), col = colors, xlim = c(-max(r), max(r)), 
-     ylim = c(-max(r), max(r)))
-
-polygon(max(r) * sin(seq(0,2 * pi, length.out = 100)),
-        max(r) * cos(seq(0,2 * pi, length.out = 100)))
+plot(Y_1[, 1], Y_1[, 2], col = colors, xlim = c(-1, 1), ylim = c(-1, 1))
+graphics::polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+                  y = sin(seq(0, 2 * pi, length.out = 100)))
 ```
 
 Now that we have concluded that it is clear that our algorithm is clustering the data along the circumference. Next step is to cluster the data with `kms_dir` in the resultant sphere:
@@ -268,38 +255,37 @@ num_instants <- nrow(jdf_coor)
 num_coordinates <- dim(jdf_coor)[3]
 
 jdf_long_fmt_res <- NULL
-for(k in 1:num_coordinates) {
-  
-  jdf_long_fmt_res <- rbind(jdf_long_fmt_res, jdf_coor[ , , k])
-  
+for (k in 1:num_coordinates) {
+  jdf_long_fmt_res <- rbind(jdf_long_fmt_res, jdf_coor[, , k])
 }
 
 
 # Delete the column coordinates
-jdf_long_fmt_res <- jdf_long_fmt_res[,-1]
+jdf_long_fmt_res <- jdf_long_fmt_res[, -1]
 
-jdf_long_fmt_res <- data.frame(jdf_long_fmt_res) %>% 
+jdf_long_fmt_res <- data.frame(jdf_long_fmt_res) %>%
   mutate(
     time = as.POSIXct(time, origin = "UTC"),
     lat = as.numeric(lat),
     lon = as.numeric(lon),
     theta = as.numeric(theta)
-  ) %>% 
+  ) %>%
   arrange(time)
 
 hours <- 3
 instant_seq <- seq(
-    from = as.POSIXct("2020-06-01 00:00:00", tz = "UTC"), 
+    from = as.POSIXct("2020-06-01 00:00:00", tz = "UTC"),
     to = as.POSIXct("2022-07-01 00:00:00", tz = "UTC"),
     by = paste(hours, "hours", sep = " ")
   )
 instant_seq <- instant_seq[-length(instant_seq)]
 instant_seq <- instant_seq[index_to_not_remove]
 
-jdf_long_fmt_strtime <- jdf_long_fmt_res %>% 
+jdf_long_fmt_strtime <- jdf_long_fmt_res %>%
   mutate(time = as.character(time))
 
-jdf_by_time_res <- abind(split(jdf_long_fmt_strtime, jdf_long_fmt_strtime$time), along = 3)
+jdf_by_time_res <- abind(
+  split(jdf_long_fmt_strtime, jdf_long_fmt_strtime$time), along = 3)
 
 unique_lat <- unique(jdf_long_fmt_res$lat)
 unique_lon <- unique(jdf_long_fmt_res$lon)
@@ -311,28 +297,33 @@ lon_values <- sort(unique_lon)
 r <- num_instants
 n <- num_coordinates
 
-jdf_by_time_latlon <- array(NA, dim = c(lon_length, lat_length, dim(jdf_by_time_res)[3]))
-colors_by_time_latlon <- array(NA, dim = c(lon_length, lat_length, dim(jdf_by_time_res)[3]))
-kms_dir_colors_cir <- array(NA, dim = c(lon_length, lat_length, dim(jdf_by_time_res)[3]))
-kms_dir_colors_sph <- array(NA, dim = c(lon_length, lat_length, dim(jdf_by_time_res)[3]))
+jdf_by_time_latlon <- array(NA,
+                            dim = c(lon_length, lat_length,
+                                    dim(jdf_by_time_res)[3]))
+colors_by_time_latlon <- array(NA,
+                               dim = c(lon_length, lat_length,
+                                       dim(jdf_by_time_res)[3]))
+kms_dir_colors_cir <- array(NA,
+                            dim = c(lon_length, lat_length,
+                                    dim(jdf_by_time_res)[3]))
+kms_dir_colors_sph <- array(NA,
+                            dim = c(lon_length, lat_length,
+                                    dim(jdf_by_time_res)[3]))
 
-for(k in seq_len(r)) {
-  
-  for(i in seq_len(n)) {
-      
-    val <- jdf_by_time_res[i, ,k]
+for (k in seq_len(r)) {
+  for (i in seq_len(n)) {
+    val <- jdf_by_time_res[i, , k]
     lat <- as.numeric(val["lat"])
     lon <- as.numeric(val["lon"])
     index_lat <- which(round(lat_values, digits = 5) == lat)
     index_lon <- which(round(lon_values, digits = 4) == lon)
     theta <- as.numeric(val["theta"])
-    
-    jdf_by_time_latlon[index_lon, index_lat, k] = theta
-    colors_by_time_latlon[index_lon, index_lat, k] = ifelse(colors[k] == 1, 3, 4)
-    kms_dir_colors_cir[index_lon, index_lat, k] = res_kms_dir_Y_1$cluster[k]
-    kms_dir_colors_sph[index_lon, index_lat, k] = res_kms_dir_Y$cluster[k]
+    jdf_by_time_latlon[index_lon, index_lat, k] <- theta
+    colors_by_time_latlon[index_lon, index_lat, k] <-
+      ifelse(colors[k] == 1, 3, 4)
+    kms_dir_colors_cir[index_lon, index_lat, k] <- res_kms_dir_Y_1$cluster[k]
+    kms_dir_colors_sph[index_lon, index_lat, k] <- res_kms_dir_Y$cluster[k]
   }
-  
 }
 
 colnames(jdf_by_time_latlon) <- lat_values
@@ -340,38 +331,43 @@ rownames(jdf_by_time_latlon) <- lon_values
 
 plot_vfield <- function(k, colors_by_time_latlon) {
 
-  loc = "Juan de Fuca"
+  loc <- "Juan de Fuca"
   tim_i <- format(instant_seq[k], "%Y-%m-%d %H")
   direction <- ifelse(colors[k] == 1, "S/E", "N/W")
   title <- paste(loc, tim_i, "\n", direction)
-  OceanView::quiver2D(cos(jdf_by_time_latlon[ , , k]), sin(jdf_by_time_latlon[ , , k]), 
+  OceanView::quiver2D(cos(jdf_by_time_latlon[, , k]),
+                      sin(jdf_by_time_latlon[, , k]),
                       x = lon_values,
                       y = lat_values,
-                      col = colors_by_time_latlon[ , , k], clim = c(0, 1),
-                      xlim = c(min(lon_values - 0.015), max(lon_values + 0.015)),
-                      ylim = c(min(lat_values - 0.015), max(lat_values + 0.015)),
-                      main = title, colkey = FALSE, xlab = "Longitude", 
+                      col = colors_by_time_latlon[, , k], clim = c(0, 1),
+                      xlim = c(min(lon_values - 0.015),
+                               max(lon_values + 0.015)),
+                      ylim = c(min(lat_values - 0.015),
+                               max(lat_values + 0.015)),
+                      main = title, colkey = FALSE, xlab = "Longitude",
                       ylab = "Latitude")
   points(expand.grid(lon_values, lat_values), pch = 16, cex = 0.5)
 
 }
 
 # par(mfrow = c(3, 3))
-# for (k in seq_len(length(instant_seq))) 
+# for (k in seq_len(length(instant_seq)))
 #  plot_vfield(k, colors_by_time_latlon = colors_by_time_latlon)
 
 
-# manipulate::manipulate(plot_vfield(k, colors_by_time_latlon = colors_by_time_latlon), 
-#                       k = manipulate::slider(1, r, step = 1))
-
+# manipulate::manipulate(plot_vfield(k,
+#                               colors_by_time_latlon = colors_by_time_latlon),
+#                        k = manipulate::slider(1, r, step = 1))
 
 animation::saveVideo(expr = {
-  animation::ani.options(interval = 0.05, ani.res = 1080, ani.width = 1080, ani.height = 1080)
-  times_seq <- 1:length(instant_seq)
+  animation::ani.options(interval = 0.05, ani.res = 1080, ani.width = 1080,
+                         ani.height = 1080)
+  times_seq <- seq_len(length(instant_seq))
   for (i in times_seq) {
-    plot_vfield(i, colors_by_time_latlon = colors_by_time_latlon)
-  }
-}, video.name = "juandefuca.mp4", ffmpeg = "/opt/homebrew/opt/ffmpeg@2.8/bin/ffmpeg")
+      plot_vfield(i, colors_by_time_latlon = colors_by_time_latlon)
+    }
+  }, video.name = "juandefuca.mp4",
+  ffmpeg = "/opt/homebrew/opt/ffmpeg@2.8/bin/ffmpeg")
 ```
 
 The video generated from each time instant's picture is stored here: https://www.dropbox.com/s/o6r9guvfx9pfrwx/juandefuca.mp4?dl=0.
@@ -381,12 +377,14 @@ Let's create another video but in this case the clusters are defined by the `kms
 ```{r eval = FALSE}
 
 animation::saveVideo(expr = {
-  animation::ani.options(interval = 0.05, ani.res = 1080, ani.width = 1080, ani.height = 1080)
-  times_seq <- 1:length(instant_seq)
+  animation::ani.options(interval = 0.05, ani.res = 1080, ani.width = 1080,
+                         ani.height = 1080)
+  times_seq <- seq_len(length(instant_seq))
   for (i in times_seq) {
     plot_vfield(i, colors_by_time_latlon = kms_dir_colors_cir)
   }
-}, video.name = paste(here("data-raw", "strait-juan-fuca"), "jdfkmscir.mp4", sep = "/"), 
+}, video.name = paste(here("data-raw", "strait-juan-fuca"), "jdfkmscir.mp4",
+                      sep = "/"),
     ffmpeg = "/opt/homebrew/opt/ffmpeg@2.8/bin/ffmpeg")
 ```
 
@@ -395,12 +393,15 @@ The video is stored here: https://www.dropbox.com/s/mgshm2kw5r906rw/jdfkmscir.mp
 ```{r eval = FALSE}
 
 animation::saveVideo(expr = {
-  animation::ani.options(interval = 0.05, ani.res = 1080, ani.width = 1080, ani.height = 1080)
-  times_seq <- 1:length(instant_seq)
+  animation::ani.options(interval = 0.05, ani.res = 1080, ani.width = 1080,
+                         ani.height = 1080)
+  times_seq <- seq_len(length(instant_seq))
   for (i in times_seq) {
     plot_vfield(i, colors_by_time_latlon = kms_dir_colors_sph)
   }
-}, video.name = paste(here("data-raw", "strait-juan-fuca"), "jdfkmssph.mp4", sep = "/"), ffmpeg = "/opt/homebrew/opt/ffmpeg@2.8/bin/ffmpeg")
+}, video.name = paste(here("data-raw", "strait-juan-fuca"), "jdfkmssph.mp4",
+                      sep = "/"),
+ffmpeg = "/opt/homebrew/opt/ffmpeg@2.8/bin/ffmpeg")
 ```
 
 The video recorded is stored here: https://www.dropbox.com/s/5jbfgsg0khii2tc/jdfkmssph.mp4?dl=0.
@@ -408,8 +409,7 @@ The video recorded is stored here: https://www.dropbox.com/s/5jbfgsg0khii2tc/jdf
 Now that we have the vector field, we can place each of them on the map related to the strait Juan de Fuca area.
 
 ```{r eval = FALSE}
- 
-jdf_long_fmt_res_uv <- jdf_long_fmt_res %>% 
+jdf_long_fmt_res_uv <- jdf_long_fmt_res %>%
   mutate(
     u = cos(theta),
     v = sin(theta),
@@ -417,56 +417,48 @@ jdf_long_fmt_res_uv <- jdf_long_fmt_res %>%
     color = rep(colors, each = dim(jdf_coor)[3])
   )
 
-jdf_by_time_uv <- abind(split(jdf_long_fmt_res_uv, jdf_long_fmt_res_uv$time), along = 3)
+jdf_by_time_uv <- abind(split(jdf_long_fmt_res_uv, jdf_long_fmt_res_uv$time),
+                        along = 3)
 jdf_by_time_uv <- jdf_by_time_uv[, -c(3, 4), ]
 
-(map <<- get_map(c(left = min(lon_values) - 0.1, 
+(map <<- get_map(c(left = min(lon_values) - 0.1,
                     bottom = min(lat_values) - 0.1,
-                    right = max(lon_values) + 0.1, 
+                    right = max(lon_values) + 0.1,
                     top = max(lat_values) + 0.1)))
 
 dput(map, file = "myMaps")
 
 plot_ggvfield <- function(i) {
-  data <- data.frame(jdf_by_time_uv[ , , i]) %>% 
+  data <- data.frame(jdf_by_time_uv[, , i]) %>%
     mutate(
       lon = as.numeric(lon),
       lat = as.numeric(lat),
       u = as.numeric(u),
       v = as.numeric(v),
       color = as.numeric(color)
-    ) %>% 
+    ) %>%
     select(lon, lat, u, v, color)
-  
-  loc = "Juan de Fuca"
+  loc <- "Juan de Fuca"
   tim_i <- format(instant_seq[i], "%Y-%m-%d %H")
   direction <- ifelse(colors[i] == 1, "S/E", "N/W")
   title <- paste(loc, tim_i, "\n", direction)
-  
-  ggobject <- NULL
-  if(first(data$color) == 1) {
-    
-    ggmap(dget(file = "myMaps"), extent = "panel", geom = "blank", zoom = 0.9, 
-          maptype = "toner-lite") + 
-    geom_quiver(mapping = aes(u = u, v = v, color = 4), data = data, 
+  if (first(data$color) == 1) {
+    ggmap(dget(file = "myMaps"), extent = "panel", geom = "blank", zoom = 0.9,
+          maptype = "toner-lite") +
+    geom_quiver(mapping = aes(u = u, v = v, color = 4), data = data,
                 center = TRUE, show.legend = FALSE) + ggtitle(title)
-    
   } else {
-    
-    ggmap(dget(file = "myMaps"), extent = "panel", geom = "blank", zoom = 0.9, 
+    ggmap(dget(file = "myMaps"), extent = "panel", geom = "blank", zoom = 0.9,
             maptype = "toner-lite") +
-      geom_quiver(mapping = aes(u = u, v = v), data = data, 
+      geom_quiver(mapping = aes(u = u, v = v), data = data,
                   center = TRUE, show.legend = FALSE) + ggtitle(title)
-    
   }
-  ggsave(paste(here("data-raw", "strait-juan-fuca", "img"), paste0("map", i, ".png"), sep = "/"))
+  ggsave(paste(here("data-raw", "strait-juan-fuca", "img"),
+               paste0("map", i, ".png"), sep = "/"))
 }
-
-times_seq <- 1:dim(jdf_by_time_uv)[3]
-for( i in times_seq) {
-  
+times_seq <- seq_len(dim(jdf_by_time_uv)[3])
+for (i in times_seq) {
   plot_ggvfield(i)
-  
 }
 
 # ffmpeg -y -r 1/0.05 -i map%d.png juandefucamap.mp4

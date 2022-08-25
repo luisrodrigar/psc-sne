@@ -2,12 +2,15 @@
 % Please edit documentation in R/prob_distribution.R
 \name{d_ij_psph_cauchy}
 \alias{d_ij_psph_cauchy}
-\title{Polyspherical Cauchy density for the \eqn{i}-th and \eqn{j}-th observations}
+\title{Polyspherical Cauchy density for the
+\eqn{i}-th and \eqn{j}-th observations}
 \usage{
 d_ij_psph_cauchy(x, i, j, rho)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
+where \code{n} is the number of observations, \code{d} is the dimension of
+each sphere, and \code{r} is the number of spheres.}
 
 \item{i}{corresponds to the \eqn{i}-th observation index.}
 
@@ -19,6 +22,6 @@ d_ij_psph_cauchy(x, i, j, rho)
 Polyspherical Cauchy density value given the parameters.
 }
 \description{
-Calculate the high-dimension polyspherical Cauchy density for the
-\eqn{i}-th and \eqn{j}-th observations.
+Calculate the high-dimension polyspherical Cauchy density
+for the \eqn{i}-th and \eqn{j}-th observations.
 }

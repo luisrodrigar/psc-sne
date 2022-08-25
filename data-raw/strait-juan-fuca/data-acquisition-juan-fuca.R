@@ -1,4 +1,3 @@
-
 library(ncdf4)
 library(lubridate)
 library(circular)
@@ -11,8 +10,8 @@ library(tidyr)
 library(ggmap)
 library(viridis)
 
-# This script shows the necessary steps to obtain the data for the San Juan de Fuca
-# analysis. There are two main steps: (1) downloading the raw data;
+# This script shows the necessary steps to obtain the data for the San Juan
+# de Fuca analysis. There are two main steps: (1) downloading the raw data;
 # (2) filtering the raw data to obtain data only for zones A, B, C, and D with
 # the weighted average daily mean
 
@@ -41,19 +40,33 @@ end_lat <- 48.64
 begin_lon <- -124.254
 end_lon <- -123.36
 
+# Initilize variables
+begin_lat_ind <- NULL
+begin_lon_ind <- NULL
+begin_tim_ind <- NULL
+end_lat_ind <- NULL
+end_lon_ind <- NULL
+end_tim_ind <- NULL
+end_lat_ind <- NULL
+end_lon_ind <- NULL
+end_tim_ind <- NULL
+l_lat <- NULL
+l_lon <- NULL
+l_tim <- NULL
+
 # Get data function -- takes info from global environment and writes on it
 get_data <- function() {
 
   # Obtain the data indexes associated to the given information
-  begin_lat_ind <<- which(lat >= begin_lat)[1]
-  begin_lon_ind <<- which(lon >= begin_lon)[1]
-  begin_tim_ind <<- which(tim >= begin_tim)[1]
-  end_lat_ind <<- which(lat <= end_lat)
-  end_lon_ind <<- which(lon <= end_lon)
-  end_tim_ind <<- which(tim <= end_tim)
-  end_lat_ind <<- end_lat_ind[length(end_lat_ind)]
-  end_lon_ind <<- end_lon_ind[length(end_lon_ind)]
-  end_tim_ind <<- end_tim_ind[length(end_tim_ind)]
+  begin_lat_ind <- which(lat >= begin_lat)[1]
+  begin_lon_ind <- which(lon >= begin_lon)[1]
+  begin_tim_ind <- which(tim >= begin_tim)[1]
+  end_lat_ind <- which(lat <= end_lat)
+  end_lon_ind <- which(lon <= end_lon)
+  end_tim_ind <- which(tim <= end_tim)
+  end_lat_ind <- end_lat_ind[length(end_lat_ind)]
+  end_lon_ind <- end_lon_ind[length(end_lon_ind)]
+  end_tim_ind <- end_tim_ind[length(end_tim_ind)]
 
   # Download sizes
   l_lat <<- end_lat_ind - begin_lat_ind + 1
@@ -90,7 +103,7 @@ if (download_data) {
   for (year in 2020:2022) {
 
     month <- 1
-    if(year == 2020) {
+    if (year == 2020) {
 
       # Starting in June for the year 2020
       month <- 6
@@ -185,7 +198,8 @@ remove_next_month_instants <- function(results) {
     date_to_remove <- dates[which(months == least_frequent_month)]
     # Exclude that date
     results <- results %>%
-      filter(!(as.POSIXct(time, tz = "UTC") %in% as.POSIXct(date_to_remove, tz = "UTC")))
+      filter(!(as.POSIXct(time, tz = "UTC") %in%
+                 as.POSIXct(date_to_remove, tz = "UTC")))
 
   }
   return(results)
@@ -282,7 +296,7 @@ extract_long_fmt <- function(results, hours, num_cores = detectCores() - 1) {
 
   location_results <- mclapply(
     mc.cores = num_cores,
-    X = 1:nrow(grid),
+    X = seq_len(nrow(grid)),
     FUN = function(i) {
       results %>%
         filter(lat == grid[i, 1] & lon == grid[i, 2]) %>%
@@ -297,7 +311,7 @@ extract_long_fmt <- function(results, hours, num_cores = detectCores() - 1) {
   # Arrange by ascending instant and rename column vars
   data.frame(data) %>%
     mutate(
-      time = as.POSIXct(.[[1]], origin = '1970-01-01', tz = 'UTC'),
+      time = as.POSIXct(.[[1]], origin = "1970-01-01", tz = "UTC"),
       lat = .[[2]],
       lon = .[[3]],
       theta = .[[4]],
@@ -340,7 +354,7 @@ theta_lat_lon_create <- function(lon_values, lat_values, data) {
   # Select only the theta value with the location and time values
   jdf_by_time <- data %>%
     dplyr::select(time, lat, lon, theta) %>%
-    mutate(time = as.character(time, format="%Y-%m-%d %H:%M:%S"),
+    mutate(time = as.character(time, format = "%Y-%m-%d %H:%M:%S"),
            lat = as.character(lat),
            lon = as.character(lon),
            theta = as.character(theta))
@@ -350,7 +364,8 @@ theta_lat_lon_create <- function(lon_values, lat_values, data) {
   # Time instant size
   r <- dim(jdf_by_time)[3]
 
-  # 3-dimensional array to store the matrix of thetas for the latitude and longitude
+  # 3-dimensional array to store the matrix of thetas
+  # for the latitude and longitude
   lat_lon_theta_by_time <- array(
     dim = c(length(lat_values), length(lon_values), r)
   )
@@ -358,11 +373,12 @@ theta_lat_lon_create <- function(lon_values, lat_values, data) {
   for (k in seq_len(r)) {
     # Convert to wide format data frame
     # Where columns are longitude values and rows are latitude values
-    lat_lon_theta_by_time[, , k] = (data.frame(jdf_by_time[ , 2:4, k]) %>%
+    lat_lon_theta_by_time[, , k] <- (data.frame(jdf_by_time[, 2:4, k]) %>%
                                       mutate(lat = as.numeric(lat),
                                              lon = as.numeric(lon),
                                              theta = as.numeric(theta)) %>%
-                                      reshape(timevar = "lon", idvar = "lat", direction = "wide") %>%
+                                      reshape(timevar = "lon", idvar = "lat",
+                                              direction = "wide") %>%
                                       dplyr::select(-lat) %>%
                                       as.matrix())
   }
@@ -388,13 +404,16 @@ lat_lon_theta_by_time <- theta_lat_lon_create(lon_values = lon_values,
 
 # How many NA's are there?
 filled.contour(lon_values, lat_values,
-               t(apply(lat_lon_theta_by_time, 1:2, function(x) mean(is.na(x)))),
+               t(apply(lat_lon_theta_by_time, 1:2, function(x) {
+                  mean(is.na(x))
+                 })),
                ylab = "lat", xlab = "lon", zlim = c(0, 1),
                main = "Proportion NAs", plot.axes = {
                  box()
                  axis(1)
                  axis(2)
-                 points(expand.grid(lon_values, lat_values), pch = 16, cex = 0.5)
+                 points(expand.grid(lon_values, lat_values), pch = 16,
+                        cex = 0.5)
                  })
 
 # Show percentage of missing values on the map (Strait Juan de Fuca)
@@ -409,10 +428,12 @@ perc_na_long_fmt <- get_percentage_na(juanfuca)
 # Plot the map with the points and the countour surface colored
 ggmap(map, extent = "panel") +
   ggtitle("Percentage of missing values") +
-  geom_contour_filled(data = perc_na_long_fmt, aes(z = freq), alpha = 0.6, size = 0.1)
+  geom_contour_filled(data = perc_na_long_fmt, aes(z = freq), alpha = 0.6,
+                      size = 0.1)
 
 # Merge the previous dataset that contains the frequency of missing values
-# with the base dataset that contains all the information for this interval of time
+# with the base dataset that contains all the information for
+# this interval of time
 jdf_freq <- merge(x = juanfuca, y = perc_na_long_fmt, by = c("lat", "lon"))
 
 # Set the maximum percentage of NA's, 10%
@@ -425,7 +446,8 @@ jdf_long_fmt <- jdf_freq %>%
 # Plot in the map the locations selected
 ggmap(map, extent = "panel") +
   ggtitle("Selected data locations for the analysis") +
-  geom_contour_filled(data = jdf_long_fmt, aes(z = freq), alpha = 0.6, size = 0.1)
+  geom_contour_filled(data = jdf_long_fmt, aes(z = freq), alpha = 0.6,
+                      size = 0.1)
 
 # Remove freq column
 jdf_long_fmt <- jdf_long_fmt %>%

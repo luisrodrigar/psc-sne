@@ -7,15 +7,20 @@
 high_dimension_p(x, rho_list)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
+where \code{n} is the number of observations, \code{d} is the dimension of
+each sphere, and \code{r} is the number of spheres.}
 
-\item{rho_list}{rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.}
+\item{rho_list}{rho list of size \code{n} for each \code{i}-th observation
+that stands for the concentration parameter.}
 }
 \value{
-An array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
+An array of size \code{c(n, n)} with the high-dimension conditional
+probabilities of \code{x}.
 }
 \description{
-Calculates the high-dimension conditional probabilities of a polyspherical Cauchy distribution. Scalar version algorithm.
+Calculates the high-dimension conditional probabilities of a
+polyspherical Cauchy distribution. Scalar version algorithm.
 }
 \examples{
 x <- sphunif::r_unif_sph(100, 3, 3)

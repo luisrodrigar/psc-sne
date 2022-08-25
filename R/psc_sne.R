@@ -9,13 +9,15 @@
 #' @param d target dimension to reduce the data.
 #' @param P matrix of size \code{c(n, n)} with the high-dimensional
 #' polyspherical Cauchy probabilities.
-#' @param cos_sim an array of size \code{c(n, n, r)} with the cosine
+#' @param cos_sim a vector of size \code{n/2} with the cosine
 #' similarities in high-dimension for the polysphere \eqn{(\mathcal{S}^p)^r}.
-#' Optional parameter, default value set to \code{NULL}.
+#' The way that the cosine similarities matrix is treated makes the calculus
+#' faster since it is flat in a vector object. Optional parameter, defaults to
+#' \code{NULL}.
 #' @param Q matrix of size \code{c(n, n)} with the low-dimension spherical
-#' Cauchy probabilities. Optional parameter, default value set to \code{NULL}.
+#' Cauchy probabilities. Optional parameter, defaults to \code{NULL}.
 #' @return Resulting reduced data for the \eqn{i}-th observation onto the
-#' sphere \eqn{\mathcal{S}^d}
+#' sphere \eqn{\mathcal{S}^d}.
 #' @examples
 #' Y <- sphunif::r_unif_sph(40, 3, 1)[ , , 1]
 #' X <- sphunif::r_unif_sph(40, 3, 3)
@@ -73,52 +75,65 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 #' @param X an array of size \code{c(n, d + 1, r)} with the polyspherical data,
 #' where \code{n} is the number of observations, \code{d} is the dimension of
 #' each sphere, and \code{r} is the number of spheres.
-#' @param d the target dimension to use for reduce the dimension of the data
-#' \code{X}.
+#' @param d the target dimension to use for the reduced data of \code{X}.
 #' @param rho_psc_list rho parameters of the high-dimensional polyspherical
-#' Cauchy probabilities (optional, default \code{NULL}).
-#' @param rho rho parameter of the low-dimensional spherical Cauchy
-#' probabilities (optional, default value \code{0.5}).
-#' @param perplexity parameter which says what is more important: local or
-#' global aspects (optional, default \code{30}).
-#' @param num_iteration maximum number of iterations (optional, default value
-#' \code{200}).
+#' Cauchy probabilities. Multiple types of parameters are allowed,
+#' distinguishing three scenarios. The first one when the type of the parameter
+#' is a list, then it contains the vector \code{rho_values} and the matrix
+#' \code{P}, the second scenario when the type is a vector, then this object
+#' contains the rho values, within this function the
+#' \code{\link{high_dimension}} function is called to get the \matrix{P}.
+#' The last scenario that is when this object is set to \code{NULL}, i.e., the
+#' \code{\link{rho_optim_bst}} function is called to get the rho values
+#' (given a fixed perplexity) and the probabilities matrix. Optional parameter,
+#' defaults to \code{NULL}).
+#' @param rho parameter of the low-dimensional spherical Cauchy
+#' probabilities. Optional, defaults to \code{0.5}).
+#' @param perplexity parameter that measures the number of neighbors to
+#' use when mapping between high- and low-dimension. Defaults to \code{30}).
+#' @param maxit maximum number of iterations. Defaults to \code{1e3}).
 #' @param initial_momentum first value of the momentum of the first \code{250}
 #' iterations. Defaults to \code{0.5}.
 #' @param final_momentum momentum to take into account after the \code{250}
 #' iteration. Defaults to \code{0.8}.
-#' @param eta is the learning rate of the optimization algorithm (optional,
-#' default value \code{200}).
+#' @param eta is the learning rate of the optimization algorithm. Optional
+#' param, defaults to \code{200}.
 #' @param early_exaggeration the first \code{100} iterations results are
-#' exaggerated by this factor (optional, default value \code{4.0}).
+#' exaggerated by this factor. Optional parameter, defaults to \code{4.0}).
 #' @param colors list with as many elements as observations are, only valid
-#' when visualization is true (optional, default value \code{NULL}).
-#' @param show_prog defines whether the progression plots are shown or
-#' not (optional, default value \code{FALSE}).
+#' when visualization is true. Optional parameter, defaults to \code{NULL}).
+#' @param show_prog defines the number of iterations skipped when reporting
+#' the progress. Defaults to \code{100}, i.e., only multiples of \code{100}
+#' are reported, otherwise the closer multiple of \code{100} is taking into
+#' account. \code{show_prog} also controls the frequency a plot is shown:
+#' after \code{2 * show_prog} iterations. If \code{FALSE}, no progress is
+#' shown at all.
 #' @param tol is the tolerance, when is below this value it is considered that
-#' a good solution has been obtained (optional, default value \code{1e-9}).
-#' @param check whether to check or not the tolerance.
+#' a good solution has been obtained. Defaults to \code{1e-6}).
 #' @param parallel_cores number of cores to use concurrently for the
-#' calculation of the gradient.
+#' calculation of the gradient. Defaults to \code{parallel::detectCores() - 1},
+#' that means that uses the total number of cores of the computer except one of
+#' them.
 #' @param init is a parameter to indicate how to proceed with the initialization
 #' of the resultant reduced dimension object. There are two possible ways:
 #' \code{equispaced} (evenly spaced points in the circumference/sphere) or
-#' \code{random} (random points generated uniformly).
+#' \code{random} (random points generated uniformly). Defaults to
+#' \code{equispaced}.
 #' @return Resulting data reduced to \eqn{\mathcal{S}^d} after applying the
 #' algorithm for the total number of iterations selected.
 #' @examples
 #' X <- sphunif::r_unif_sph(40, 3, 3)
-#' psc_sne(X, d = 1, parallel_cores = 2, num_iteration = 1e4)
+#' psc_sne(X, d = 1, parallel_cores = 2, maxit = 1e4)
 #' psc_sne(X, d = 2, parallel_cores = 2)
 #' @export
 psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
-                    num_iteration = 200, initial_momentum = 0.5,
+                    maxit = 1e3, initial_momentum = 0.5,
                     final_momentum = 0.8, eta = 200, early_exaggeration = 4.0,
-                    colors = NULL, show_prog = FALSE, tol = 1e-9,
-                    check = TRUE, parallel_cores = parallel::detectCores() - 1,
+                    colors = NULL, show_prog = 100, tol = 1e-6,
+                    parallel_cores = parallel::detectCores() - 1,
                     init = c("equispaced", "random")[1]) {
 
-  # Checks
+  # Input checks
   if (d < 1) {
 
     stop("Error, d value must be greater or equal than 1")
@@ -165,15 +180,15 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   }
 
   if ((!is.numeric(perplexity) || perplexity <= 0) &&
-      (!is.numeric(num_iteration) || num_iteration <= 0) &&
+      (!is.numeric(maxit) || maxit <= 0) &&
       (!is.numeric(eta) || eta <= 0) &&
       (!is.numeric(parallel_cores) || parallel_cores <= 0)) {
 
-    stop("Error, perplexity, num_iteration, eta, early_exaggeration and parallel_cores must be positive number")
+    stop("Error, perplexity, maxit, eta, early_exaggeration and parallel_cores must be positive number")
 
   }
 
-  if(!is.numeric(tol) || tol >= 1 || tol < 0) {
+  if (!is.numeric(tol) || tol >= 1 || tol < 0) {
 
     stop("Error, tol parameter must be within [0, 1)")
 
@@ -188,10 +203,35 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
   # Sample size and sphere dimension within polysphere
   n <- nrow(X)
-  p <- ncol(X) - 1
 
   # Conditional high-dimensional probabilities and data on the reduced sphere
   P_cond <- Y_i <- NULL
+
+  # If show_prog is TRUE
+  if (show_prog && !is.numeric(show_prog)) {
+
+    # Set the print trace each 100 iterations
+    show_prog <- 100
+
+  } else if (is.numeric(show_prog) && (show_prog %% 100 != 0)) {
+
+    # Set the print trace to the closest multiple of 100
+    # Value of 100 in case of a small value
+    if (show_prog < 50) {
+
+      show_prog <- 100
+
+    } else if (show_prog %% 100 >= 50) {
+
+      show_prog <- show_prog + 100 - (show_prog %% 100)
+
+    } else if (show_prog %% 100 > 0) {
+
+      show_prog <- show_prog - (show_prog %% 100)
+
+    }
+
+  }
 
   # Based on the rho values parameter, do different things
   if (is.null(rho_psc_list)) {
@@ -231,7 +271,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   } else {
 
     # Generate random points uniformly
-    Y[, , 1] <- Y[, , 2] <- sphunif::r_unif_sph(n, d + 1)[ , , 1]
+    Y[, , 1] <- Y[, , 2] <- sphunif::r_unif_sph(n, d + 1)[, , 1]
 
   }
 
@@ -250,22 +290,13 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   old_par <- NULL
   if (show_prog) {
 
-    if (d == 2) {
-
-      # Visualizing the plots in a 2 x 2 grid for d = 2
-      old_par <- par(mfrow = c(1, 1), mar = c(2, 2, 2, 2))
-
-    } else if (d == 1) {
-
-      # Visualizing the plots in a 4 x 4 grid for d = 1
-      old_par <- par(mfrow = c(4, 4), mar = c(1.5, 1.5, 1.5, 1.5))
-
-    }
+      # Visualizing the plots in a 3 x 3 grid for d = 1
+      old_par <- par(mfrow = c(3, 3), mar = c(0, 0, 0, 0))
 
   }
 
-  # Interval from 2 to number of iterations + 2
-  range_iterations <- seq_len(num_iteration) + 2
+  # Interval from 3 to number of iterations + 2
+  range_iterations <- seq_len(maxit) + 2
 
   # Gradient descent
   convergence <- FALSE
@@ -325,49 +356,68 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
       best_i <- i - 2
       best_obj_i <- obj_func_iter[best_i]
-      best_Y_i <- Y[ , , 2]
+      best_Y_i <- Y[, , 2]
 
     }
 
-    # Progress
-    cat(sprintf(
-      "It: %d; obj: %.3e; abs: %.3e; rel: %.3e; norm: %.3e; mom: %.3e;\nbest it: %d; best obj: %.3e\n",
-      i - 2, obj_func_iter[i - 2], absolute_errors[i - 2],
-      relative_errors[i - 2], gradient_norms[i - 2], moment_norms[i - 2],
-      best_i, best_obj_i
-    ))
+    if (show_prog && is.numeric(show_prog) && (((i - 2) %% show_prog == 0)
+                                               || (i - 2 == 1)
+                                               || i - 2 == maxit)  ) {
 
-    if (show_prog && (i == 3 || (i - 2) %% 25 == 0 || i == num_iteration + 2)) {
-
-      show_iter_sol(Y[ , , 2], i, d, colors)
+      # Progress trace
+      cat(sprintf(
+        "It: %d; obj: %.3e; abs: %.3e; rel: %.3e; norm: %.3e; mom: %.3e;\nbest it: %d; best obj: %.3e\n",
+        i - 2, obj_func_iter[i - 2], absolute_errors[i - 2],
+        relative_errors[i - 2], gradient_norms[i - 2], sqrt(sum(moment_i^2)),
+        best_i, best_obj_i
+      ))
 
     }
 
+    # Plot the current status if the first iteration, the last one or it is
+    # twice the number of lines indicated with show_prog param
+    if (show_prog && (i - 2 == 1 || ((i - 2) %% (show_prog * 2) == 0)
+                      || i - 2 == maxit)) {
+
+      show_iter_sol(Y[, , 2], i, d, colors)
+
+    }
     # Reverse the early exaggeration made at the beginning
-    if (i == 102) {
+    if (i - 2 == 100) {
 
       P <- P / early_exaggeration
 
     }
 
     # Relative error less than tol, then break the loop
-    if (check && i - 2 > 100) {
+    if (i - 2 > 100) {
 
       if (all(c(relative_errors[i - 2], absolute_errors[i - 2],
                 gradient_norms[i - 2]) < tol)) {
 
+        # Progress trace
+        cat(sprintf(
+          "It: %d; obj: %.3e; abs: %.3e; rel: %.3e; norm: %.3e; mom: %.3e;\nbest it: %d; best obj: %.3e\n",
+          i - 2, obj_func_iter[i - 2], absolute_errors[i - 2],
+          relative_errors[i - 2], gradient_norms[i - 2], sqrt(sum(moment_i^2)),
+          best_i, best_obj_i
+        ))
+        # Restore the par configuration
+        par(old_par)
+        # Show the last configuration
+        show_iter_sol(Y[, , 2], i, d, colors)
         convergence <- TRUE
         break
 
       }
-
     }
   }
 
   if (show_prog) {
 
-    # Visualize the solution
+    # Restore the par configuration
     par(old_par)
+    # Show the best configuration
     show_iter_sol(best_Y_i, best_i + 2, d, colors)
 
   }
@@ -404,30 +454,34 @@ show_iter_sol <- function(Y, i, d, colors = NULL) {
 
   }
 
-  # Plot on a circumference
   if (d == 1) {
-
-    Y_rad <- DirStats::to_rad(Y)
-    r <- 1
-    theta <- Y_rad
-    plot(r * sin(theta),
-      r * cos(theta),
-      col = colors,
-      xlim = c(-max(r), max(r)),
-      ylim = c(-max(r), max(r)), main = paste("Iteration", i - 2)
+    # Plot on a circumference
+    plot(Y[, 1], Y[, 2], col = colors,
+         xlim = c(-1, 1), ylim = c(-1, 1),
+         xlab = "", ylab = "", axes = FALSE,
+         main = paste("Iteration", i - 2)
     )
-    graphics::polygon(max(r) * sin(seq(0, 2 * pi, length.out = 100)),
-                      max(r) * cos(seq(0, 2 * pi, length.out = 100)))
+    graphics::polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+                      y = sin(seq(0, 2 * pi, length.out = 100)))
 
-  }
-
-  # Plot on an sphere
-  else if (d == 2) {
-
-    scatterplot3d::scatterplot3d(
+  } else if (d == 2) {
+    # Sequence from -180 to 180 by an step of 15 in radians
+    seq_rad <- seq(-pi, pi, by = pi / 30)
+    # Meridian calculates as theta = 0 and phi = i
+    # where i is the radians
+    meridian <- do.call(rbind, lapply(seq_rad, function(i) c(0, i)))
+    equator <- do.call(rbind, lapply(seq_rad, function(i) c(i, pi/2)))
+    # Plot on an sphere
+    sd3 <- scatterplot3d::scatterplot3d(
       Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-      color = colors, main = paste("Iteration", i - 2)
+      color = colors, main = paste("Iteration", i - 2), xlab = "", ylab = "",
+      zlab = "", axis = FALSE,
+      pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
     )
+    sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+                 type = "l", lty = 3)
+    sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+                 type = "l", lty = 3)
 
   }
 

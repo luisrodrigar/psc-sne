@@ -7,18 +7,23 @@
 rho_optim_bst(x, perp_fixed, num_cores = parallel::detectCores() - 1)
 }
 \arguments{
-\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.}
+\item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
+where \code{n} is the number of observations, \code{d} is the dimension of
+each sphere, and \code{r} is the number of spheres.}
 
 \item{perp_fixed}{a fixed value used to optimized the rho values.}
 
-\item{num_cores}{number of cores to execute the code concurrently. This value must be below the total number of the CPU has available.}
+\item{num_cores}{number of cores to execute the code concurrently. This
+value must be below the total number of the CPU has available.}
 }
 \value{
-Rho values and conditional probability matrix obtained as a result of the optimization.
+Rho values and conditional probability matrix obtained as a
+result of the optimization.
 }
 \description{
-Calculate the rho list values based on a fixed perplexity and a given data in \eqn{(\mathcal{S}^p)^r}.
-The boundaries are set from 0 to 0.9999 for each value. It prints the time consumption.
+Calculate the rho list values based on a fixed perplexity and
+a given data in \eqn{(\mathcal{S}^p)^r}. The boundaries are set from 0 to
+0.9999 for each value. It prints the time consumption.
 }
 \examples{
 x <- sphunif::r_unif_sph(20, 3, 4)

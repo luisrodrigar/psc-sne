@@ -9,13 +9,16 @@ gen_opt_sphere(n, d)
 \arguments{
 \item{n}{positive integer that defines the size of the sample to generate.}
 
-\item{d}{size of the low-dimension which defines the sphere \eqn{\mathcal{S}^d}.}
+\item{d}{size of the low-dimension which defines the sphere
+\eqn{\mathcal{S}^d}.}
 }
 \value{
-Evenly optimal separated points onto the low-dimension sphere \eqn{\mathcal{S}^d}.
+Evenly optimal separated points onto the low-dimension sphere
+\eqn{\mathcal{S}^d}.
 }
 \description{
-Generated optimal evenly separated points onto the sphere \eqn{\mathcal{S}^d}.
+Generated optimal evenly separated points onto the sphere
+\eqn{\mathcal{S}^d}.
 }
 \examples{
 gen_opt_sphere(100, 1)
