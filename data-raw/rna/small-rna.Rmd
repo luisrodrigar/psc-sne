@@ -42,10 +42,9 @@ We run psc-SNE for $d = 1$ with its default $\eta$.
 
 ```{r pscsne-1, cache = TRUE}
 # Default
-void_1 <- capture.output(
-  fit_1 <- psc_sne(X = smallrna_X, d = 1, rho_psc_list = rho_psc_list,
-                   eta = 200, maxit = 1e3, tol = 1e-6, show_prog = 10,
-                   colors = smallrna$clusters))
+fit_1 <- psc_sne(X = smallrna_X, d = 1, rho_psc_list = rho_psc_list,
+                 eta = 200, maxit = 1e3, tol = 1e-6, show_prog = 10,
+                 colors = smallrna$clusters)
 
 # Does not converge
 fit_1$convergence
@@ -59,10 +58,9 @@ The employed $\eta$ seems to be too large. Let's reduce it.
 
 ```{r pscsne-2, cache = TRUE}
 # Lower eta
-void_2 <- capture.output(
-  fit_2 <- psc_sne(X = smallrna_X, d = 1, rho_psc_list = rho_psc_list,
-                   eta = 10, maxit = 1e3, tol = 1e-6, show_prog = 10,
-                   colors = smallrna$clusters))
+fit_2 <- psc_sne(X = smallrna_X, d = 1, rho_psc_list = rho_psc_list,
+                 eta = 10, maxit = 1e3, tol = 1e-6, show_prog = 10,
+                 colors = smallrna$clusters)
 
 # Converges
 fit_2$convergence
