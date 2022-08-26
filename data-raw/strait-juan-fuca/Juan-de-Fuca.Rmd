@@ -22,10 +22,13 @@ library(pscsne)
 library(webshot2)
 library(ggquiver)
 library(ggmap)
+library(movMF)
 
 knitr::opts_chunk$set(echo = TRUE)
 rgl::setupKnitr()
 ```
+
+## Introduction
 
 Transform the original data set into an array of dimension `c(n, d+1, r)`, where `n` is the time instant, `r` is the number of (latitude and longitude) coordinates and `d+1` are the Cartesian angles which in this cases is equal to 2. 
 
@@ -85,76 +88,117 @@ Let's load the data objects generated in the previous chunk.
 load(paste(here("data-raw", "strait-juan-fuca"), "pscsne.rda", sep = "/"))
 ```
 
+## Processing data
+
 Now we are ready to reduce the dimension using the polyspherical Cauchy SNE. First, optimized rho is based on a perplexity of 30, $d=1$ and initializing the resultant reduced data with optimized evenly space points:
 
 ```{r cache=TRUE}
-res_pscsne <- psc_sne(X = jdf_pscsne, d = 1, rho_psc_list = rho_30,
-                      maxit = 500, init = "equispaced")
+res_pscsne_1_eq <- psc_sne(X = jdf_pscsne, d = 1, rho_psc_list = rho_30,
+                           init = "equispaced")
 
-Y_1 <- res_pscsne$best_Y
+Y_1_eq <- res_pscsne_1_eq$best_Y
 ```
 
 Let's see these results on the circle:   
 
-```{r fig.asp=1}
-plot(Y_1[, 1], Y_1[, 2], xlim = c(-1, 1), ylim = c(-1, 1))
+```{r fig.asp=1, fig.align='center'}
+plot(Y_1_eq[, 1], Y_1_eq[, 2], xlim = c(-1, 1), ylim = c(-1, 1),
+     main = "Equispaced Init")
 graphics::polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
                   y = sin(seq(0, 2 * pi, length.out = 100)))
 ```
 
-We can not get so many insights from the previous plot, all the points are around the circumference. Let's see reducing the data to a sphere.
+Now, it is time to initialize the reduced dimension data with a uniform distribution instead.
 
-Let's now reduced the dimension onto the sphere, $d=2$, of radius 1, with an optimized rho based on a perplexity of 30 and initialize the resultant reduced dimension data with optimized evenly space points:
+```{r cache=TRUE}
+res_pscsne_1_unif <- psc_sne(X = jdf_pscsne, d = 1, rho_psc_list = rho_30,
+                             init = "random")
 
-Let's do the same but initializing the resultant reduced dimension data with optimized evenly space points:
+Y_1_unif <- res_pscsne_1_unif$best_Y
+```
+
+Let's see these results on the circle:   
+
+```{r fig.asp=1, fig.align='center'}
+plot(Y_1_unif[, 1], Y_1_unif[, 2], xlim = c(-1, 1), ylim = c(-1, 1),
+     main = "Uniform Init")
+graphics::polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
+                  y = sin(seq(0, 2 * pi, length.out = 100)))
+``` 
+
+As we can see in the iteration status printing, the `equispaced` initialization obtains slightly better results due to the smaller value of the objective function (3.736 compared to 3.738). 
+
+We can not get so many insights from the previous plots, since all the points are around the circumference. Let's see what happens when data is reduced onto the sphere, $d=2$, of radius 1, with an optimized rho based on a perplexity of 30 and initialize the resultant reduced dimension data with optimized evenly space points:
 
 ```{r cache=TRUE, fig.height=8, fig.width=8}
-res_pscsne <- psc_sne(X = jdf_pscsne, d = 2, rho_psc_list = rho_30,
-                      maxit = 500, init = "equispaced")
+res_pscsne_2_eq <- psc_sne(X = jdf_pscsne, d = 2, rho_psc_list = rho_30,
+                           init = "equispaced")
 
-Y <- res_pscsne$best_Y
+Y_2_eq <- res_pscsne_2_eq$best_Y
 ```
 
 And plot the results in an sphere:
 
-```{r}
-scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
-                             zlim = c(-1, 1), color = rep(1, nrow(Y)))
+```{r fig.asp=1, fig.align='center'}
+seq_rad <- seq(-pi, pi, by = pi / 30)
+meridian <- do.call(rbind, lapply(seq_rad, function(i) c(0, i)))
+equator <- do.call(rbind, lapply(seq_rad, function(i) c(i, pi/2)))
+
+sd3 <- scatterplot3d::scatterplot3d(
+  Y_2_eq, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+  xlab = "", ylab = "", zlab = "", axis = FALSE, main = "Equispaced Init",
+  pch = "."
+)
+sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+             type = "l", lty = 2, col = "blue", lwd = 2)
+sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+             type = "l", lty = 2, col = "blue", lwd = 2)
 ```
 
-Onto the 3d sphere. Here we can see a well-defined belt which separates observations.
+Let's do the same but initializing the reduced dimension data with a uniform
+distribution. Afterwards, it will be nice to compare both results.
 
-```{r, fig.height=5, fig.width=5, fig.align='center', rgl=TRUE, dev='png'}
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-            radius = 1, type = "s", col = "lightblue", alpha = 0.8,
-            lit = FALSE)
-rgl::points3d(Y, col = rep(1, nrow(Y)))
-rgl.viewpoint(theta = -90, phi = -90, zoom = .9)
+```{r cache=TRUE, fig.height=8, fig.width=8}
+res_pscsne_2_unif <- psc_sne(X = jdf_pscsne, d = 2, rho_psc_list = rho_30,
+                             init = "random")
+
+Y_2_unif <- res_pscsne_2_unif$best_Y
 ```
 
+And plot the results in an sphere:
 
-Nevertheless, as you can see in the next plot, there is some continuity so the belt is not completely around the sphere. That could be informing the difference between "East" and "West" flows and also on the existence of other intermediate regimes.
-
-```{r, fig.height=5, fig.width=5, fig.align='center', rgl=TRUE, dev='png'}
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-            radius = 1, type = "s", col = "lightblue", alpha = 0.8,
-            lit = FALSE)
-rgl::points3d(Y, col = rep(1, nrow(Y)))
-rgl.viewpoint(theta = 180, phi = 90, zoom = .9)
+```{r fig.asp=1, fig.align='center'}
+sd3 <- scatterplot3d::scatterplot3d(
+  Y_2_unif, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+  xlab = "", ylab = "", zlab = "", axis = FALSE, main = "Uniform Init",
+  pch = "."
+)
+sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+             type = "l", lty = 2, col = "blue", lwd = 2)
+sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+             type = "l", lty = 2, col = "blue", lwd = 2)
 ```
 
-Let's see what are the rows located in both sides of the belt, to figure out why they are well separated.
+As it did not occur for $d = 1$, results are more satisfactory when the initialization of the reduced dimension data points are randomly spread than when they are based on evenly optimized equidistant points. It is easy to see this little difference comparing the objective function value of the `random` initialization (2.868) and the value of the `equispaced` (2.883).
 
-```{r}
+For the following analysis, we are going to consider the object with the lowest objective function for both cases, $d=1$ and $d=2$, then the objects `Y_1_eq` and `Y_2_unif`, respectively.
+
+## Analysis
+
+Resultant points onto the sphere ($d=2$) suggest there is a well-defined belt that separates observations. That suggests that there is a potential difference between sea currents directions. Nevertheless, as you could see in the above plot, there is some continuity so the belt is not completely around the sphere. That could be informing the difference between "East" and "West" flows and also on the existence of other intermediate regimes. Let's see what are some rows located in both sides of the belt, to figure out why they are well separated.
+
+```{r echo=FALSE, eval=FALSE}
 rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
             radius = 1, type = "s", col = "lightblue", alpha = 1, lit = FALSE)
-rgl::text3d(Y, text = seq_len(nrow(Y)), cex = 0.8)
+rgl::text3d(Y_2_eq, text = seq_len(nrow(Y_2_eq)), cex = 0.8)
 ```
 
 As it is shown in the previous plot (which is a zoom-in in the zone around the belt), there are two groups:
 
 - The one group which is above the belt, with the following row ids: *2157*, *2215*, *2205*, *2217*, *3168*, *2166* and *3004*.
 - The other group is below the well-separated area, with the following row ids: *988*, *288*, *1848*, *467*, *188*, *671* and *173*.
+
+To facilitate interpretation of results, we just plot the first 16 time instants (that corresponds each of them with an sphere).
 
 ```{r}
 up_group <- c(2157, 2215, 2205, 2217, 3168, 2166, 3004)
@@ -164,54 +208,110 @@ total <- c(up_group, below_group)
 colors <- c(rep(2, length(up_group)), rep(3, length(below_group)))
 
 data_groups <- jdf_pscsne[total, , ]
+num_time_instants <- 16
 
-par(mfrow = c(3, 5))
-for (k in seq_len(dim(jdf_pscsne)[3])) {
+for (k in seq_len(num_time_instants)) {
+  old_par <- par(mfrow = c(4, 4), mar = c(0, 0, 0, 0))
   plot(data_groups[, 1, k], data_groups[, 2, k], col = colors, xlim = c(-1, 1),
-       ylim = c(-1, 1))
+       ylim = c(-1, 1), xlab = "", ylab = "", axes = FALSE)
   graphics::polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
                     y = sin(seq(0, 2 * pi, length.out = 100)))
+  par(old_par)
 }
 
 ```
 
+We see that most of the points separated by the gap are in opposite directions. Moreover, it is easy to see that these directions are the currents that go out and in of the strait, sea currents directions to the west and to the east, respectively.
+
+### Clustering
+
+#### Mixture of von Mises package
+
 Let's see if the package `movMF` can detect automatically the two mixtures:
 
-```{r, fig.height=5, fig.width=5, fig.align='center', rgl=TRUE, dev='png'}
-library(movMF)
-Y_rad <- DirStats::to_rad(Y)
+```{r}
+Y_rad <- DirStats::to_rad(Y_2_unif)
 fitted <- movMF(x = Y_rad, k = 2, nruns = 10)
 colors <- predict(fitted)
-
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-            radius = 1, type = "s", col = "lightblue", alpha = 1, lit = FALSE)
-rgl::points3d(Y, col = colors)
-rgl.viewpoint(theta = 0, phi = 0, zoom = .7)
 ```
 
-It didn't succeed, we can run the circular/spherical-adapted kernel mean shift version to see if it can detect these groups automatically in the circumference. 
+```{r fig.asp=1, fig.align='center'}
+sd3 <- scatterplot3d::scatterplot3d(
+  Y_2_unif, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1), color = colors,
+  xlab = "", ylab = "", zlab = "", axis = FALSE, main = "movMF clusters",
+  pch = "."
+)
+sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+             type = "l", lty = 2, col = "blue", lwd = 3)
+sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+             type = "l", lty = 2, col = "blue", lwd = 3)
+```
 
-```{r cache = TRUE}
-res_kms_dir_Y_1 <- kms_dir(x = Y_1, data = Y_1)
+It didn't succeed, we can run the circular/spherical-adapted kernel mean shift version to see if it can detect these groups automatically. 
 
-plot(Y_1[, 1], Y_1[, 2], col = res_kms_dir_Y_1$cluster, xlim = c(-1, 1),
+#### Kernel Mean Shift 
+
+First, the kernel mean shift is applied for data on to the circumference.
+
+```{r cache = TRUE, fig.asp=1}
+res_kms_dir_Y_1 <- kms_dir(x = Y_1_eq, data = Y_1_eq)
+
+plot(Y_1_eq[, 1], Y_1_eq[, 2], col = res_kms_dir_Y_1$cluster, xlim = c(-1, 1),
      ylim = c(-1, 1))
 graphics::polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
                   y = sin(seq(0, 2 * pi, length.out = 100)))
 
 ```
 
-Other option is to pick up two points that represent the north and the south poles and, later on, assign a group to the remainder points.
-
+The total number of clusters identified for $d=1$:
 
 ```{r}
+sprintf("Number of clusters (d = 1) %d", max(res_kms_dir_Y_1$cluster))
+```
 
+Once we have got these results, we can conclude that this could be a potential solution since it is identifying two principal directions (west and east) and other two (south and north) that are less frequent.
+
+We do the same for the reduced data on the sphere $d=2$:
+
+```{r cache = TRUE}
+res_kms_dir_Y_2_unif <- kms_dir(x = Y_2_unif, data = Y_2_unif)
+```
+
+The total number of clusters identified for $d = 2$:
+
+```{r}
+colors <- res_kms_dir_Y_2_unif$cluster
+sprintf("Number of clusters (d = 2) %d", max(colors))
+```
+
+Let's see the results on the sphere:
+
+```{r fig.asp=1, fig.align='center'}
+sd3 <- scatterplot3d::scatterplot3d(
+  Y_2_unif, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1), color = colors,
+  xlab = "", ylab = "", zlab = "", axis = FALSE, main = "kms clustering",
+  pch = "."
+)
+sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+             type = "l", lty = 2, lwd = 2)
+sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+             type = "l", lty = 2, lwd = 2)
+```
+
+Many clusters identified, that makes difficult the interpretation of each cluster. The results on the circumference are better in terms of understanding. 
+
+#### By hand
+
+Other option is to pick up two points that represent the north and the south poles and, later on, assign a group to the remainder points.
+
+```{r}
 north_point <- 3609
 south_point <- 2088
 
-cos_sim_sph <- drop(sphunif::Psi_mat(array(Y, dim = c(nrow(Y), ncol(Y), 1)),
-                                     scalar_prod = TRUE))
-cos_sim_mat <- vec2matrix(cos_sim_sph, n = nrow(Y), diag_value = 1)
+cos_sim_sph <- drop(
+  sphunif::Psi_mat(array(Y_2_unif, dim = c(nrow(Y_2_unif), ncol(Y_2_unif), 1)),
+                   scalar_prod = TRUE))
+cos_sim_mat <- vec2matrix(cos_sim_sph, n = nrow(Y_2_unif), diag_value = 1)
 
 north_sounth_cos_sim <- cos_sim_mat[c(north_point, south_point), ]
 
@@ -219,38 +319,32 @@ north_sounth_cos_sim <- cos_sim_mat[c(north_point, south_point), ]
 colors <- apply(X = acos(north_sounth_cos_sim), MARGIN = 2, FUN = which.min)
 ```
 
+Let's see the results graphically:
 
-```{r fig.height=5, fig.width=5, fig.align='center', rgl=TRUE, dev='png'}
-
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "lightblue", alpha = 1, lit = FALSE)
-rgl::points3d(Y, col = colors)
-rgl.viewpoint(theta = 0, phi = 0, zoom = .7)
+```{r fig.asp=1}
+sd3 <- scatterplot3d::scatterplot3d(
+  Y_2_unif, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1), color = colors,
+  xlab = "", ylab = "", zlab = "", axis = FALSE, pch = "."
+)
+sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+             type = "l", lty = 2, col = "blue", lwd = 3)
+sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+             type = "l", lty = 2, col = "blue", lwd = 3)
 ```
 
 Let's use this color to see if it could split the two groups in the first reduction dimension we have done, where $d = 1$:
 
 ```{r}
-plot(Y_1[, 1], Y_1[, 2], col = colors, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y_1_eq[, 1], Y_1_eq[, 2], col = colors, xlim = c(-1, 1), ylim = c(-1, 1))
 graphics::polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
                   y = sin(seq(0, 2 * pi, length.out = 100)))
 ```
 
-Now that we have concluded that it is clear that our algorithm is clustering the data along the circumference. Next step is to cluster the data with `kms_dir` in the resultant sphere:
+Now that we have concluded that it is clear that our algorithm is clustering the data along the circumference. 
 
-```{r cache = TRUE}
-res_kms_dir_Y <- kms_dir(x = Y, data = Y)
-```
+### Visualization
 
-```{r fig.height=5, fig.width=5, fig.align='center', rgl=TRUE, dev='png'}
-colors <- res_kms_dir_Y$cluster
-rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
-             radius = 1, type = "s", col = "lightblue", alpha = 1, lit = FALSE)
-rgl::points3d(Y, col = colors)
-rgl.viewpoint(theta = 0, phi = 0, zoom = .7)
-```
-
-Now, it is time to visualize how the current sea evolves for the diferent instants depending on the group assigned:
+Now, it is time to visualize how the current sea evolves for the different instants depending on the group assigned:
 
 ```{r eval = FALSE}
 num_instants <- nrow(jdf_coor)
@@ -324,7 +418,7 @@ for (k in seq_len(r)) {
     colors_by_time_latlon[index_lon, index_lat, k] <-
       ifelse(colors[k] == 1, 3, 4)
     kms_dir_colors_cir[index_lon, index_lat, k] <- res_kms_dir_Y_1$cluster[k]
-    kms_dir_colors_sph[index_lon, index_lat, k] <- res_kms_dir_Y$cluster[k]
+    kms_dir_colors_sph[index_lon, index_lat, k] <- res_kms_dir_Y_2_unif$cluster[k]
   }
 }
 
@@ -379,7 +473,7 @@ Let's create another video but in this case the clusters are defined by the `kms
 ```{r eval = FALSE}
 
 animation::saveVideo(expr = {
-  animation::ani.options(interval = 0.05, ani.res = 1080, ani.width = 1080,
+  animation::ani.options(interval = 0.2, ani.res = 1080, ani.width = 1080,
                          ani.height = 1080)
   times_seq <- seq_len(length(instant_seq))
   for (i in times_seq) {
@@ -390,7 +484,9 @@ animation::saveVideo(expr = {
     ffmpeg = "/opt/homebrew/opt/ffmpeg@2.8/bin/ffmpeg")
 ```
 
-The video is stored here: https://www.dropbox.com/s/mgshm2kw5r906rw/jdfkmscir.mp4?dl=0. Next step is about doing the same but on the sphere $d = 2$.
+The video is stored here: https://www.dropbox.com/s/jiaww9k0ql62r71/jdfkmscir.mp4?dl=0. 
+
+Next thing to do is generate the video on the sphere $d = 2$.
 
 ```{r eval = FALSE}
 
@@ -466,4 +562,4 @@ for (i in times_seq) {
 # ffmpeg -y -r 1/0.05 -i map%d.png juandefucamap.mp4
 ```
 
-The video is stored here: https://www.dropbox.com/s/iimnmxyj9ohaatv/jdfmap.mov?dl=0.
+The video is stored here: https://www.dropbox.com/s/zf9b56rqjk81i3y/jdfkmssph.mp4?dl=0.
