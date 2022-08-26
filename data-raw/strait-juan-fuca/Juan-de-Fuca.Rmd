@@ -38,7 +38,7 @@ load(juanfuca_pkg)
 # Obtain other data frame
 # Transform into coordinates (value formed by lat and lon separated by a comma)
 # Remove speed from the dataset
-jdf_coor <- jdf_long_fmt %>%
+jdf_coor <- jdf %>%
   unite(col = "coordinates", lat, lon, sep = ",", remove = FALSE) %>%
   dplyr::select(-"speed")
 # Transform the data frame into a 3-dimensional array
@@ -94,11 +94,7 @@ res_pscsne <- psc_sne(X = jdf_pscsne, d = 1, rho_psc_list = rho_30,
 Y_1 <- res_pscsne$best_Y
 ```
 
-Unit: seconds
-                                                                                                                                               expr
- {     res_pscsne <- psc_sne(X = jdf_pscsne, d = 1, rho_psc_list = rho_30,          num_iteration = 500, init = "equispaced", parallel_cores = 1) }
-      min       lq     mean   median       uq      max neval
- 2434.701 2434.701 2434.701 2434.701 2434.701 2434.701    
+Let's see these results on the circle:   
 
 ```{r fig.asp=1}
 plot(Y_1[, 1], Y_1[, 2], xlim = c(-1, 1), ylim = c(-1, 1))
@@ -112,7 +108,7 @@ Let's now reduced the dimension onto the sphere, $d=2$, of radius 1, with an opt
 
 Let's do the same but initializing the resultant reduced dimension data with optimized evenly space points:
 
-```{r cache=TRUE}
+```{r cache=TRUE, fig.height=8, fig.width=8}
 res_pscsne <- psc_sne(X = jdf_pscsne, d = 2, rho_psc_list = rho_30,
                       maxit = 500, init = "equispaced")
 
