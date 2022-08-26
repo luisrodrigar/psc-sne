@@ -302,11 +302,9 @@ r2 <- 2
 r3 <- 2
 r4 <- 95
 # Calculate the north pole of the sphere
-theta <- (90 * pi) / (180)
-phi <- (0 * pi) / (180)
-north_pole <- t(DirStats::to_sph(th = c(theta), ph = c(phi)))
+north_pole <- cbind(c(0, 0, 1))
 # small circle in the equator (1 sample)
-samp_1 <- r_path_s2r(n = n, r = r1, sigma = 0.1, Theta = north_pole)
+samp_1 <- r_path_s2r(n = n, r = r1, sigma = 0.08, Theta = north_pole)
 # small circle rotated 1 and 2 (2 samples)
 samp_2_3 <- r_path_s2r(n = n, r = r2, sigma = 0.1)
 # spherical spiral 1 and 2 (2 samples)

@@ -115,7 +115,6 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
 ### An example in variable selection
 
 We define 5 groups of 20 variables that are strongly positive correlated each of them. For example, consider 
-
 $$
 (\mathbf{X}_{1},\ldots,\mathbf{X}_{5})'\sim\mathcal{N}_{100}(\boldsymbol{\mu},\boldsymbol{\Sigma}),
 $$ 
@@ -123,9 +122,11 @@ where
 $$
 \boldsymbol{\Sigma}=\mathrm{diag}(\boldsymbol{\Sigma}_{1},\ldots,\boldsymbol{\Sigma}_{5})
 $$ 
-is blockwise diagonal. Take now $n=200$ observations and center and standardize the features. Then the features now live in $\mathbb{S}^{n-1}$. 
+is block-wise diagonal. Take now $n=200$ observations and center and standardize the features. Then the features now live in $\mathbb{S}^{n-1}$. 
 
-Run pscsne on the standardized features on $\mathbb{S}^{199}$ for 100 observations. Then, we consider 10 groups of 20 variables each of them with positive correlation.
+Then, we consider 10 groups of 20 variables each of them with positive correlations. A covariance matrix of size `c(200, 200)` is created and filled in only those entries that belongs to the $i$-th group with the associated entry of the vector `rho` and powers of itself. Along with the mean vector defined as zeros, the parameters of the multivariate normal are already set up and some data are generated. These points have the peculiarity to lie onto the sphere, therefore, spherical data.
+
+In order to avoid observations that belongs to the same group together, we have shuffled these points so the data-set is disorganized.
 
 ```{r}
 # Visualize some features
@@ -160,7 +161,7 @@ rho_list <- rho_optim_bst(x = feat_data, perp_fixed = 30,
                           num_cores = num_cores_param)
 ```
 
-Run psc_sne() with colors being the groups of variables for $d = 1$:
+Run `psc-sne` on the standardized features on $\mathbb{S}^{199}$ for 100 observations being the colors the groups of variables, first set $d = 1$:
 
 ```{r}
 res_pscsne_21 <- psc_sne(X = feat_data, d = 1, rho_psc_list = rho_list,
@@ -430,6 +431,7 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
 ## \boldmath $(\mathbb{S}^2)^{100}$ \unboldmath
 
 Generate samples that are uniform and independent in all $\mathbb{S}^2$ except in the first five, where there is a common time-indexed path given by 
+
 $$
 x_1(t)=\text{equator},
 $$ 
@@ -445,7 +447,8 @@ $$
 $$
 x_5(t)=\text{spherical-spiral-2}.
 $$ 
-Use [spherical spirals](https://en.wikipedia.org/wiki/Spiral#Spherical_spirals).
+
+Basically, in this scenario we are generating 95 spheres, $\mathbb{S}^2$, that follows all of them a uniform distribution. The remainder spheres are a small circle distribution located in the equator, two small circles rotated randomly and two rotated spiral distribution.
 
 ```{r cache = TRUE}
 n <- 100
@@ -454,11 +457,9 @@ r2 <- 2
 r3 <- 2
 r4 <- 95
 # Calculate the north pole of the sphere
-theta <- (90 * pi) / (180)
-phi <- (0 * pi) / (180)
-north_pole <- t(DirStats::to_sph(th = c(theta), ph = c(phi)))
+north_pole <- cbind(c(0, 0, 1))
 # small circle in the equator (1 sample)
-samp_1 <- r_path_s2r(n = n, r = r1, sigma = 0.1, Theta = north_pole)
+samp_1 <- r_path_s2r(n = n, r = r1, sigma = 0.08, Theta = north_pole)
 # small circle rotated 1 and 2 (2 samples)
 samp_2_3 <- r_path_s2r(n = n, r = r2, sigma = 0.1)
 # spherical spiral 1 and 2 (2 samples)
@@ -501,7 +502,9 @@ polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
         y = sin(seq(0, 2 * pi, length.out = 100)))
 ```
 
-Results shows more or less the structure of the first 5 spheres even with the noise included with the remainder spheres. Afterwards, let's get the results on the sphere:
+Results show more or less the time-index structure of the first 5 spheres even with the noise of the remainder spheres. Nevertheless, it is not possible to distinguish any shape. 
+
+Afterwards, let's get the results on the sphere:
 
 ```{r cache=TRUE, fig.height=8, fig.width=8}
 psc_sne_res_52 <- psc_sne(X = x_s2_100, d = 2, rho_psc_list = rho_30_s2_100,
@@ -509,7 +512,7 @@ psc_sne_res_52 <- psc_sne(X = x_s2_100, d = 2, rho_psc_list = rho_30_s2_100,
                           parallel_cores = num_cores_param)
 ```
 
-In this case results show again the insights obtained in the reduced dimension to the circumference. Let's visualize the results on the sphere:
+Let's visualize the results on the sphere:
 
 ```{r fig.asp=1}
 Y <- psc_sne_res_52$best_Y
@@ -523,3 +526,5 @@ sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
 sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
              type = "l", lty = 3)
 ```
+
+In this case, the resultant data show again the insights obtained in the reduced dimension when $d=1$. It is not possible to see a clear shape, for example, a small circle or a spiral. That makes sense since it is not possible to distinguish any clear cluster since there are lot of noise and other distributions involved.
