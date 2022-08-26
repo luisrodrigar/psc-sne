@@ -82,11 +82,11 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 #' is a list, then it contains the vector \code{rho_values} and the matrix
 #' \code{P}, the second scenario when the type is a vector, then this object
 #' contains the rho values, within this function the
-#' \code{\link{high_dimension}} function is called to get the matrix
-#' \eqn{\mathbf{P}}. The last scenario that is when this object is set to
-#' \code{NULL}, i.e., the \code{\link{rho_optim_bst}} function is called to get
-#' the rho values (given a fixed perplexity) and the probabilities matrix.
-#' Optional parameter, defaults to \code{NULL}).
+#' \code{\link{high_dimension}} function is called to get the matrix \code{P}.
+#' The last scenario that is when this object is set to \code{NULL}, i.e., the
+#' \code{\link{rho_optim_bst}} function is called to get the rho values
+#' (given a fixed perplexity) and the probabilities matrix. Optional parameter,
+#' defaults to \code{NULL}).
 #' @param rho parameter of the low-dimensional spherical Cauchy
 #' probabilities. Optional, defaults to \code{0.5}).
 #' @param perplexity parameter that measures the number of neighbors to
@@ -268,10 +268,11 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   # Initial momentum
   momentum <- initial_momentum
 
-  old_par <- par()
   if (show_prog) {
 
-      # Visualizing the plots in a 3 x 3 grid for d = 1
+      # Visualizing the plots in a 3 x 3 grid
+      old_par <- par()
+      on.exit(par(old_par))
       old_par <- par(mfrow = c(3, 3), mar = c(0, 0, 2, 0))
 
   }
@@ -341,11 +342,11 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     }
 
+    # Progress trace
     if (show_prog && is.numeric(show_prog) && (((i - 2) %% show_prog == 0)
                                                || (i - 2 == 1)
                                                || i - 2 == maxit)  ) {
 
-      # Progress trace
       cat(sprintf(
         "It: %d; obj: %.3e; abs: %.3e; rel: %.3e; norm: %.3e; mom: %.3e;\nbest it: %d; best obj: %.3e\n",
         i - 2, obj_func_iter[i - 2], absolute_errors[i - 2],
@@ -360,7 +361,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     if (show_prog && (i - 2 == 1 || ((i - 2) %% (show_prog * 2) == 0)
                       || i - 2 == maxit)) {
 
-      show_iter_sol(Y[, , 2], i, d, colors)
+      show_iter_sol(Y = Y[, , 2], i = i, d = d, colors = colors)
 
     }
     # Reverse the early exaggeration made at the beginning
@@ -383,20 +384,14 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
           relative_errors[i - 2], gradient_norms[i - 2], sqrt(sum(moment_i^2)),
           best_i, best_obj_i
         ))
+
         # Show the last configuration
-        show_iter_sol(Y[, , 2], i, d, colors)
+        show_iter_sol(Y = Y[, , 2], i = i, d = d, colors = colors)
         convergence <- TRUE
         break
 
       }
     }
-  }
-
-  if (show_prog) {
-
-    # Restore the par configuration
-    par(old_par)
-
   }
 
   # Return configurations and diagnstics
