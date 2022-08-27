@@ -354,7 +354,7 @@ Many clusters identified, that makes difficult the interpretation of each cluste
 
 Now, it is time to visualize how the current sea evolves for the different instants depending on the group assigned:
 
-```{r dyn-1}
+```{r dyn-1, cache = TRUE}
 num_instants <- nrow(jdf_coor)
 num_coordinates <- dim(jdf_coor)[3]
 
@@ -425,7 +425,7 @@ for (k in seq_len(r)) {
     colors_by_time_latlon[index_lon, index_lat, k] <-
       ifelse(colors[k] == 1, 3, 4)
     kms_dir_colors_cir[index_lon, index_lat, k] <- res_kms_dir_Y_1$cluster[k]
-    kms_dir_colors_sph[index_lon, index_lat, k] <- res_kms_dir_Y_2_unif$cluster[k]
+    kms_dir_colors_sph[index_lon, index_lat, k] <- res_kms_dir_Y_2$cluster[k]
   }
 }
 
@@ -566,11 +566,11 @@ The video is stored here: https://www.dropbox.com/s/zf9b56rqjk81i3y/jdfkmssph.mp
 
 Another possible visualization is to produce a static view of the vector fields with the observations that are more prototypical of different regimes. For that, we first retrieve the $\mathbf{m}_1,\ldots,\mathbf{m}_s\in\mathbb{S}^d$ modes in the psc-SNE scores. Then, we look for the observations $\mathbf{x}_1,\ldots,\mathbf{x}_s\in(\mathbb{S}^1)^r$ whose psc-SNE scores are closer to $\mathbf{m}_1,\ldots,\mathbf{m}_s\in\mathbb{S}^d$ with a numerical search. Then, we plot the $s$ vector fields.
 
-```{r sta-1}
-# Get prototypical observations associated to psc-SNE scores
+```{r sta-1, fig.asp = 1/2}
+# Get prototypical observations of the vector field regimes
 proto_obs <- function(X, Y, modes) {
-  
-  protos_X <- array(dim = dim(Y))
+
+  protos_X <- array(dim = c(nrow(modes), dim(X)[2:3]))
   protos_ind <- numeric(nrow(modes))
   for (i in seq_len(nrow(modes))) {
 
@@ -582,18 +582,44 @@ proto_obs <- function(X, Y, modes) {
 
 }
 
-# Get prototypes for d = 1, 2
+# Get regimes for d = 1, 2
 proto_1 <- proto_obs(X = X_jdf, Y = Y_1_eq, modes = res_kms_dir_Y_1$modes)
 proto_2 <- proto_obs(X = X_jdf, Y = Y_2_unif, modes = res_kms_dir_Y_2$modes)
 
 # TODO: link selected row-indexes in X_jdf with k-indexes in jdf_by_time_latlon[, , k]
+# I do not know how to do this
 k_proto_1 <- c(100, 200) # TODO
-k_proto_1 <- c(100, 200) # TODO
+k_proto_2 <- c(100, 200) # TODO
 
-for (k in k_proto_1) {
-  plot_vfield(k = k, col = 1)
+# Plotting function
+plot_vfield2 <- function(k, reg, col = 1) {
+
+  loc <- paste("Prototype of regime", reg)
+  tim_i <- format(instant_seq[k], "%Y-%m-%d %H")
+  title <- paste0(loc, "\n(attained in ", tim_i, ")")
+  OceanView::quiver2D(cos(jdf_by_time_latlon[, , k]),
+                      sin(jdf_by_time_latlon[, , k]),
+                      x = lon_values,
+                      y = lat_values,
+                      col = col, clim = c(0, 1),
+                      xlim = c(min(lon_values - 0.015),
+                               max(lon_values + 0.015)),
+                      ylim = c(min(lat_values - 0.015),
+                               max(lat_values + 0.015)),
+                      main = title, colkey = FALSE, xlab = "Longitude",
+                      ylab = "Latitude")
+  points(expand.grid(lon_values, lat_values), pch = 16, cex = 0.5)
+
 }
-for (k in k_proto_2) {
-  plot_vfield(k = k, col = 1)
+
+# Plots
+par(mfrow = c(1, 2))
+for (reg in seq_along(k_proto_1)) {
+  plot_vfield2(k = k_proto_1[reg], reg = reg, col = 1)
+}
+
+par(mfrow = c(1, 2))
+for (reg in seq_along(k_proto_2)) {
+  plot_vfield2(k = k_proto_2[reg], reg = reg, col = 1)
 }
 ```
