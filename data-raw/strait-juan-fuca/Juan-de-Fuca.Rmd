@@ -262,16 +262,19 @@ Resultant points onto the sphere ($d=2$) suggest there is a well-defined belt th
 
 First, the kernel mean shift is applied for data on to the circumference.
 
-```{r kms-1d, cache = TRUE, fig.asp = 1}
+```{r kms-1d-1, cache = TRUE}
 res_kms_dir_Y_1 <- kms_dir(data = Y_1_eq)
-plot(Y_1_eq[, 1], Y_1_eq[, 2], col = kres_kms_dir_Y_1$cluster, xlim = c(-1, 1),
+```
+
+```{r kms-1d-2, fig.asp = 1}
+plot(Y_1_eq[, 1], Y_1_eq[, 2], col = res_kms_dir_Y_1$cluster, xlim = c(-1, 1),
      ylim = c(-1, 1))
 polygon(x = cos(th), y = sin(th))
 ```
 
 The total number of clusters identified for $d=1$:
 
-```{r}
+```{r kms-1d-3}
 sprintf("Number of clusters (d = 1) %d", max(res_kms_dir_Y_1$cluster))
 ```
 
@@ -279,20 +282,20 @@ Once we have got these results, we can conclude that this could be a potential s
 
 We do the same for the reduced data on the sphere $d=2$:
 
-```{r kms-2d, cache = TRUE}
+```{r kms-2d-1, cache = TRUE}
 res_kms_dir_Y_2 <- kms_dir(data = Y_2_unif)
 ```
 
 The total number of clusters identified for $d = 2$:
 
-```{r}
+```{r kms-2d-2}
 colors <- res_kms_dir_Y_2$cluster
 sprintf("Number of clusters (d = 2) %d", max(colors))
 ```
 
 Let's see the results on the sphere:
 
-```{r fig.asp = 1, fig.align = 'center'}
+```{r kms-2d-3, fig.asp = 1, fig.align = 'center'}
 sd3 <- scatterplot3d::scatterplot3d(
   Y_2_unif, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1), color = colors,
   xlab = "", ylab = "", zlab = "", axis = FALSE, main = "kms clustering",
