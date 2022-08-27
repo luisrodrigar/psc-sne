@@ -208,7 +208,7 @@ prob_cond_i_psph <- function(x, i, rho_list, d_total_i_psph_cauchy = NULL) {
 #' @description Calculate the marginal low-dimension spherical
 #' Cauchy probability.
 #'
-#' @param y matrix that stands for an sphere, \eqn{\mathcal{S}^d}.
+#' @param y matrix that stands for a sphere, \eqn{\mathcal{S}^d}.
 #' @inheritParams d_sph_cauchy
 #' @return Spherical marginal Cauchy density probability given the parameters.
 d_i_sph_cauchy <- function(y, i, rho) {

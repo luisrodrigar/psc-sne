@@ -137,7 +137,7 @@ res_pscsne_2_eq <- psc_sne(X = jdf_pscsne, d = 2, rho_psc_list = rho_30,
 Y_2_eq <- res_pscsne_2_eq$best_Y
 ```
 
-And plot the results in an sphere:
+And plot the results onto the sphere:
 
 ```{r fig.asp=1, fig.align='center'}
 seq_rad <- seq(-pi, pi, by = pi / 30)
@@ -165,7 +165,7 @@ res_pscsne_2_unif <- psc_sne(X = jdf_pscsne, d = 2, rho_psc_list = rho_30,
 Y_2_unif <- res_pscsne_2_unif$best_Y
 ```
 
-And plot the results in an sphere:
+And plot the results onto the sphere:
 
 ```{r fig.asp=1, fig.align='center'}
 sd3 <- scatterplot3d::scatterplot3d(
@@ -198,7 +198,7 @@ As it is shown in the previous plot (which is a zoom-in in the zone around the b
 - The one group which is above the belt, with the following row ids: *2157*, *2215*, *2205*, *2217*, *3168*, *2166* and *3004*.
 - The other group is below the well-separated area, with the following row ids: *988*, *288*, *1848*, *467*, *188*, *671* and *173*.
 
-To facilitate interpretation of results, we just plot the first 16 time instants (that corresponds each of them with an sphere).
+To facilitate interpretation of results, we just plot the first 16 time instants (that corresponds each of them with a sphere).
 
 ```{r}
 up_group <- c(2157, 2215, 2205, 2217, 3168, 2166, 3004)

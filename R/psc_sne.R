@@ -443,7 +443,7 @@ show_iter_sol <- function(Y, i, d, colors = NULL) {
     # where i is the radians
     meridian <- do.call(rbind, lapply(seq_rad, function(i) c(0, i)))
     equator <- do.call(rbind, lapply(seq_rad, function(i) c(i, pi/2)))
-    # Plot on an sphere
+    # Plot on the sphere
     sd3 <- scatterplot3d::scatterplot3d(
       Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
       color = colors, main = paste("Iteration", i - 2), xlab = "", ylab = "",
