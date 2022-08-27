@@ -343,23 +343,23 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     }
 
     # Progress trace
-    if (show_prog && is.numeric(show_prog) && (((i - 2) %% show_prog == 0)
-                                               || (i - 2 == 1)
-                                               || i - 2 == maxit)  ) {
+    if (show_prog && is.numeric(show_prog) &&
+        (((i - 2) %% show_prog == 0) || (i - 2 == 1) || i - 2 == maxit)) {
 
-      cat(sprintf(
-        "It: %d; obj: %.3e; abs: %.3e; rel: %.3e; norm: %.3e; mom: %.3e;\nbest it: %d; best obj: %.3e\n",
-        i - 2, obj_func_iter[i - 2], absolute_errors[i - 2],
-        relative_errors[i - 2], gradient_norms[i - 2], sqrt(sum(moment_i^2)),
-        best_i, best_obj_i
+      # Progress trace
+      message(sprintf(paste("It: %d (best: %d); obj: %.2e (best: %.2e);",
+                            "abs: %.1e; rel: %.1e; norm: %.1e; mom: %.1e"),
+                      i - 2, best_i, obj_func_iter[i - 2], best_obj_i,
+                      absolute_errors[i - 2], relative_errors[i - 2],
+                      gradient_norms[i - 2], sqrt(sum(moment_i^2))
       ))
 
     }
 
     # Plot the current status if the first iteration, the last one or it is
     # twice the number of lines indicated with show_prog param
-    if (show_prog && (i - 2 == 1 || ((i - 2) %% (show_prog * 2) == 0)
-                      || i - 2 == maxit)) {
+    if (show_prog &&
+        (i - 2 == 1 || ((i - 2) %% (show_prog * 2) == 0) || i - 2 == maxit)) {
 
       show_iter_sol(Y = Y[, , 2], i = i, d = d, colors = colors)
 
@@ -378,11 +378,11 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
                 gradient_norms[i - 2]) < tol)) {
 
         # Progress trace
-        cat(sprintf(
-          "It: %d; obj: %.3e; abs: %.3e; rel: %.3e; norm: %.3e; mom: %.3e;\nbest it: %d; best obj: %.3e\n",
-          i - 2, obj_func_iter[i - 2], absolute_errors[i - 2],
-          relative_errors[i - 2], gradient_norms[i - 2], sqrt(sum(moment_i^2)),
-          best_i, best_obj_i
+        message(sprintf(paste("It: %d (best: %d); obj: %.2e (best: %.2e);",
+                              "abs: %.1e; rel: %.1e; norm: %.1e; mom: %.1e"),
+          i - 2, best_i, obj_func_iter[i - 2], best_obj_i,
+          absolute_errors[i - 2], relative_errors[i - 2], gradient_norms[i - 2],
+          sqrt(sum(moment_i^2))
         ))
 
         # Show the last configuration
@@ -394,7 +394,16 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     }
   }
 
-  # Return configurations and diagnstics
+  # Converged?
+  if (show_prog) {
+
+    message(ifelse(
+      convergence, "CONVERGENCE!",
+      "**NO** CONVERGENCE. Decrease eta? Change init? Increase maxit?"))
+
+  }
+
+  # Return configurations and diagnostics
   return(list("best_Y" = best_Y_i, "last_Y" = Y[, , 2],
               "diagnostics" = data.frame("obj" = obj_func_iter,
                                          "abs" = absolute_errors,
@@ -427,22 +436,21 @@ show_iter_sol <- function(Y, i, d, colors = NULL) {
   }
 
   if (d == 1) {
+
     # Plot on a circumference
-    plot(Y[, 1], Y[, 2], col = colors,
-         xlim = c(-1, 1), ylim = c(-1, 1),
-         xlab = "", ylab = "", axes = FALSE,
-         main = paste("Iteration", i - 2)
-    )
-    graphics::polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
-                      y = sin(seq(0, 2 * pi, length.out = 100)))
+    plot(Y[, 1], Y[, 2], col = colors, xlim = c(-1, 1), ylim = c(-1, 1),
+         xlab = "", ylab = "", axes = FALSE, main = paste("Iteration", i - 2))
+    th <- seq(0, 2 * pi, length.out = 100)
+    graphics::polygon(x = cos(th), y = sin(th))
 
   } else if (d == 2) {
+
     # Sequence from -180 to 180 by an step of 15 in radians
     seq_rad <- seq(-pi, pi, by = pi / 30)
     # Meridian calculates as theta = 0 and phi = i
     # where i is the radians
     meridian <- do.call(rbind, lapply(seq_rad, function(i) c(0, i)))
-    equator <- do.call(rbind, lapply(seq_rad, function(i) c(i, pi/2)))
+    equator <- do.call(rbind, lapply(seq_rad, function(i) c(i, pi / 2)))
     # Plot on the sphere
     sd3 <- scatterplot3d::scatterplot3d(
       Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
