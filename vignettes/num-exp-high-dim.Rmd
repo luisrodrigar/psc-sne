@@ -287,7 +287,7 @@ r1 <- 5
 r2 <- 95
 p <- 1
 n <- 100
-kappa <- 1
+kappa <- 3
 gen_data <- rbinom(n = n, size = n, prob = 0.5)
 x_vMF_5 <- sapply(seq_len(r1), function(k1) {
   data_vMF <- lapply(seq_len(n), function(i) {
@@ -516,4 +516,4 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
              type = "l", lty = 3)
 ```
 
-In this case, the resultant data show again the insights obtained in the reduced dimension when $d=1$. It is not possible to see a clear shape, for example, a small circle or a spiral. That makes sense since it is not possible to distinguish any clear cluster since there are lot of noise and other distributions involved.
+In this case, the resultant data show again the insights obtained in the reduced dimension when $d=1$. It is not possible to see a clear shape, for example, a small circle or a spiral. The fact that there are lot of noise and other distributions involved, makes not possible to distinguish any clear cluster.
