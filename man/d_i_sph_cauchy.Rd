@@ -7,7 +7,7 @@
 d_i_sph_cauchy(y, i, rho)
 }
 \arguments{
-\item{y}{matrix that stands for an sphere, \eqn{\mathcal{S}^d}.}
+\item{y}{matrix that stands for a sphere, \eqn{\mathcal{S}^d}.}
 
 \item{i}{corresponds to the \eqn{i}-th observation index.}
 

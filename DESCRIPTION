@@ -1,7 +1,7 @@
 Package: pscsne
 Type: Package
 Title: Polyspherical Cauchy SNE
-Version: 0.0.1.900003
+Version: 0.0.1.900004
 Date: 2022-08-26
 Authors@R: c(
      person(given = "Eduardo", family = "García-Portugués",
