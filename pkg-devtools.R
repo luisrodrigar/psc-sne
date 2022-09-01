@@ -64,7 +64,7 @@ build(".", vignettes = FALSE)
 
 # Install locally
 install(".", args = c("--no-multiarch", "--no-test-load"),
-        build_vignettes = TRUE)
+        build_vignettes = FALSE)
 packageVersion(pkg)
 
 # Load package
