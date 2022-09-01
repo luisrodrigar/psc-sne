@@ -137,13 +137,12 @@ binary_search_optimization <- function(D_i, i, beta, h_star, prob_star,
   }
   return(list(probs = prob_star, beta = beta))
 }
-
 ```
 
 Once we have defined these two methods, we are able to obtain the high dimensional properties:
 
 ```{r}
-
+ 
 high_dimension_probs <- function(X = matrix(), tolerance = 1e-5,
                                  perplexity = 30) {
   n <- nrow(X)
