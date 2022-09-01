@@ -10,6 +10,12 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
+def.chunk.hook <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize",
+         paste0("\n \\", options$size, "\n\n", x, "\n\n \\normalsize"), x)
+})
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -21,6 +27,7 @@ library(abind)
 library(rgl)
 library(mvtnorm)
 num_cores_param <- 7
+stopifnot(packageVersion("pscsne") <= "0.0.1.900004")
 ```
 
 Numerical experiments are important for testing the effectiveness of the psc-sne algorithm since it can be identified whether the function is providing good results or not. Then, this document contains information about the simulation of high-dimensional data and defines different cases in each point.
@@ -50,11 +57,12 @@ sc_unif_mix <- function(n, p, w_sc, w_unif, kappa = 50) {
   cols <- cols[indexes]
   return(list("data" = data, "colors" = cols))
 }
-n <- 600
+n <- 800
 p <- 101
 w_sc <- 0.5
 w_unif <- 0.5
 kappa <- 1000
+set.seed(42)
 sc_unif_mix_res <- sc_unif_mix(n = n, p = p, w_sc = w_sc, w_unif = w_unif,
                                kappa = kappa)
 sc_unif_mix_data <- sc_unif_mix_res$data
@@ -68,34 +76,37 @@ rho_30_1 <- rho_optim_bst(x = sc_unif_mix_data, perp_fixed = 30,
                           num_cores = num_cores_param)
 ```
 
-The next thing is to run the psc-sne algorithm with the parameter $d = 1$:
+#### Reduction to $d=1$
 
-```{r cache=TRUE}
+The next thing is to run the `psc-sne` algorithm with the parameter $d = 1$:
+
+```{r cache = TRUE, size = "scriptsize", fig.align = 'center'}
 res_pscsne_11 <- psc_sne(X = sc_unif_mix_data, d = 1, rho_psc_list = rho_30_1,
                          show_prog = TRUE, colors = sc_unif_mix_colors,
-                         parallel_cores = num_cores_param, eta = 100)
+                         parallel_cores = num_cores_param)
 ```
 
 The best result related with the smallest value of the objective function is:
 
-```{r fig.asp=1, fig.align='center'}
+```{r fig.asp = 1, fig.align = 'center'}
 Y <- res_pscsne_11$best_Y
 plot(Y[, 1], Y[, 2], col = sc_unif_mix_colors, xlim = c(-1, 1),
      ylim = c(-1, 1))
-
-polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
-        y = sin(seq(0, 2 * pi, length.out = 100)))
+th <- seq(0, 2 * pi, length.out = 100)
+polygon(x = cos(th), y = sin(th))
 ```
+
+#### Reduction to $d=2$
 
 After that, let's execute psc-sne with the parameter $d = 2$:
 
-```{r cache=TRUE, fig.height=8, fig.width=8}
+```{r cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 res_pscsne_12 <- psc_sne(X = sc_unif_mix_data, d = 2, rho_psc_list = rho_30_1,
                          show_prog = TRUE, colors = sc_unif_mix_colors,
-                         parallel_cores = num_cores_param, eta = 10)
+                         parallel_cores = num_cores_param, eta = 100)
 ```
 
-```{r fig.asp=1, fig.align='center'}
+```{r fig.asp = 1, fig.align = 'center'}
 seq_rad <- seq(-pi, pi, by = pi / 30)
 meridian <- do.call(rbind, lapply(seq_rad, function(i) c(0, i)))
 equator <- do.call(rbind, lapply(seq_rad, function(i) c(i, pi/2)))
@@ -111,7 +122,6 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
              type = "l", lty = 3)
 ```
 
-
 ### An example in variable selection
 
 We define 5 groups of 20 variables that are strongly positive correlated each of them. For example, consider 
@@ -122,17 +132,18 @@ where
 $$
 \boldsymbol{\Sigma}=\mathrm{diag}(\boldsymbol{\Sigma}_{1},\ldots,\boldsymbol{\Sigma}_{5})
 $$ 
-is block-wise diagonal. Take now $n=200$ observations and center and standardize the features. Then the features now live in $\mathbb{S}^{n-1}$. 
+is block-wise diagonal. Take now $n=200$ observations and center and standardize the features. Then the features now live in $\mathbb{S}^{n-1}$.
 
 Then, we consider 10 groups of 20 variables each of them with positive correlations. A covariance matrix of size `c(200, 200)` is created and filled in only those entries that belongs to the $i$-th group with the associated entry of the vector `rho` and powers of itself. Along with the mean vector defined as zeros, the parameters of the multivariate normal are already set up and some data are generated. These points have the peculiarity to lie onto the sphere, therefore, spherical data.
 
 In order to avoid observations that belongs to the same group together, we have shuffled these points so the data-set is disorganized.
 
-```{r}
+```{r cache = TRUE}
 # Visualize some features
-n <- 100
+n <- 200
 g <- 5
 p <- 20
+set.seed(42)
 x <- r_block(n = n, g = g, p = p)
 pairs(x[, c(1:2, p + 1:2, (2 * p) + 1:2)],
       labels = c("Var 1", "Var 2", paste("Var", p + 1), paste("Var", p + 2),
@@ -149,6 +160,7 @@ cols <- rep(1:g, each = p)
 # Set an array of dimension c(g * p, n, 1)
 dim(feat_data) <- c(dim(feat_data), 1)
 # Change the order of the data
+set.seed(42)
 indexes <- sample(1:(g * p))
 feat_data <- feat_data[indexes, , , drop = FALSE]
 cols <- cols[indexes]
@@ -156,33 +168,37 @@ cols <- cols[indexes]
 
 Let's calculate the rho based on a perplexity of 30
 
-```{r}
+```{r cache = TRUE}
 rho_list <- rho_optim_bst(x = feat_data, perp_fixed = 30,
                           num_cores = num_cores_param)
 ```
 
+#### Reduction to $d=1$
+
 Run `psc-sne` on the standardized features on $\mathbb{S}^{199}$ for 100 observations being the colors the groups of variables, first set $d = 1$:
 
-```{r}
+```{r cache = TRUE, size = "scriptsize", fig.align = 'center'}
 res_pscsne_21 <- psc_sne(X = feat_data, d = 1, rho_psc_list = rho_list,
-                      colors = cols, show_prog = TRUE,
-                      eta = 35, parallel_cores = num_cores_param)
+                         colors = cols, show_prog = TRUE,
+                         eta = 35, parallel_cores = num_cores_param)
 ```
 
 The best result related with the smallest value of the objective function is:
 
-```{r fig.asp=1, fig.align='center'}
+```{r fig.asp = 1, fig.align = 'center'}
 Y <- res_pscsne_21$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1),
-     ylim = c(-1, 1))
-
-polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
-        y = sin(seq(0, 2 * pi, length.out = 100)))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+th <- seq(0, 2 * pi, length.out = 100)
+polygon(x = cos(th), y = sin(th))
 ```
 
-The psc-sne algorithm identifies in the reduced dimension on the circumference the five groups that are in this case strongly positive correlated within each group's variables. Let's do the same for $d = 2$:
+The psc-sne algorithm identifies in the reduced dimension on the circumference the five groups that are in this case strongly positive correlated within each group's variables. 
 
-```{r cache=TRUE, fig.height=8, fig.width=8}
+#### Reduction to $d=2$
+
+Let's do the same for $d = 2$:
+
+```{r cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_22 <- psc_sne(feat_data, d = 2, rho_psc_list = rho_list,
                           colors = cols, show_prog = TRUE,
                           eta = 35, parallel_cores = num_cores_param)
@@ -190,7 +206,7 @@ psc_sne_res_22 <- psc_sne(feat_data, d = 2, rho_psc_list = rho_list,
 
 In case of the scores projected onto the sphere, results are good since the five groups are clearly separated along the sphere. Let's see the points in the interactive sphere using the package `rgl`.
 
-```{r fig.asp=1}
+```{r fig.asp = 1}
 Y <- psc_sne_res_22$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
@@ -205,12 +221,13 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
 
 Let's do the same but taking now negative and positive correlations for each group. For example, for the first group we are going to take a significant negative correlation, for the second a large correlation and so on.
 
-```{r}
+```{r cache = TRUE}
 # Visualize some features
 n <- 100
 g <- 5
 p <- 20
 rho_values_neg <- rep(c(-0.9, 0.9), times = g)[1:g]
+set.seed(42)
 x <- r_block(n = n, g = g, p = p, rho = rho_values_neg)
 pairs(x[, c(1:2, p + 1:2, (2 * p) + 1:2)],
       labels = c("Var 1", "Var 2", paste("Var", p + 1), paste("Var", p + 2),
@@ -227,48 +244,53 @@ cols <- rep(1:g, each = p)
 # Set an array of dimension c(g * p, n, 1)
 dim(feat_data_2) <- c(dim(feat_data_2), 1)
 # Change the order of the data
+set.seed(42)
 indexes <- sample(1:(g * p))
 feat_data_2 <- feat_data_2[indexes, , , drop = FALSE]
 cols <- cols[indexes]
 ```
 
-Let's calculate the rho based on a perplexity of 30
+Let's calculate the rho based on a perplexity of 30:
 
-```{r}
+```{r cache = TRUE}
 rho_list_2 <- rho_optim_bst(x = feat_data_2, perp_fixed = 30,
                             num_cores = num_cores_param)
 ```
 
-Run psc_sne() with colors being the groups of variables. First, reduced the data on the circumference.
+#### Reduction to $d=1$
 
-```{r}
+Run `psc_sne()` with colors being the groups of variables. First, reduced the data on the circumference.
+
+```{r cache = TRUE, size = "scriptsize", fig.align = 'center'}
 res_pscsne_21_neg <- psc_sne(X = feat_data_2, d = 1, rho_psc_list = rho_list_2,
-                      colors = cols, show_prog = TRUE, eta = 35,
-                      parallel_cores = num_cores_param)
+                             colors = cols, show_prog = TRUE, eta = 35,
+                             parallel_cores = num_cores_param)
 ```
 
 The best result related with the smallest value of the objective function is:
 
-```{r fig.asp=1, fig.align='center'}
+```{r fig.asp = 1, fig.align = 'center'}
 Y <- res_pscsne_21_neg$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1),
-     ylim = c(-1, 1))
-
-polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
-        y = sin(seq(0, 2 * pi, length.out = 100)))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+th <- seq(0, 2 * pi, length.out = 100)
+polygon(x = cos(th), y = sin(th))
 ```
 
-In this case, the negative correlation in some groups has an effect on the results produced by psc-sne. Each group with negative correlation is split in two where they look like being distributed more or less antipodal. Later on, reduced on the sphere $d = 2$.
+In this case, the negative correlation in some groups has an effect on the results produced by `psc_sne`. Each group with negative correlation is split in two where they look like being distributed more or less antipodal. 
 
-```{r cache=TRUE, fig.height=8, fig.width=8}
+#### Reduction to $d=2$
+
+Now, let's reduce the data onto the sphere $d = 2$.
+
+```{r cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_22_neg <- psc_sne(feat_data_2, d = 2, rho_psc_list = rho_list_2,
-                              colors = cols, show_prog = TRUE, eta = 35,
+                              colors = cols, show_prog = TRUE, eta = 20,
                               parallel_cores = num_cores_param)
 ```
 
 In case of the reduced dimension $d = 2$, we can confirm the results obtained in the circumference. Let's see these results on the sphere.
 
-```{r fig.asp=1}
+```{r fig.asp = 1}
 Y <- psc_sne_res_22_neg$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
@@ -292,18 +314,22 @@ r1 <- 5
 r2 <- 95
 p <- 1
 n <- 100
-kappa <- 1
+kappa <- 3
+set.seed(42)
 gen_data <- rbinom(n = n, size = n, prob = 0.5)
 x_vMF_5 <- sapply(seq_len(r1), function(k1) {
   data_vMF <- lapply(seq_len(n), function(i) {
     if (gen_data[i] <= n / 2) {
+      set.seed(42)
       rotasym::r_vMF(n = 1, mu = c(0, 1), kappa = kappa)
     } else {
+      set.seed(42)
       rotasym::r_vMF(n = 1, mu = c(0, -1), kappa = kappa)
     }
   })
   do.call(rbind, data_vMF)
 }, simplify = "array")
+set.seed(42)
 x_uniform_95 <- sphunif::r_unif_sph(n = n, p = p + 1, M = r2)
 x_s1_100 <- abind(x_vMF_5, x_uniform_95, along = 3)
 ```
@@ -315,9 +341,11 @@ rho_30_s1_100 <- rho_optim_bst(x = x_s1_100, perp_fixed = 30,
                                num_cores = num_cores_param)
 ```
 
+#### Reduction to $d=1$
+
 First, let's reduce the dimension to the circumference:
 
-```{r}
+```{r cache = TRUE, size = "scriptsize", fig.align = 'center'}
 cols <- ifelse(gen_data <= n / 2, 2, 3)
 psc_sne_res_31 <- psc_sne(X = x_s1_100, d = 1, rho_psc_list = rho_30_s1_100,
                           colors = cols, show_prog = TRUE, eta = 25,
@@ -326,18 +354,20 @@ psc_sne_res_31 <- psc_sne(X = x_s1_100, d = 1, rho_psc_list = rho_30_s1_100,
 
 The best result related with the smallest value of the objective function is:
 
-```{r fig.asp=1, fig.align='center'}
+```{r fig.asp = 1, fig.align = 'center'}
 Y <- psc_sne_res_31$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1),
-     ylim = c(-1, 1))
-
-polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
-        y = sin(seq(0, 2 * pi, length.out = 100)))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+th <- seq(0, 2 * pi, length.out = 100)
+polygon(x = cos(th), y = sin(th))
 ```
 
-We can see the two different antipodal groups defined in the first five circumferences so the psc-sne algorithm can detect these von Misses-Fisher distributions even with the noise added with the remainder 95 uniform distributions onto the circumference. Later on, let's reduce the dimension to the sphere:
+We can see the two different antipodal groups defined in the first five circumferences so the `psc_sne` algorithm can detect these von Misses-Fisher distributions even with the noise added with the remainder 95 uniform distributions onto the circumference.
 
-```{r cache=TRUE, fig.height=8, fig.width=8}
+#### Reduction to $d=2$
+
+Let's reduce the data onto the sphere:
+
+```{r cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_32 <- psc_sne(X = x_s1_100, d = 2, rho_psc_list = rho_30_s1_100,
                           colors = cols, show_prog = TRUE, eta = 25,
                           parallel_cores = num_cores_param)
@@ -345,7 +375,7 @@ psc_sne_res_32 <- psc_sne(X = x_s1_100, d = 2, rho_psc_list = rho_30_s1_100,
 
 In this case, results show two groups antipodal in the sphere. There are some not well identified points but this is something expected since there are 95 points distributed uniformly. Let's visualize the results on the sphere:
 
-```{r fig.asp=1}
+```{r fig.asp = 1}
 Y <- psc_sne_res_32$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
@@ -360,7 +390,7 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
 
 ### A path in \boldmath $(\mathbb{S}^1)^{100}$ \unboldmath indexed by time.
 
-For example, generated by 
+For example, generated by
 $$
 \theta_i(t)=(\alpha_i+2\pi k_i t) \mod 2\pi,\quad t\in[0,1], k_i\in\mathbb{Z}, \alpha_i\in[0,2\pi).
 $$
@@ -369,9 +399,11 @@ These are wrapped straight lines with different slopes and starting points.
 ```{r cache = TRUE}
 n <- 100
 r <- 100
+set.seed(42)
 x_s1_100_path <- r_path_s1r(n = n, r = r)
 cols <- rainbow(n, alpha = 1)
 # Change the order of the data
+set.seed(42)
 indexes <- sample(1:n)
 x_s1_100_path <- x_s1_100_path[indexes, , ]
 cols <- cols[indexes]
@@ -384,9 +416,11 @@ rho_30_s1_100_path <- rho_optim_bst(x = x_s1_100_path, perp_fixed = 30,
                                     num_cores = num_cores_param)
 ```
 
+#### Reduction to $d=1$
+
 First, let's reduce the dimension to the circumference:
 
-```{r}
+```{r cache = TRUE, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_41 <- psc_sne(X = x_s1_100_path, d = 1,
                           rho_psc_list = rho_30_s1_100_path, colors = cols,
                           show_prog = TRUE, eta = 25,
@@ -395,18 +429,20 @@ psc_sne_res_41 <- psc_sne(X = x_s1_100_path, d = 1,
 
 The best result related with the smallest value of the objective function is:
 
-```{r fig.asp=1, fig.align='center'}
+```{r fig.asp = 1, fig.align = 'center'}
 Y <- psc_sne_res_41$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1),
-     ylim = c(-1, 1))
-
-polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
-        y = sin(seq(0, 2 * pi, length.out = 100)))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+th <- seq(0, 2 * pi, length.out = 100)
+polygon(x = cos(th), y = sin(th))
 ```
 
-We can see that the points in the circumference are more or less well arranged. Nevertheless, it looks like this reduced dimension is not appropriate since results are not as satisfactory as other cases. Let's see if results onto the sphere are better:
+We can see that the points in the circumference are more or less well arranged. Nevertheless, it looks like this reduced dimension is not appropriate since results are not as satisfactory as other cases.
 
-```{r cache=TRUE, fig.height=8, fig.width=8}
+#### Reduction to $d=2$
+
+Let's see if results onto the sphere are better:
+
+```{r cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_42 <- psc_sne(X = x_s1_100_path, d = 2,
                           rho_psc_list = rho_30_s1_100_path, colors = cols,
                           show_prog = TRUE, eta = 25,
@@ -415,7 +451,7 @@ psc_sne_res_42 <- psc_sne(X = x_s1_100_path, d = 2,
 
 In this case, results are well sorted along the sphere since the gradient of the rainbow colors are well defined. Let's visualize the results in the interactive sphere:
 
-```{r fig.asp=1}
+```{r fig.asp = 1}
 Y <- psc_sne_res_42$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
@@ -427,6 +463,8 @@ sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
 sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
              type = "l", lty = 3)
 ```
+
+Again, we can see the 1d-structure related to the time-index generated in the path since the closed rainbow colors are also located nearby.
 
 ## \boldmath $(\mathbb{S}^2)^{100}$ \unboldmath
 
@@ -459,18 +497,23 @@ r4 <- 95
 # Calculate the north pole of the sphere
 north_pole <- cbind(c(0, 0, 1))
 # small circle in the equator (1 sample)
+set.seed(42)
 samp_1 <- r_path_s2r(n = n, r = r1, sigma = 0.08, Theta = north_pole)
 # small circle rotated 1 and 2 (2 samples)
+set.seed(42)
 samp_2_3 <- r_path_s2r(n = n, r = r2, sigma = 0.1)
 # spherical spiral 1 and 2 (2 samples)
+set.seed(42)
 samp_4_5 <- r_path_s2r(n = n, r = r3, c = 3, spiral = TRUE, sigma = 0.01)
 # Data following an uniform distribution on the sphere (95 samples)
+set.seed(42)
 samp_95 <- r_unif_sph(n = n, p = 3, M = r4)
 # Join the data by the third dimension
 x_s2_100 <- abind(samp_1, samp_2_3, samp_4_5, samp_95, along = 3)
 # Create rainbow colors, alpha is the level of opacity
 cols <- rainbow(n, alpha = 1)
 # Change the order of the data
+set.seed(42)
 indexes <- sample(1:n)
 x_s2_100 <- x_s2_100[indexes, , ]
 cols <- cols[indexes]
@@ -483,9 +526,11 @@ rho_30_s2_100 <- rho_optim_bst(x = x_s2_100, perp_fixed = 30,
                                num_cores = num_cores_param)
 ```
 
+#### Reduction to $d=1$
+
 First, let's reduce the dimension to the circumference:
 
-```{r}
+```{r cache = TRUE, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_51 <- psc_sne(X = x_s2_100, d = 1, rho_psc_list = rho_30_s2_100,
                           colors = cols, show_prog = TRUE, eta = 25,
                           parallel_cores = num_cores_param)
@@ -493,20 +538,20 @@ psc_sne_res_51 <- psc_sne(X = x_s2_100, d = 1, rho_psc_list = rho_30_s2_100,
 
 The best result related with the smallest value of the objective function is:
 
-```{r fig.asp=1, fig.align='center'}
+```{r fig.asp = 1, fig.align = 'center'}
 Y <- psc_sne_res_51$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1),
-     ylim = c(-1, 1))
-
-polygon(x = cos(seq(0, 2 * pi, length.out = 100)),
-        y = sin(seq(0, 2 * pi, length.out = 100)))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+th <- seq(0, 2 * pi, length.out = 100)
+polygon(x = cos(th), y = sin(th))
 ```
 
-Results show more or less the time-index structure of the first 5 spheres even with the noise of the remainder spheres. Nevertheless, it is not possible to distinguish any shape. 
+Results show more or less the time-index structure of the first 5 spheres even with the noise of the remainder spheres. Nevertheless, it is not possible to distinguish any shape.
+
+#### Reduction to $d=2$
 
 Afterwards, let's get the results on the sphere:
 
-```{r cache=TRUE, fig.height=8, fig.width=8}
+```{r cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_52 <- psc_sne(X = x_s2_100, d = 2, rho_psc_list = rho_30_s2_100,
                           colors = cols, show_prog = TRUE, eta = 25,
                           parallel_cores = num_cores_param)
@@ -514,7 +559,7 @@ psc_sne_res_52 <- psc_sne(X = x_s2_100, d = 2, rho_psc_list = rho_30_s2_100,
 
 Let's visualize the results on the sphere:
 
-```{r fig.asp=1}
+```{r fig.asp = 1}
 Y <- psc_sne_res_52$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
@@ -527,4 +572,29 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
              type = "l", lty = 3)
 ```
 
-In this case, the resultant data show again the insights obtained in the reduced dimension when $d=1$. It is not possible to see a clear shape, for example, a small circle or a spiral. That makes sense since it is not possible to distinguish any clear cluster since there are lot of noise and other distributions involved.
+In this case, the resultant data show again the insights obtained in the reduced dimension when $d=1$. It is not possible to see a clear shape, for example, a small circle or a spiral. The fact that there are lot of noise and other distributions involved, makes not possible to distinguish any clear cluster.
+
+Nevertheless, we are going to execute `psc_sne` with other parameters configuration to see if results are better. Instead of having the initialization of data points evenly spaced, now the initial values are randomly distributed:
+
+```{r cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
+set.seed(42)
+psc_sne_res_52 <- psc_sne(X = x_s2_100, d = 2, rho_psc_list = rho_30_s2_100,
+                          colors = cols, show_prog = TRUE, eta = 30,
+                          parallel_cores = num_cores_param, init = "random")
+```
+Onto the sphere:
+
+```{r fig.asp = 1}
+Y <- psc_sne_res_52$best_Y
+sd3 <- scatterplot3d::scatterplot3d(
+  Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
+  color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
+  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+)
+sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
+             type = "l", lty = 3)
+sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
+             type = "l", lty = 3)
+```
+
+There is not any advantage in using other initialization value. It is possible to see that points from the path that were generated next to each other are approximately close. Then, as it was saying, although there is not any clear shape we can differentiate the time-index of the path.
