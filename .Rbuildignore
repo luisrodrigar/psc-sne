@@ -3,3 +3,5 @@
 data-raw
 pkg-devtools.R
 log.txt
+^doc$
+^Meta$

@@ -31,14 +31,12 @@ vmf11 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 10)
 vmf12 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi)), kappa = 10)
 x1 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf11),
                               DirStats::to_rad(vmf12)))
-
 vmf21 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi / 2)),
                         kappa = 5)
 vmf22 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 5)
 x2 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf21), DirStats::to_rad(vmf22)))
 
 x <- rbind(x1, x2)
-
 # Cartesian coordinates
 n <- 400
 x_array <- array(dim = c(n, 2, 2))
@@ -115,7 +113,6 @@ x1 <- rbind(samp1, samp2, samp3)
 scatterplot3d::scatterplot3d(x1,
                              xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
                              color = rep(1:3, each = n), main = "Sphere 1")
-
 rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
              radius = 1, type = "s", col = "lightblue", alpha = 0.25,
              lit = FALSE)
@@ -137,7 +134,6 @@ rgl::plot3d(0, 0, 0, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
              radius = 1, type = "s", col = "lightblue", alpha = 0.25,
              lit = FALSE)
 rgl::points3d(x2, col = rep(c(1, 2, 3), each = n))
-
 
 x_2 <- array(dim = c(n * 3, 3, 2))
 x_2[, , 1] <- x1
@@ -179,7 +175,6 @@ res_pscsne <- psc_sne(X = x_2, d = 2, rho_psc_list = rho_second_perp20,
 Y <- res_pscsne$best_Y
 ```
 
-
 ```{r fig.asp=1, fig.align='center'}
 scatterplot3d::scatterplot3d(Y, xlim = c(-1, 1), ylim = c(-1, 1),
                              zlim = c(-1, 1), color = colors,
@@ -205,7 +200,6 @@ vmf13 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi / 2)),
 x1 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf11),
                               DirStats::to_rad(vmf12),
                               DirStats::to_rad(vmf13)))
-
 vmf21 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi / 2)),
                         kappa = 5)
 vmf22 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = 0)),
@@ -221,6 +215,7 @@ vmf32 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = 0)),
                         kappa = 30)
 vmf33 <- rotasym::r_vMF(n = n_ori, mu = drop(DirStats::to_cir(th = pi / 2)),
                         kappa = 30)
+
 x3 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf31), DirStats::to_rad(vmf32),
                               DirStats::to_rad(vmf33)))
 
