@@ -5,28 +5,36 @@
 \alias{jdf}
 \title{Juan de Fuca currents}
 \format{
-A data frame with TODO rows and TODO variables:
+A data frame with 638,400 observations (rows) and 5 variables
+(columns):
 \describe{
-  \item{TODO}{TODO}
-  \item{TODO}{TODO}
+  \item{lat}{latitude coordinate in decimal format.}
+  \item{lon}{longitude coordinate in decimal format.}
+  \item{time}{time in the following format yyyy-MM-dd hh:mm:ss.}
+  \item{theta}{angle in radians of the sea current vector.}
+  \item{speed}{module of the sea current vector.}
 }
 }
 \source{
-TODO
+\url{https://github.com/luisrodrigar/psc-sne/blob/main/data/jdf.rda}
 }
 \usage{
 jdf
 }
 \description{
-TODO
+Sea currents defined by their angle and speed produced
+in some geographic coordinates in Juan de Fuca strait area from
+2020-06-01 to 2022-07-01, last day excluded.
 }
 \details{
-TODO
+The data object is created with the code in
+\url{https://github.com/luisrodrigar/psc-sne/blob/main/data-raw/strait-juan-fuca/data-acquisition-juan-fuca.R}
 }
 \examples{
 # Load data
 data("jdf")
 
+# Plot vector field
 # TODO
 }
 \references{

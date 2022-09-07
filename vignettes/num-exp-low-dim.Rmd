@@ -27,6 +27,7 @@ library(abind)
 library(rgl)
 library(mvtnorm)
 num_cores_param <- 2
+stopifnot(packageVersion("pscsne") >= "0.0.1.900004")
 ```
 
 Numerical experiments are important to uncover hidden structures in the data to demonstrate that psc-sne does a good job on the task of dimension reduction. Then, this document contains information about the simulation of low-dimensional data and defines different cases in each point.

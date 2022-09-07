@@ -104,33 +104,51 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 #' when visualization is true. Optional parameter, defaults to \code{NULL}).
 #' @param show_prog defines the number of iterations skipped when reporting
 #' the progress. Defaults to \code{100}, i.e., only multiples of \code{100}
-#' are reported. \code{show_prog} also controls the frequency a plot is shown:
-#' after \code{2 * show_prog} iterations. If \code{FALSE}, no progress is
-#' shown at all.
+#' are reported. If \code{FALSE}, no progress is shown at all.
+#' @param show_plots show convergence plots? If \code{TRUE} (default),
+#' a plot is shown: after \code{2 * show_prog} iterations and at the end
+#' of the search.
 #' @param tol is the tolerance, when is below this value it is considered that
 #' a good solution has been obtained. Defaults to \code{1e-6}).
 #' @param parallel_cores number of cores to use concurrently for the
 #' calculation of the gradient. Defaults to \code{parallel::detectCores() - 1},
 #' that means that uses the total number of cores of the computer except one of
 #' them.
-#' @param init is a parameter to indicate how to proceed with the initialization
-#' of the resultant reduced dimension object. There are two possible ways:
-#' \code{equispaced} (evenly spaced points in the circumference/sphere) or
-#' \code{random} (random points generated uniformly). Defaults to
-#' \code{equispaced}.
-#' @return Resulting data reduced to \eqn{\mathcal{S}^d} after applying the
-#' algorithm for the total number of iterations selected.
+#' @param init how to initialize the scores: \code{"equispaced"} (evenly spaced
+#' points on the circumference/sphere), \code{"random"} (random points
+#' generated uniformly), \code{"most_promising"} (best configuration
+#' obtained in \code{N} differently-initialized searches run with
+#' \code{maxit / 100} iterations), or a matrix. Defaults to \code{"equispaced"}.
+#' @param N number of differently-initialized searches (see above). Defaults to
+#' \code{10}.
+#' @return A list with the following entries:
+#' \itemize{
+#'   \item \code{best_Y}: best configuration of scores found.
+#'   \item \code{last_Y}: last configuration of scores found.
+#'   \item \code{rho_psc_list}: vector or rho's.
+#'   \item \code{diagnostics}: data frame with the objective function values,
+#'   absolute/relative errors, gradient norms, and moment norms.
+#'   \item \code{convergence}: convergence flag.
+#' }
+#' @details
+#' When \code{init = "most_promising"}, \code{N - 1} initializations are random
+#' and one is an equispaced grid.
 #' @examples
-#' X <- sphunif::r_unif_sph(40, 3, 3)
-#' psc_sne(X, d = 1, parallel_cores = 2, maxit = 1e4)
-#' psc_sne(X, d = 2, parallel_cores = 2)
+#' X <- sphunif::r_unif_sph(n = 100, p = 3, M = 3)
+#' X[1:50, , 1] <- rotasym::r_vMF(n = 50, mu = c(0, 0, 1), kappa = 10)
+#' X[51:100, , 1] <- rotasym::r_vMF(n = 50, mu = c(0, 0, -1), kappa = 10)
+#' psc <- psc_sne(X = X, d = 1, parallel_cores = 2, eta = 50,
+#'                init = "most_promising")
+#' psc2 <- psc_sne(X = X, d = 1, parallel_cores = 2, eta = 50,
+#'                 init = psc$last_Y)
 #' @export
 psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
                     maxit = 1e3, initial_momentum = 0.5,
                     final_momentum = 0.8, eta = 200, early_exaggeration = 4.0,
-                    colors = NULL, show_prog = 100, tol = 1e-6,
-                    parallel_cores = parallel::detectCores() - 1,
-                    init = c("equispaced", "random")[1]) {
+                    colors = NULL, show_prog = 100, show_plots = TRUE,
+                    tol = 1e-6, parallel_cores = parallel::detectCores() - 1,
+                    init = c("equispaced", "random", "most_promising")[1],
+                    N = 10) {
 
   # Input checks
   if (d < 1) {
@@ -193,6 +211,12 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
   }
 
+  if (N < 1) {
+
+    stop("N has to be larger than 1")
+
+  }
+
   # Initializing the vectors for the objective value, errors and gradient norm
   obj_func_iter <- numeric(length = nrow(X))
   absolute_errors <- numeric(length = nrow(X))
@@ -218,7 +242,13 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   if (is.null(rho_psc_list)) {
 
     # Calculating the rho optimal values by means of the 'rho_optim_bst' method
-    res_opt <- rho_optim_bst(X, perplexity, parallel_cores)
+    if (show_prog) {
+
+      message("Computing rho_psc_list with rho_optim_bst()")
+
+    }
+    res_opt <- rho_optim_bst(x = X, perp_fixed = perplexity,
+                             num_cores = parallel_cores)
     P_cond <- res_opt$P
     rho_psc_list <- res_opt$rho_values
 
@@ -242,17 +272,82 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   P <- P * early_exaggeration
 
   # Matrices to store the two previous Y's
-  Y <- array(NA, c(n, d + 1, 2))
+  Y <- array(data = NA, dim = c(n, d + 1, 2))
 
-  if (init == "equispaced") {
+  # Initialization
+  if (is.character(init) && init == "equispaced") {
 
     # Generate points evenly spaced
     Y[, , 1] <- Y[, , 2] <- gen_opt_sphere(n, d)
 
-  } else {
+  } else if (is.character(init) && init == "random") {
 
     # Generate random points uniformly
     Y[, , 1] <- Y[, , 2] <- sphunif::r_unif_sph(n, d + 1)[, , 1]
+
+  } else if (is.character(init) && init == "most_promising") {
+
+    # Maximum iterations
+    maxit_start <- max(round(maxit / 10), 1)
+
+    # Run short psc_sne()'s
+    start <- list()
+    i_min <- 1
+    obj_min <- Inf
+    for (i in seq_len(N)) {
+
+      if (show_prog) {
+
+        message(sprintf("BEGIN start %d / %d", i, N))
+
+      }
+
+      # Fit and best objective explored
+      start[[i]] <- psc_sne(X = X, d = d, rho_psc_list = rho_psc_list,
+                            rho = rho, perplexity = perplexity,
+                            maxit = maxit_start,
+                            initial_momentum = initial_momentum,
+                            final_momentum = final_momentum, eta = eta,
+                            early_exaggeration = early_exaggeration,
+                            colors = colors, show_prog = FALSE,
+                            show_plots = FALSE, tol = tol,
+                            parallel_cores = parallel::detectCores() - 1,
+                            init = ifelse(i == 1, "equispaced", "random"))
+      obj_i <- tail(start[[i]]$diagnostics$obj, n = 1)
+
+      # Better solution?
+      if (obj_i < obj_min) {
+
+        obj_min <- obj_i
+        i_min <- i
+
+      }
+
+      if (show_prog) {
+
+        message(sprintf(paste("END start %d / %d (best: %d / %d).",
+                              "Obj: %.2e (best: %.2e)"), i, N, i_min, N,
+                        obj_i, obj_min))
+
+      }
+
+    }
+
+    # Best solution explored
+    Y[, , 1] <- Y[, , 2] <- start[[i_min]]$last_Y
+
+  } else if (is.matrix(init)) {
+
+    if (!(nrow(init) == n && ncol(init) == d + 1)) {
+
+      stop("Dimension of init is not c(n, d + 1).")
+
+    }
+    Y[, , 1] <- Y[, , 2] <- init
+
+  } else {
+
+    stop("init must be \"equispaced\", \"random\", \"most_promising\" or a matrix.")
 
   }
 
@@ -268,7 +363,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   # Initial momentum
   momentum <- initial_momentum
 
-  if (show_prog) {
+  if (show_prog && show_plots) {
 
       # Visualizing the plots in a 3 x 3 grid
       old_par <- par()
@@ -358,12 +453,13 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
     # Plot the current status if the first iteration, the last one or it is
     # twice the number of lines indicated with show_prog param
-    if (show_prog &&
+    if (show_prog && show_plots &&
         (i - 2 == 1 || ((i - 2) %% (show_prog * 2) == 0) || i - 2 == maxit)) {
 
       show_iter_sol(Y = Y[, , 2], i = i, d = d, colors = colors)
 
     }
+
     # Reverse the early exaggeration made at the beginning
     if (i - 2 == 100) {
 
@@ -386,7 +482,11 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
         ))
 
         # Show the last configuration
-        show_iter_sol(Y = Y[, , 2], i = i, d = d, colors = colors)
+        if (show_plots) {
+
+          show_iter_sol(Y = Y[, , 2], i = i, d = d, colors = colors)
+
+        }
         convergence <- TRUE
         break
 
@@ -405,6 +505,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 
   # Return configurations and diagnostics
   return(list("best_Y" = best_Y_i, "last_Y" = Y[, , 2],
+              "rho_psc_list" = rho_psc_list,
               "diagnostics" = data.frame("obj" = obj_func_iter,
                                          "abs" = absolute_errors,
                                          "rel" = relative_errors,
