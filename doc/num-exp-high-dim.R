@@ -15,7 +15,7 @@ library(sphunif)
 library(abind)
 library(rgl)
 library(mvtnorm)
-num_cores_param <- 7
+num_cores_param <- 2
 stopifnot(packageVersion("pscsne") <= "0.0.1.900004")
 
 ## ----cache = TRUE-------------------------------------------------------------
@@ -70,12 +70,12 @@ res_pscsne_12 <- psc_sne(X = sc_unif_mix_data, d = 2, rho_psc_list = rho_30_1,
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 seq_rad <- seq(-pi, pi, by = pi / 30)
 meridian <- do.call(rbind, lapply(seq_rad, function(i) c(0, i)))
-equator <- do.call(rbind, lapply(seq_rad, function(i) c(i, pi/2)))
+equator <- do.call(rbind, lapply(seq_rad, function(i) c(i, pi / 2)))
 Y <- res_pscsne_12$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = sc_unif_mix_colors, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -134,7 +134,7 @@ Y <- psc_sne_res_22$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -194,7 +194,7 @@ Y <- psc_sne_res_22_neg$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -251,7 +251,7 @@ Y <- psc_sne_res_32$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -297,7 +297,7 @@ Y <- psc_sne_res_42$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -359,7 +359,7 @@ Y <- psc_sne_res_52$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -377,7 +377,7 @@ Y <- psc_sne_res_52$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c('+', '-')[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)

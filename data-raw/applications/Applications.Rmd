@@ -35,7 +35,6 @@ vmf21 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = pi / 2)),
                         kappa = 5)
 vmf22 <- rotasym::r_vMF(n = n, mu = drop(DirStats::to_cir(th = 0)), kappa = 5)
 x2 <- sdetorus::toPiInt(cbind(DirStats::to_rad(vmf21), DirStats::to_rad(vmf22)))
-
 x <- rbind(x1, x2)
 # Cartesian coordinates
 n <- 400
@@ -48,7 +47,8 @@ x_array <- x_array[indexes, , ]
 colors <- rep(c(1, 2), each = n / 2)[indexes]
 
 plot(x, xlim = c(-pi, pi), ylim = c(-pi, pi), axes = FALSE,
-     col = rep(c(1, 2), each = n / 2), pch = 16, xlab = "x", ylab = "y")
+     col = rep(c(1, 2), each = n / 2), pch = 16,
+     xlab = "x", ylab = "y")
 sdetorus::torusAxis()
 
 ```
@@ -268,7 +268,6 @@ Now we are going to reduce to dimension $\mathbb{S}^2$ then $d=2$ (sphere):
 ```{r cache=TRUE, fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_3, d = 2, rho_psc_list = rho_third_perp25,
                       eta = 20, colors = colors, show_prog = TRUE)
-
 Y <- res_pscsne$best_Y
 ```
 
@@ -440,7 +439,6 @@ First, let's reduce to dimension $\mathbb{S}^1$ then $d=1$ (circumference):
 ```{r fig.height=10, fig.width=10}
 res_pscsne <- psc_sne(X = x_5, d = 1, rho_psc_list = rho_five_perp20,
                       eta = 20, show_prog = TRUE, colors = colors)
-
 Y <- res_pscsne$best_Y
 ```
 

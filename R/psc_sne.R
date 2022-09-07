@@ -285,7 +285,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   for (i in range_iterations) {
 
     # Applying final momentum
-    if (i >= 250) {
+    if (i - 2 >= 250) {
 
       momentum <- final_momentum
 
