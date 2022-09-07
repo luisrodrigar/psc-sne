@@ -32,9 +32,9 @@ test(pkg = ".")
 run_examples(".", run_dontrun = TRUE, run_donttest = TRUE, fresh = TRUE)
 
 # Check
-check(pkg = ".", cran = TRUE)
-check(pkg = ".", cran = TRUE, args = c("--no-tests")) # No tests
-# check(pkg = pkg, args = "--no-examples", vignettes = FALSE) # No examples nor vignettes
+# check(pkg = ".", cran = TRUE)
+# check(pkg = ".", cran = TRUE, args = c("--no-tests")) # No tests
+check(pkg = ".", args = "--no-examples", vignettes = FALSE) # No examples nor vignettes
 # check(pkg = pkg, document = FALSE) # Examples and vignettes
 # check(pkg = pkg, document = FALSE, args = "--run-donttest") # Extended examples
 

@@ -7,8 +7,9 @@
 psc_sne(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   maxit = 1000, initial_momentum = 0.5, final_momentum = 0.8,
   eta = 200, early_exaggeration = 4, colors = NULL, show_prog = 100,
-  tol = 1e-06, parallel_cores = parallel::detectCores() - 1,
-  init = c("equispaced", "random")[1])
+  show_plots = TRUE, tol = 1e-06,
+  parallel_cores = parallel::detectCores() - 1, init = c("equispaced",
+  "random", "most_promising")[1], N = 10)
 }
 \arguments{
 \item{X}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
@@ -54,9 +55,11 @@ when visualization is true. Optional parameter, defaults to \code{NULL}).}
 
 \item{show_prog}{defines the number of iterations skipped when reporting
 the progress. Defaults to \code{100}, i.e., only multiples of \code{100}
-are reported. \code{show_prog} also controls the frequency a plot is shown:
-after \code{2 * show_prog} iterations. If \code{FALSE}, no progress is
-shown at all.}
+are reported. If \code{FALSE}, no progress is shown at all.}
+
+\item{show_plots}{show convergence plots? If \code{TRUE} (default),
+a plot is shown: after \code{2 * show_prog} iterations and at the end
+of the search.}
 
 \item{tol}{is the tolerance, when is below this value it is considered that
 a good solution has been obtained. Defaults to \code{1e-6}).}
@@ -66,22 +69,40 @@ calculation of the gradient. Defaults to \code{parallel::detectCores() - 1},
 that means that uses the total number of cores of the computer except one of
 them.}
 
-\item{init}{is a parameter to indicate how to proceed with the initialization
-of the resultant reduced dimension object. There are two possible ways:
-\code{equispaced} (evenly spaced points in the circumference/sphere) or
-\code{random} (random points generated uniformly). Defaults to
-\code{equispaced}.}
+\item{init}{how to initialize the scores: \code{"equispaced"} (evenly spaced
+points on the circumference/sphere), \code{"random"} (random points
+generated uniformly), \code{"most_promising"} (best configuration
+obtained in \code{N} differently-initialized searches run with
+\code{maxit / 100} iterations), or a matrix. Defaults to \code{"equispaced"}.}
+
+\item{N}{number of differently-initialized searches (see above). Defaults to
+\code{10}.}
 }
 \value{
-Resulting data reduced to \eqn{\mathcal{S}^d} after applying the
-algorithm for the total number of iterations selected.
+A list with the following entries:
+\itemize{
+  \item \code{best_Y}: best configuration of scores found.
+  \item \code{last_Y}: last configuration of scores found.
+  \item \code{rho_psc_list}: vector or rho's.
+  \item \code{diagnostics}: data frame with the objective function values,
+  absolute/relative errors, gradient norms, and moment norms.
+  \item \code{convergence}: convergence flag.
+}
 }
 \description{
 Calculates the polyspherical-Cauchy SNE given a data onto the
 polysphere and the reduced dimension.
 }
+\details{
+When \code{init = "most_promising"}, \code{N - 1} initializations are random
+and one is an equispaced grid.
+}
 \examples{
-X <- sphunif::r_unif_sph(40, 3, 3)
-psc_sne(X, d = 1, parallel_cores = 2, maxit = 1e4)
-psc_sne(X, d = 2, parallel_cores = 2)
+X <- sphunif::r_unif_sph(n = 100, p = 3, M = 3)
+X[1:50, , 1] <- rotasym::r_vMF(n = 50, mu = c(0, 0, 1), kappa = 10)
+X[51:100, , 1] <- rotasym::r_vMF(n = 50, mu = c(0, 0, -1), kappa = 10)
+psc <- psc_sne(X = X, d = 1, parallel_cores = 2, eta = 50,
+               init = "most_promising")
+psc2 <- psc_sne(X = X, d = 1, parallel_cores = 2, eta = 50,
+                init = psc$last_Y)
 }
