@@ -34,7 +34,7 @@ library(ggquiver)
 library(ggmap)
 library(movMF)
 library(formatR)
-stopifnot(packageVersion("pscsne") <= "0.0.1.900004")
+stopifnot(packageVersion("pscsne") >= "0.0.1.900004")
 knitr::opts_chunk$set(echo = TRUE)
 rgl::setupKnitr()
 ```
