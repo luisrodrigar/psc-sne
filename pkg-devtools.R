@@ -57,7 +57,7 @@ path <- find.package(pkg)
 file.remove(paste0(pkg, ".pdf"))
 system(paste(shQuote(file.path(R.home("bin"), "R")),
              "CMD", "Rd2pdf", shQuote(path)))
-build_manual(pkg)
+# build_manual(path = ".")
 
 # Build
 build(".", vignettes = FALSE)
@@ -95,3 +95,10 @@ compare_to_cran(chk)
 
 # Fingers crossed
 release(pkg)
+
+
+
+png(filename = "file.png", width = 7, height = 7, units = "in", res = 300)
+plot(1:5)
+dev.off()
+
