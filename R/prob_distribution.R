@@ -100,7 +100,7 @@ d_i_psph_cauchy <- function(x, i, rho_list) {
 #'
 #' @inheritParams high_dimension
 #' @return Marginal polyspherical Cauchy probabilities vector given the
-#' \eqn{\boldsymbold{\rho}} parameters.
+#' \eqn{\boldsymbol{\rho}} parameters.
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(20, 3, 4)
