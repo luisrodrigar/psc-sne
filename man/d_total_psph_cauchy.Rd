@@ -17,7 +17,7 @@ that stands for the concentration parameter.}
 }
 \value{
 Marginal polyspherical Cauchy probabilities vector given the
-\eqn{\boldsymbold{\rho}} parameters.
+\eqn{\boldsymbol{\rho}} parameters.
 }
 \description{
 Calculate the marginal high-dimension polyspherical Cauchy
