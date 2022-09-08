@@ -83,7 +83,7 @@ The next thing is to run the `psc-sne` algorithm with the parameter $d = 1$:
 ```{r cache = TRUE, size = "scriptsize", fig.align = 'center'}
 res_pscsne_11 <- psc_sne(X = sc_unif_mix_data, d = 1, rho_psc_list = rho_30_1,
                          show_prog = TRUE, colors = sc_unif_mix_colors,
-                         parallel_cores = num_cores_param)
+                         eta = 100, parallel_cores = num_cores_param)
 ```
 
 The best result related with the smallest value of the objective function is:
@@ -91,7 +91,7 @@ The best result related with the smallest value of the objective function is:
 ```{r fig.asp = 1, fig.align = 'center'}
 Y <- res_pscsne_11$best_Y
 plot(Y[, 1], Y[, 2], col = sc_unif_mix_colors, xlim = c(-1, 1),
-     ylim = c(-1, 1))
+     ylim = c(-1, 1), axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 ```
@@ -103,7 +103,7 @@ After that, let's execute psc-sne with the parameter $d = 2$:
 ```{r cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 res_pscsne_12 <- psc_sne(X = sc_unif_mix_data, d = 2, rho_psc_list = rho_30_1,
                          show_prog = TRUE, colors = sc_unif_mix_colors,
-                         parallel_cores = num_cores_param, eta = 100)
+                         eta = 100, parallel_cores = num_cores_param)
 ```
 
 ```{r fig.asp = 1, fig.align = 'center'}
@@ -114,7 +114,8 @@ Y <- res_pscsne_12$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = sc_unif_mix_colors, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -136,12 +137,12 @@ is block-wise diagonal. Take now $n=200$ observations and center and standardize
 
 Then, we consider 10 groups of 20 variables each of them with positive correlations. A covariance matrix of size `c(200, 200)` is created and filled in only those entries that belongs to the $i$-th group with the associated entry of the vector `rho` and powers of itself. Along with the mean vector defined as zeros, the parameters of the multivariate normal are already set up and some data are generated. These points have the peculiarity to lie onto the sphere, therefore, spherical data.
 
-In order to avoid observations that belongs to the same group together, we have shuffled these points so the data-set is disorganized.
+In order to avoid observations that belongs to the same group next to each other, we have shuffled these points so the data-set is disorganized.
 
 ```{r cache = TRUE}
 # Visualize some features
-n <- 200
-g <- 5
+n <- 100
+g <- 10
 p <- 20
 set.seed(42)
 x <- r_block(n = n, g = g, p = p)
@@ -187,7 +188,8 @@ The best result related with the smallest value of the objective function is:
 
 ```{r fig.asp = 1, fig.align = 'center'}
 Y <- res_pscsne_21$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 ```
@@ -211,7 +213,8 @@ Y <- psc_sne_res_22$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -224,7 +227,7 @@ Let's do the same but taking now negative and positive correlations for each gro
 ```{r cache = TRUE}
 # Visualize some features
 n <- 100
-g <- 5
+g <- 10
 p <- 20
 rho_values_neg <- rep(c(-0.9, 0.9), times = g)[1:g]
 set.seed(42)
@@ -232,6 +235,8 @@ x <- r_block(n = n, g = g, p = p, rho = rho_values_neg)
 pairs(x[, c(1:2, p + 1:2, (2 * p) + 1:2)],
       labels = c("Var 1", "Var 2", paste("Var", p + 1), paste("Var", p + 2),
                  paste("Var", (2 * p) + 1), paste("Var", (2 * p) + 2)))
+pairs(x[, c(1:2, p + 1:2)],
+      labels = c("Var 1", "Var 2", paste("Var", p + 1), paste("Var", p + 2)))
 # Standardize variables -- now the vectors of observations for each variable
 # (the columns) live on \sqrt{n - 1} * S^{n - 1}!
 x_sca <- scale(x)
@@ -271,7 +276,8 @@ The best result related with the smallest value of the objective function is:
 
 ```{r fig.asp = 1, fig.align = 'center'}
 Y <- res_pscsne_21_neg$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 ```
@@ -295,7 +301,8 @@ Y <- psc_sne_res_22_neg$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -305,7 +312,7 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
 
 ## \boldmath $(\mathbb{S}^{1})^{100}$ \unboldmath
 
-### Generating samples that are uniform and independent in all 's except in the first five, where two groups are defined by two antipodal vMF distributions at north/south
+### Generating samples that are uniform and independent in all \mathbb{S}^1's except in the first five, where two groups are defined by two antipodal vMF distributions at north/south
 
 A medium concentration (not massive, so that one has to rely on the combined information of the first ones).
 
@@ -313,17 +320,15 @@ A medium concentration (not massive, so that one has to rely on the combined inf
 r1 <- 5
 r2 <- 95
 p <- 1
-n <- 100
+n <- 200
 kappa <- 3
 set.seed(42)
 gen_data <- rbinom(n = n, size = n, prob = 0.5)
 x_vMF_5 <- sapply(seq_len(r1), function(k1) {
   data_vMF <- lapply(seq_len(n), function(i) {
     if (gen_data[i] <= n / 2) {
-      set.seed(42)
       rotasym::r_vMF(n = 1, mu = c(0, 1), kappa = kappa)
     } else {
-      set.seed(42)
       rotasym::r_vMF(n = 1, mu = c(0, -1), kappa = kappa)
     }
   })
@@ -348,7 +353,7 @@ First, let's reduce the dimension to the circumference:
 ```{r cache = TRUE, size = "scriptsize", fig.align = 'center'}
 cols <- ifelse(gen_data <= n / 2, 2, 3)
 psc_sne_res_31 <- psc_sne(X = x_s1_100, d = 1, rho_psc_list = rho_30_s1_100,
-                          colors = cols, show_prog = TRUE, eta = 25,
+                          colors = cols, show_prog = TRUE, eta = 110,
                           parallel_cores = num_cores_param)
 ```
 
@@ -356,7 +361,8 @@ The best result related with the smallest value of the objective function is:
 
 ```{r fig.asp = 1, fig.align = 'center'}
 Y <- psc_sne_res_31$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 ```
@@ -369,7 +375,7 @@ Let's reduce the data onto the sphere:
 
 ```{r cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_32 <- psc_sne(X = x_s1_100, d = 2, rho_psc_list = rho_30_s1_100,
-                          colors = cols, show_prog = TRUE, eta = 25,
+                          colors = cols, show_prog = TRUE, eta = 50,
                           parallel_cores = num_cores_param)
 ```
 
@@ -380,7 +386,8 @@ Y <- psc_sne_res_32$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -397,7 +404,7 @@ $$
 These are wrapped straight lines with different slopes and starting points.
 
 ```{r cache = TRUE}
-n <- 100
+n <- 200
 r <- 100
 set.seed(42)
 x_s1_100_path <- r_path_s1r(n = n, r = r)
@@ -431,7 +438,8 @@ The best result related with the smallest value of the objective function is:
 
 ```{r fig.asp = 1, fig.align = 'center'}
 Y <- psc_sne_res_41$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 ```
@@ -456,7 +464,8 @@ Y <- psc_sne_res_42$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -484,12 +493,12 @@ x_4(t)=\text{spherical-spiral-1},
 $$ 
 $$
 x_5(t)=\text{spherical-spiral-2}.
-$$ 
+$$
 
-Basically, in this scenario we are generating 95 spheres, $\mathbb{S}^2$, that follows all of them a uniform distribution. The remainder spheres are a small circle distribution located in the equator, two small circles rotated randomly and two rotated spiral distribution.
+Therefore, 95 spheres that follow a uniform distribution are generated in $\mathbb{S}^2$. The remaining spheres are formed by data that follow a small circle distribution located in the equator, two small circle distributions rotated randomly and two rotated spherical spiral distributions.
 
 ```{r cache = TRUE}
-n <- 100
+n <- 200
 r1 <- 1
 r2 <- 2
 r3 <- 2
@@ -540,7 +549,8 @@ The best result related with the smallest value of the objective function is:
 
 ```{r fig.asp = 1, fig.align = 'center'}
 Y <- psc_sne_res_51$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 ```
@@ -553,8 +563,8 @@ Afterwards, let's get the results on the sphere:
 
 ```{r cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_52 <- psc_sne(X = x_s2_100, d = 2, rho_psc_list = rho_30_s2_100,
-                          colors = cols, show_prog = TRUE, eta = 25,
-                          parallel_cores = num_cores_param)
+                          colors = cols, show_prog = TRUE, eta = 5,
+                          parallel_cores = num_cores_param, maxit = 2000)
 ```
 
 Let's visualize the results on the sphere:
@@ -564,7 +574,8 @@ Y <- psc_sne_res_52$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -589,7 +600,8 @@ Y <- psc_sne_res_52$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
