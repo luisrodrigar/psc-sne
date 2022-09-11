@@ -24,3 +24,4 @@ currently min and max rho
 Calculate the rho value based on a perplexity difference
 and current values of rho, rho min and rho max.
 }
+\keyword{internal}

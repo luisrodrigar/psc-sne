@@ -28,15 +28,15 @@ contains the rho values, within this function the
 The last scenario that is when this object is set to \code{NULL}, i.e., the
 \code{\link{rho_optim_bst}} function is called to get the rho values
 (given a fixed perplexity) and the probabilities matrix. Optional parameter,
-defaults to \code{NULL}).}
+defaults to \code{NULL}.}
 
 \item{rho}{parameter of the low-dimensional spherical Cauchy
-probabilities. Optional, defaults to \code{0.5}).}
+probabilities. Optional, defaults to \code{0.5}.}
 
 \item{perplexity}{parameter that measures the number of neighbors to
-use when mapping between high- and low-dimension. Defaults to \code{30}).}
+use when mapping between high- and low-dimension. Defaults to \code{30}.}
 
-\item{maxit}{maximum number of iterations. Defaults to \code{1e3}).}
+\item{maxit}{maximum number of iterations. Defaults to \code{1e3}.}
 
 \item{initial_momentum}{first value of the momentum of the first \code{250}
 iterations. Defaults to \code{0.5}.}
@@ -48,10 +48,10 @@ iteration. Defaults to \code{0.8}.}
 param, defaults to \code{200}.}
 
 \item{early_exaggeration}{the first \code{100} iterations results are
-exaggerated by this factor. Optional parameter, defaults to \code{4.0}).}
+exaggerated by this factor. Optional parameter, defaults to \code{4.0}.}
 
 \item{colors}{list with as many elements as observations are, only valid
-when visualization is true. Optional parameter, defaults to \code{NULL}).}
+when visualization is true. Optional parameter, defaults to \code{NULL}.}
 
 \item{show_prog}{defines the number of iterations skipped when reporting
 the progress. Defaults to \code{100}, i.e., only multiples of \code{100}
@@ -62,7 +62,7 @@ a plot is shown: after \code{2 * show_prog} iterations and at the end
 of the search.}
 
 \item{tol}{is the tolerance, when is below this value it is considered that
-a good solution has been obtained. Defaults to \code{1e-6}).}
+a good solution has been obtained. Defaults to \code{1e-6}.}
 
 \item{parallel_cores}{number of cores to use concurrently for the
 calculation of the gradient. Defaults to \code{parallel::detectCores() - 1},
@@ -90,8 +90,8 @@ A list with the following entries:
 }
 }
 \description{
-Calculates the polyspherical-Cauchy SNE given a data onto the
-polysphere and the reduced dimension.
+Computes polyspherical Cauchy SNE given a data onto the
+polysphere and a dimension to reduce to.
 }
 \details{
 When \code{init = "most_promising"}, \code{N - 1} initializations are random

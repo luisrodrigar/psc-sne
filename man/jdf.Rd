@@ -32,12 +32,39 @@ The data object is created with the code in
 }
 \examples{
 # Load data
-data("jdf")
-
+data(jdf)
 # Plot vector field
-# TODO
+time_instant <- as.POSIXct("2021-06-30 03:00:00", tz = "UTC")
+jdf_lat_lon <- jdf \%>\%
+    dplyr::filter(time == time_instant) \%>\%
+    unite(col = "coordinates", lat, lon, sep = ",", remove = FALSE)
+jdf_by_time_latlon <- array(NA, dim = c(length(unique(jdf_lat_lon$lon)),
+                                        length(unique(jdf_lat_lon$lat))))
+lat_values <- rev(sort(unique(jdf_lat_lon$lat)))
+lon_values <- sort(jdf_lat_lon$lon)
+
+n <- nrow(jdf_lat_lon)
+for (i in seq_len(n)) {
+    index_lat <- which(round(lat_values, digits = 5) ==
+                       round(jdf_lat_lon[i, ]$lat, digits = 5))
+    index_lon <- which(round(lon_values, digits = 4) ==
+                       round(jdf_lat_lon[i, ]$lon, digits = 4))
+    jdf_by_time_latlon[index_lon, index_lat] <- val$theta
 }
-\references{
-TODO
+# Plot vector field
+loc <- "Juan de Fuca"
+speed <- jdf_lat_lon$speed
+tim_i <- format(time_instant, "\%Y-\%m-\%d \%H:\%M")
+OceanView::quiver2D(cos(jdf_by_time_latlon), sin(jdf_by_time_latlon),
+                   x = lon_values,
+                   y = lat_values,
+                   colvar = speed, clim = c(0, 1),
+                   xlim = c(min(lon_values - 0.015),
+                            max(lon_values + 0.015)),
+                   ylim = c(min(lat_values - 0.015),
+                            max(lat_values + 0.015)),
+                   main = paste(loc, tim_i), colkey = FALSE,
+                   xlab = "Latitude", ylab = "Longitude")
+points(expand.grid(lon_values, lat_values), pch = 16, cex = 0.5)
 }
 \keyword{datasets}

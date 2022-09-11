@@ -21,9 +21,10 @@ A matrix of size \code{c(n, g * p)} with the sample.
 }
 \description{
 Sample a zero-mean multivariate normal
-\eqn{N_{gp}(0, \Sigma)} with a diagonal block matrix \eqn{\Sigma}
-partitioned into \eqn{g} blocks with \eqn{p} variables. Each block is
-constructed as a \code{\link[=stats]{toeplitz}} correlation matrix.
+\eqn{N_{gp}(\mathbf{0}, \boldsymbol{\Sigma})} with a diagonal block matrix
+\eqn{\boldsymbol{\Sigma}} partitioned into \eqn{g} blocks with \eqn{p}
+variables. Each block is constructed as a \code{\link[=stats]{toeplitz}}
+correlation matrix.
 }
 \examples{
 # Visualize some features

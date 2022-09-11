@@ -2,11 +2,11 @@
 
 #' @title Samplers of one-dimensional modes of variation for polyspherical data
 #'
-#' @description Functions for sampling data on \eqn{(S^d)^r} for \eqn{d=1,2}
+#' @description Functions for sampling data on \eqn{(\mathcal{S}^d)^r} for \eqn{d=1,2}
 #' using one-dimensional modes of variation.
 #'
 #' @param n sample size.
-#' @param r number of spheres in the polysphere \eqn{(S^d)^r}.
+#' @param r number of spheres in the polysphere \eqn{(\mathcal{S}^d)^r}.
 #' @param alpha a vector of size \code{r} valued in \eqn{[-\pi,\pi)} with the
 #' initial angles for the linear trend. Chosen at random by default.
 #' @param k a vector of size \code{r} with the \bold{integer} slopes defining
@@ -19,12 +19,13 @@
 #' @param t latitude, with respect to \code{Theta}, of the small circle.
 #' Defaults to \code{0} (equator).
 #' @param Theta a matrix of size \code{c(3, r)} giving the north poles for
-#' \eqn{S^2}. Useful for rotating the sample. Chosen at random by default.
+#' \eqn{\mathcal{S}^2}. Useful for rotating the sample. Chosen at random by
+#' default.
 #' @param spiral consider a spiral (or, more precisely, a
 #' \href{https://en.wikipedia.org/wiki/Clélie}{Clélie curve}) instead of
 #' a small circle? Defaults to \code{FALSE}.
 #' @return
-#' An array of size \code{c(n, d, r)} with samples on \eqn{(S^d)^r}. If
+#' An array of size \code{c(n, d, r)} with samples on \eqn{(\mathcal{S}^d)^r}. If
 #' \code{angles = TRUE} for \code{r_path_s1r}, then a matrix of size
 #' \code{c(n ,r)} with angles is returned.
 #' @examples
@@ -171,9 +172,10 @@ r_path_s2r <- function(n, r, t = 0, c = 1,
 #' @title Sample correlation matrices with block structure
 #'
 #' @description Sample a zero-mean multivariate normal
-#' \eqn{N_{gp}(0, \Sigma)} with a diagonal block matrix \eqn{\Sigma}
-#' partitioned into \eqn{g} blocks with \eqn{p} variables. Each block is
-#' constructed as a \code{\link[=stats]{toeplitz}} correlation matrix.
+#' \eqn{N_{gp}(\mathbf{0}, \boldsymbol{\Sigma})} with a diagonal block matrix
+#' \eqn{\boldsymbol{\Sigma}} partitioned into \eqn{g} blocks with \eqn{p}
+#' variables. Each block is constructed as a \code{\link[=stats]{toeplitz}}
+#' correlation matrix.
 #'
 #' @inheritParams samplers_one
 #' @param g number of groups of variables that are uncorrelated between them.

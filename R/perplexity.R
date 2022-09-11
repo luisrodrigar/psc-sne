@@ -56,6 +56,7 @@ to_perplexity_P <- function(x, i, rho) {
 #' x <- sphunif::r_unif_sph(25, 3, 3)
 #' i <- 1
 #' to_perp_i(x, i, 0.25)
+#' @keywords internal
 to_perp_i <- function(x, i, rho, cos_sim_psh = NULL) {
   # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
   if (is.null(cos_sim_psh)) {
@@ -107,10 +108,6 @@ to_perp <- function(x, rho_list, cos_sim_psh = NULL) {
 }
 
 
-# microbenchmark::microbenchmark(
-#   to_perplexity_P(x, 1, 0.5),
-#   to_perp(x, rep(.5, nrow(x)), cosine_polysph(x))
-# )
 #
 # Unit: milliseconds
 # expr      min       lq      mean    median        uq      max neval
@@ -120,207 +117,6 @@ to_perp <- function(x, rho_list, cos_sim_psh = NULL) {
 #####################################################
 ##  Optimize rho list based on a fixed perplexity  ##
 #####################################################
-
-### scalar calculus
-
-# Time difference of 10.21872 mins
-
-#' @title Serial optimization \eqn{\rho} concentration parameters
-#' (scalar version)
-#'
-#' @description Calculate the rho list values based on a fixed perplexity and
-#' a given data in \eqn{(\mathcal{S}^p)^r}.
-#' Optimize the value using a method L-BFGS-B, setting the boundaries from 0
-#' to 0.9999.
-#' Each value is calculated serially. It prints the time consumption.
-#'
-#' @inheritParams high_dimension
-#' @param perplexity a fixed value (between 5 and 100) to optimize the rho
-#' parameters.
-#' @return Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized for
-#' the given perplexity.
-rho_optim_serial <- function(x, perplexity) {
-  # Sample size
-  n <- nrow(x)
-  # Time start
-  start_time <- Sys.time()
-  # For each observation, calculate the optimal value based on the fixed
-  # perplexity
-  rho_opt <- sapply(1:n, function(i) {
-    stats::optim(
-      par = 0.5,
-      fn = function(rho) {
-        # Objective function: (perplexity-fixed_perplexity)^2
-        res <- (to_perplexity_P(x, i, rho)$perp - perplexity)^2
-        ifelse(is.finite(res), res, 1e6)
-      },
-      method = "L-BFGS-B", lower = 0, upper = 1 - 1e-4
-    )$par
-  })
-  # Time end
-  end_time <- Sys.time()
-  # Print time difference
-  print(end_time - start_time)
-  # Simplifying the result
-  rho_opt <- simplify2array(rho_opt)
-  return(rho_opt)
-}
-
-# Time difference of 18.12201 mins
-
-#' @title Concurrent optimization of the \eqn{\rho} concentration parameters
-#' (scalar version)
-#'
-#' @description Calculate the rho list values based on a fixed perplexity and
-#' a given data in \eqn{(\mathcal{S}^p)^r}. Optimize the value using the
-#' method L-BFGS-B, setting the boundaries within [0, 1).
-#' The limit is considered as \code{1 - 1e-4}. Each value is calculated
-#' concurrently. At the end, the time consumption is shown.
-#'
-#' @inheritParams high_dimension
-#' @inheritParams rho_optim_serial
-#' @param num_cores number of cores to execute the code concurrently. This
-#' value must be below the total number of the CPU has available.
-#' @return Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized for
-#' the given perplexity.
-#' @export
-#' @examples
-#' x <- sphunif::r_unif_sph(20, 3, 4)
-#' rho_optim_par(x, 22, 2)
-#' rho_optim_par(x, 30, 2)
-rho_optim_par <- function(x, perplexity,
-                          num_cores = parallel::detectCores() - 1) {
-  # Sample size
-  n <- nrow(x)
-  # Setting up the characteristics of the parallelization
-  cl <- clusterFactory(num_cores)
-  # Time start
-  start_time <- Sys.time()
-  # For each observation, calculate concurrently the optimal value
-  # based on the fixed perplexity
-  rho_opt <- parallel::parLapply(cl, 1:n, function(i) {
-    stats::optim(
-      par = 0.5,
-      fn = function(rho) {
-        # Objective function: (perplexity-fixed_perplexity)^2
-        res <- (to_perplexity_P(x, i, rho)$perp - perplexity)^2
-        ifelse(is.finite(res), res, 1e6)
-      },
-      method = "L-BFGS-B", lower = 0, upper = 1 - 1e-4
-    )$par
-  })
-  # Time end
-  end_time <- Sys.time()
-  # Print time difference
-  print(end_time - start_time)
-  # Simplifying the result
-  rho_opt <- simplify2array(rho_opt)
-  # Stop the clusters
-  parallel::stopCluster(cl)
-  return(rho_opt)
-}
-
-# > system.time(rho_optim_par(spokes, 22))
-# Time difference of 29.04886 mins
-# user   system  elapsed
-# 3.812    5.742 1743.000
-
-#' @title Concurrent optim to calculate \eqn{\rho} concentration parameters
-#' (scalar version)
-#'
-#' @description Calculate the rho list values based on a fixed perplexity and
-#' a given data in \eqn{(\mathcal{S}^p)^r}.
-#' Optimize the value using the concurrently method L-BFGS-B (optimParallel).
-#' The boundaries are set from 0 to 0.9999. It prints the time consumption.
-#'
-#' @inheritParams high_dimension
-#' @inheritParams rho_optim_serial
-#' @inheritParams rho_optim_par
-#' @return Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized for
-#' the given perplexity.
-rho_optimParallel <- function(x, perplexity,
-                              num_cores = parallel::detectCores() - 1) {
-  # Sample size
-  n <- nrow(x)
-  # Time start
-  start_time <- Sys.time()
-  # For each observation, calculate the optimal value using a
-  # concurrently optimization method
-  rho_opt <- sapply(1:n, FUN = function(i) {
-    print(i)
-    # Setting up the characteristics of the parallelization
-    cl <- clusterFactory(num_cores)
-    parallel::setDefaultCluster(cl = cl)
-    optimParallel::optimParallel(
-      par = 0.5,
-      fn = function(rho) {
-        # Objective function: (perplexity-fixed_perplexity)^2
-        res <- (to_perp_i(x, i, rho) - perplexity)^2
-        ifelse(is.finite(res), res, 1e6)
-      },
-      lower = 0, upper = 1 - 1e-4,
-      parallel = list(loginfo = TRUE, forward = TRUE)
-    )$par
-    # Stop the clusters
-    parallel::stopCluster(cl)
-  })
-  # Time end
-  end_time <- Sys.time()
-  # Print time difference
-  print(end_time - start_time)
-  return(rho_opt)
-}
-
-# system.time(rho_optimParallel(spokes, 22))
-# Time difference of 1.281991 hours
-# user   system  elapsed
-# 23.811   15.432 4615.212
-
-## matricidal calculus, cost function
-## Time difference of 14.22428 mins
-## 50 rows 25 spheres
-
-#' @title Serial optimization of the \eqn{\rho} concentration parameters
-#' (matrix version)
-#'
-#' @description Calculate the rho list values based on a fixed perplexity and
-#' a given data in \eqn{(\mathcal{S}^p)^r}.
-#' Optimize the value using the method L-BFGS-B. The boundaries are set from
-#' 0 to 0.9999. It prints the time consumption.
-#'
-#' @inheritParams high_dimension
-#' @inheritParams rho_optim_serial
-#' @return Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized for
-#' the given perplexity.
-rho_optim_ineff <- function(x, perplexity) {
-  # Sample size
-  n <- nrow(x)
-  # Time start
-  start_time <- Sys.time()
-  # Calculate the cosine similarities of (S^p)^r
-  cosine_polysph <- sphunif::Psi_mat(x, scalar_prod = TRUE)
-  # For each observation, calculate the optimal value matrix way
-  rho_opt <- sapply(1:n, function(i) {
-    print(i)
-    stats::optim(
-      par = rep(0.5, n),
-      fn = function(rho) {
-        # Objective function |perplexity-fixed_perplexity|_2
-        dif <- to_perp(x, rho, cosine_polysph) - perplexity
-        res <- t(dif) %*% dif
-        ifelse(is.finite(res), res, 1e6)
-      },
-      method = "L-BFGS-B", lower = rep(0, n), upper = rep(1 - 1e-4, n)
-    )$par
-  })
-  # Time end
-  end_time <- Sys.time()
-  # Print time difference
-  print(end_time - start_time)
-  return(rho_opt)
-}
-
-## efficient ways to calculate the perplexity
 
 ## parallel and matrix calculus
 ## Time difference of 14.56007 mins
@@ -335,8 +131,10 @@ rho_optim_ineff <- function(x, perplexity) {
 #' time consumption.
 #'
 #' @inheritParams high_dimension
-#' @inheritParams rho_optim_serial
-#' @inheritParams rho_optim_par
+#' @param perplexity a fixed value (between 5 and 100) to optimize the rho
+#' parameters.
+#' @param num_cores number of cores to execute the code concurrently. This
+#' value must be below the total number of the CPU has available.
 #' @return Rho list (\eqn{\boldsymbol{\rho}}) with the values optimized
 #' for the given perplexity.
 rho_optimize_1 <- function(x, perplexity,
@@ -381,24 +179,6 @@ rho_optimize_1 <- function(x, perplexity,
   return(rho_opt)
 }
 
-# check <- function(l) max(sapply(l, function(y) max(abs(l[[1]] - y)))) < 1e-7
-# microbenchmark::microbenchmark(
-#  rho_optimize(xxx, 15),
-#  rho_optimize_2(xxx, 15),
-#  check = check
-# )
-
-# Unit: milliseconds
-# expr        min         lq       mean     median         uq        max neval
-# rho_optimize(xxx, 15)   64.95212   74.77625   89.47905   84.41412   95.07279   200.1545   100
-# rho_optimize_2(xxx, 15) 7582.09367 7729.17412 8035.37894 7880.25502 8186.76657 11580.5412   100
-
-# check <- function(l) max(sapply(l, function(y) max(abs(l[[1]] - y)))) < 1e-7
-# microbenchmark::microbenchmark(
-#  rho_optimize(xxx, 15),
-#  rho_optim_ineff(xxx, 15),
-#  check = check
-# )
 
 #' @title  Binary search tree algorithm
 #'
@@ -412,6 +192,7 @@ rho_optimize_1 <- function(x, perplexity,
 #' @param rho_max max value for the current rho
 #' @return Rho concentration parameter found in this step,
 #' currently min and max rho
+#' @keywords internal
 bin_search <- function(perp_diff, rho, rho_min, rho_max) {
   if (perp_diff > 0 || is.na(perp_diff)) {
     rho_min <- rho
@@ -438,6 +219,7 @@ bin_search <- function(perp_diff, rho, rho_min, rho_max) {
 #' @param max_tries number of maximum tries for each value of the rho list.
 #' @return Rho concentration parameter and conditional probabilities calculated
 #' for the \eqn{i}-th observation.
+#' @keywords internal
 rho_optim_i_bst <- function(x, i, perp_fixed, tolerance = 1e-3, rho = 0.5,
                             max_tries = 20) {
   # Min value of rho
@@ -502,7 +284,7 @@ rho_optim_i_bst <- function(x, i, perp_fixed, tolerance = 1e-3, rho = 0.5,
 #'
 #' @inheritParams high_dimension
 #' @inheritParams rho_optim_i_bst
-#' @inheritParams rho_optim_par
+#' @inheritParams rho_optimize_1
 #' @return Rho values and conditional probability matrix obtained as a
 #' result of the optimization.
 #' @export
@@ -541,11 +323,3 @@ rho_optim_bst <- function(x, perp_fixed,
   return(list(rho_values = rho_values, P = P))
 }
 
-# > rho_optim_bst(x_array, 22)
-# Time difference of 45.21138 secs
-# with optim it took 2.58 min in the best case
-
-
-# > rho_optim_bst(spokes, 22)
-# Time difference of 5.758403 mins
-# with optim func it took 28 min approx.

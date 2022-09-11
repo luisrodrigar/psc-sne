@@ -12,7 +12,7 @@ d_total_psph_cauchy(x, rho_list)
 where \code{n} is the number of observations, \code{d} is the dimension of
 each sphere, and \code{r} is the number of spheres.}
 
-\item{rho_list}{rho list of size \code{n} for each \code{i}-th observation
+\item{rho_list}{rho list of size \code{n} for each \eqn{i}-th observation
 that stands for the concentration parameter.}
 }
 \value{

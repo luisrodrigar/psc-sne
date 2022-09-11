@@ -22,3 +22,4 @@ clusterFactory(2)
 clusterFactory(2, "log.txt")
 file.remove("log.txt")
 }
+\keyword{internal}

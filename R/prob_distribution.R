@@ -14,8 +14,8 @@
 #' @param i corresponds to the \eqn{i}-th observation index.
 #' @param j corresponds to the \eqn{j}-th observation index.
 #' @param rho concentration parameter must be in [0, 1).
-#' @param k corresponds to the k-th sphere index.
-#' @param p corresponds to S^p, associated to R^(p+1).
+#' @param k corresponds to the \eqn{k}-th sphere index.
+#' @param p dimension of the sphere, \eqn{\mathcal{S}^p}.
 #' @return Spherical Cauchy density value given the parameters.
 d_sph_cauchy <- function(x, i, j, rho, k, p) {
   if (i < 1 || i > nrow(x) || j < 1 || j > nrow(x)) {
@@ -208,7 +208,7 @@ prob_cond_i_psph <- function(x, i, rho_list, d_total_i_psph_cauchy = NULL) {
 #' @description Calculate the marginal low-dimension spherical
 #' Cauchy probability.
 #'
-#' @param y matrix that stands for a sphere, \eqn{\mathcal{S}^d}.
+#' @param y a matrix of size \code{c(n, d+1)} with observations on \eqn{\mathcal{S}^d}.
 #' @inheritParams d_sph_cauchy
 #' @return Spherical marginal Cauchy density probability given the parameters.
 d_i_sph_cauchy <- function(y, i, rho) {

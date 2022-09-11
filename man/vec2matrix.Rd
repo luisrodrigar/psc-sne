@@ -27,3 +27,4 @@ x <- sphunif::r_unif_sph(n, 3)
 cos_sim_vec <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
 vec2matrix(cos_sim_vec, n, diag_value = 1)
 }
+\keyword{internal}
