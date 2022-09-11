@@ -2,7 +2,7 @@
 % Please edit documentation in R/high_dimension.R
 \name{high_dimension_i}
 \alias{high_dimension_i}
-\title{Polyspherical i-th Cauchy conditional probability vector
+\title{Polyspherical \eqn{i}-th Cauchy conditional probability vector
 (matrix version)}
 \usage{
 high_dimension_i(x, i, rho, cos_sim_psh = NULL)
@@ -36,3 +36,4 @@ x <- sphunif::r_unif_sph(100, 3, 3)
 high_dimension_i(x, 1, 0.5)
 high_dimension_i(x, 100, 0.5, sphunif::Psi_mat(x, scalar_prod = TRUE))
 }
+\keyword{internal}

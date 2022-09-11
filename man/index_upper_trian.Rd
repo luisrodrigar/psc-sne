@@ -11,7 +11,7 @@ index_upper_trian(i, j, n)
 
 \item{j}{corresponds to the \eqn{j}-th observation index.}
 
-\item{n}{the sample size of the symmetric matrix (n x n)}
+\item{n}{the sample size of the symmetric matrix of size \code{c(n, n)}.}
 }
 \description{
 Obtain the index of an element within a vector
@@ -23,3 +23,4 @@ vec <- c(1, 2, 1)
 index <- index_upper_trian(1, 2, 3)
 all.equal(vec[index], mat[1, 2])
 }
+\keyword{internal}

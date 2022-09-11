@@ -1,6 +1,9 @@
 #' @title \code{pscsne}: Polyspherical Cauchy SNE
 #'
-#' @description Implementation of the Polyspherical Cauchy SNE
+#' @description Implementation of polyspherical Cauchy Stochastic Neighbor
+#' Embedding, psc-SNE, a nonlinear dimensionality reduction technique for
+#' polyspherical data (e.g., circular, spherical or toroidal data).
+#' The main function is \code{psc_sne()}.
 #'
 #' @author Eduardo García-Portugués and Luis Ángel Rodríguez García.
 #'

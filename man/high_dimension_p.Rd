@@ -11,7 +11,7 @@ high_dimension_p(x, rho_list)
 where \code{n} is the number of observations, \code{d} is the dimension of
 each sphere, and \code{r} is the number of spheres.}
 
-\item{rho_list}{rho list of size \code{n} for each \code{i}-th observation
+\item{rho_list}{rho list of size \code{n} for each \eqn{i}-th observation
 that stands for the concentration parameter.}
 }
 \value{
@@ -26,3 +26,4 @@ polyspherical Cauchy distribution. Scalar version algorithm.
 x <- sphunif::r_unif_sph(100, 3, 3)
 high_dimension_p(x, rep(0.5, 100))
 }
+\keyword{internal}

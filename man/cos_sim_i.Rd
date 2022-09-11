@@ -30,3 +30,4 @@ x <- sphunif::r_unif_sph(n, 3, r)
 cos_sim_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
 cos_sim_i(cos_sim_psh, 4, r, n)
 }
+\keyword{internal}

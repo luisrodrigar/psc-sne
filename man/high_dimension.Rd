@@ -2,7 +2,7 @@
 % Please edit documentation in R/high_dimension.R
 \name{high_dimension}
 \alias{high_dimension}
-\title{Polyspherical Cauchy conditional probability matrix (matrix version)}
+\title{Polyspherical Cauchy conditional probability matrix}
 \usage{
 high_dimension(x, rho_list, cos_sim_psh = NULL)
 }
@@ -11,7 +11,7 @@ high_dimension(x, rho_list, cos_sim_psh = NULL)
 where \code{n} is the number of observations, \code{d} is the dimension of
 each sphere, and \code{r} is the number of spheres.}
 
-\item{rho_list}{rho list of size \code{n} for each \code{i}-th observation
+\item{rho_list}{rho list of size \code{n} for each \eqn{i}-th observation
 that stands for the concentration parameter.}
 
 \item{cos_sim_psh}{a vector of size \code{n/2} with the cosine
@@ -26,7 +26,7 @@ probabilities of \code{x}.
 }
 \description{
 Calculates the high-dimension conditional probabilities of a
-polyspherical Cauchy distribution. Matrix version algorithm.
+polyspherical Cauchy distribution.
 }
 \examples{
 x <- sphunif::r_unif_sph(100, 3, 3)

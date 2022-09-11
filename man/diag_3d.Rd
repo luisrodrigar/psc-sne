@@ -13,7 +13,7 @@ each sphere, and \code{r} is the number of spheres.}
 
 \item{k}{the \code{k}-th sphere from \eqn{(\mathcal{S}^p)^r}.}
 
-\item{val}{value to set to each array's diagonal of the poly-sphere \code{x}.}
+\item{val}{value to set to each array's diagonal of the polysphere \code{x}.}
 }
 \value{
 The \code{k}-th matrix of \code{x} with the diagonal set to
@@ -28,3 +28,4 @@ x <- sphunif::r_unif_sph(100, 3, 3)
 diag_3d(x, 1, 0)
 diag_3d(x, 3, 0)
 }
+\keyword{internal}

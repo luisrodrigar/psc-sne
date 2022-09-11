@@ -8,7 +8,7 @@
 prob_cond_i_sph(y, i, rho)
 }
 \arguments{
-\item{y}{matrix that stands for a sphere, \eqn{\mathcal{S}^d}.}
+\item{y}{a matrix of size \code{c(n, d+1)} with observations on \eqn{\mathcal{S}^d}.}
 
 \item{i}{corresponds to the \eqn{i}-th observation index.}
 

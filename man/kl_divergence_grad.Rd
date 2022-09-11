@@ -2,7 +2,7 @@
 % Please edit documentation in R/psc_sne.R
 \name{kl_divergence_grad}
 \alias{kl_divergence_grad}
-\title{Kullback-Leibler divergence gradient}
+\title{Kullback--Leibler divergence gradient}
 \usage{
 kl_divergence_grad(Y, i, rho, d, P, cos_sim = NULL, Q = NULL)
 }
@@ -33,7 +33,7 @@ Resulting reduced data for the \eqn{i}-th observation onto the
 sphere \eqn{\mathcal{S}^d}.
 }
 \description{
-Calculates analytically the gradient of the Kullback-Leibler
+Calculates analytically the gradient of the Kullback--Leibler
 divergence between low- and high-dimensional pairwise probabilities.
 }
 \examples{

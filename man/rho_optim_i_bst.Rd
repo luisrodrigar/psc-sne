@@ -32,3 +32,4 @@ Calculate the rho based on a fixed perplexity
 and a given data in \eqn{(\mathcal{S}^p)^r}. The boundaries are set
 from 0 to 0.9999.
 }
+\keyword{internal}

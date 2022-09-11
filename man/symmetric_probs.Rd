@@ -7,7 +7,7 @@
 symmetric_probs(P)
 }
 \arguments{
-\item{P}{matrix of probabilities \eqn{(P_{i|j})_{ij}} with size
+\item{P}{matrix of probabilities \eqn{(p_{i|j})_{ij}} with size
 \code{c(n, n)} where \code{n} is the number of observations of the original
 array \code{x}.}
 }
@@ -22,3 +22,4 @@ polyspherical Cauchy probability matrix.
 symmetric_probs(matrix(runif(3 * 3), nrow = 3, ncol = 3))
 symmetric_probs(diag(3))
 }
+\keyword{internal}

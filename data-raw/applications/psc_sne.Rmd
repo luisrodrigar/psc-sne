@@ -326,7 +326,7 @@ rgl::points3d(x, col = map2color(dens, pal = heat.colors(10, alpha = 0.8)))
 
 #### High Dimension
 
-For a poly-sphere $\mathbb{S}^{d,r}$ where $r\geq1$ and $d \geq 1$:
+For a polysphere $\mathbb{S}^{d,r}$ where $r\geq1$ and $d \geq 1$:
 
 ```{=tex}
 \begin{equation}

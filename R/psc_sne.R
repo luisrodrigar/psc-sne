@@ -1,7 +1,7 @@
 
-#' @title Kullback-Leibler divergence gradient
+#' @title Kullback--Leibler divergence gradient
 #'
-#' @description Calculates analytically the gradient of the Kullback-Leibler
+#' @description Calculates analytically the gradient of the Kullback--Leibler
 #' divergence between low- and high-dimensional pairwise probabilities.
 #'
 #' @inheritParams low_dimension_Q
@@ -69,8 +69,8 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 
 #' @title Polyspherical Cauchy SNE
 #'
-#' @description Calculates the polyspherical-Cauchy SNE given a data onto the
-#' polysphere and the reduced dimension.
+#' @description Computes polyspherical Cauchy SNE given a data onto the
+#' polysphere and a dimension to reduce to.
 #'
 #' @param X an array of size \code{c(n, d + 1, r)} with the polyspherical data,
 #' where \code{n} is the number of observations, \code{d} is the dimension of
@@ -86,12 +86,12 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 #' The last scenario that is when this object is set to \code{NULL}, i.e., the
 #' \code{\link{rho_optim_bst}} function is called to get the rho values
 #' (given a fixed perplexity) and the probabilities matrix. Optional parameter,
-#' defaults to \code{NULL}).
+#' defaults to \code{NULL}.
 #' @param rho parameter of the low-dimensional spherical Cauchy
-#' probabilities. Optional, defaults to \code{0.5}).
+#' probabilities. Optional, defaults to \code{0.5}.
 #' @param perplexity parameter that measures the number of neighbors to
-#' use when mapping between high- and low-dimension. Defaults to \code{30}).
-#' @param maxit maximum number of iterations. Defaults to \code{1e3}).
+#' use when mapping between high- and low-dimension. Defaults to \code{30}.
+#' @param maxit maximum number of iterations. Defaults to \code{1e3}.
 #' @param initial_momentum first value of the momentum of the first \code{250}
 #' iterations. Defaults to \code{0.5}.
 #' @param final_momentum momentum to take into account after the \code{250}
@@ -99,9 +99,9 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 #' @param eta is the learning rate of the optimization algorithm. Optional
 #' param, defaults to \code{200}.
 #' @param early_exaggeration the first \code{100} iterations results are
-#' exaggerated by this factor. Optional parameter, defaults to \code{4.0}).
+#' exaggerated by this factor. Optional parameter, defaults to \code{4.0}.
 #' @param colors list with as many elements as observations are, only valid
-#' when visualization is true. Optional parameter, defaults to \code{NULL}).
+#' when visualization is true. Optional parameter, defaults to \code{NULL}.
 #' @param show_prog defines the number of iterations skipped when reporting
 #' the progress. Defaults to \code{100}, i.e., only multiples of \code{100}
 #' are reported. If \code{FALSE}, no progress is shown at all.
@@ -109,7 +109,7 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
 #' a plot is shown: after \code{2 * show_prog} iterations and at the end
 #' of the search.
 #' @param tol is the tolerance, when is below this value it is considered that
-#' a good solution has been obtained. Defaults to \code{1e-6}).
+#' a good solution has been obtained. Defaults to \code{1e-6}.
 #' @param parallel_cores number of cores to use concurrently for the
 #' calculation of the gradient. Defaults to \code{parallel::detectCores() - 1},
 #' that means that uses the total number of cores of the computer except one of
@@ -278,7 +278,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   if (is.character(init) && init == "equispaced") {
 
     # Generate points evenly spaced
-    Y[, , 1] <- Y[, , 2] <- gen_opt_sphere(n, d)
+    Y[, , 1] <- Y[, , 2] <- grid_sphere(n, d)
 
   } else if (is.character(init) && init == "random") {
 
@@ -339,6 +339,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   } else if (is.matrix(init)) {
 
     if (!(nrow(init) == n && ncol(init) == d + 1)) {
+
 
       stop("Dimension of init is not c(n, d + 1).")
 
@@ -526,6 +527,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 #' @param d the dimension to reduce the original data.
 #' @param colors defines the group colors in the plot. Optional parameter,
 #' default value set to \code{NULL}.
+#' @keywords internal
 show_iter_sol <- function(Y, i, d, colors = NULL) {
 
   # If colors is null, set all of them to black

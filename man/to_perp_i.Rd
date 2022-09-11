@@ -34,3 +34,4 @@ x <- sphunif::r_unif_sph(25, 3, 3)
 i <- 1
 to_perp_i(x, i, 0.25)
 }
+\keyword{internal}

@@ -13,7 +13,7 @@ each sphere, and \code{r} is the number of spheres.}
 
 \item{i}{corresponds to the \eqn{i}-th observation index.}
 
-\item{rho_list}{rho list of size \code{n} for each \code{i}-th observation
+\item{rho_list}{rho list of size \code{n} for each \eqn{i}-th observation
 that stands for the concentration parameter.}
 }
 \value{

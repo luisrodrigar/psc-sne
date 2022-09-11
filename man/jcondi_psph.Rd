@@ -16,7 +16,7 @@ each sphere, and \code{r} is the number of spheres.}
 
 \item{j}{corresponds to the \eqn{j}-th observation index.}
 
-\item{rho_list}{rho list of size \code{n} for each \code{i}-th observation
+\item{rho_list}{rho list of size \code{n} for each \eqn{i}-th observation
 that stands for the concentration parameter.}
 
 \item{d_total_i_psph_cauchy}{marginal probability of the \eqn{i}-th
