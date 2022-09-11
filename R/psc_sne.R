@@ -311,7 +311,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
                             early_exaggeration = early_exaggeration,
                             colors = colors, show_prog = FALSE,
                             show_plots = FALSE, tol = tol,
-                            parallel_cores = parallel::detectCores() - 1,
+                            parallel_cores = parallel_cores,
                             init = ifelse(i == 1, "equispaced", "random"))
       obj_i <- tail(start[[i]]$diagnostics$obj, n = 1)
 

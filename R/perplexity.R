@@ -143,7 +143,7 @@ rho_optimize_1 <- function(x, perplexity,
   # Sample size
   n <- nrow(x)
   # Setting up the characteristics of the parallelization
-  cl <- clusterFactory(num_cores, "log.txt")
+  cl <- clusterFactory(num_cores)
   # Time start
   start_time <- Sys.time()
 
@@ -299,7 +299,7 @@ rho_optim_bst <- function(x, perp_fixed,
   # Time start
   start_time <- Sys.time()
   # Setting up the characteristics of the parallelization
-  cl <- clusterFactory(num_cores, "log.txt")
+  cl <- clusterFactory(num_cores)
   # Concurrently calculate the optimized value of each observation
   res_opt <- parallel::parLapply(cl, seq_len(n), function(i) {
     print(i)
