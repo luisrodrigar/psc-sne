@@ -21,3 +21,4 @@ default value set to \code{NULL}.}
 Visualize the iteration solution in a plot for the
 \eqn{i}-th iteration.
 }
+\keyword{internal}
