@@ -21,26 +21,39 @@
 #' \url{https://github.com/luisrodrigar/psc-sne/blob/main/data-raw/strait-juan-fuca/data-acquisition-juan-fuca.R}
 #' @source \url{https://github.com/luisrodrigar/psc-sne/blob/main/data/jdf.rda}
 #' @examples
+#' # Load libraries
+#' library(dplyr)
+#' library(tidyr)
+#'
 #' # Load data
 #' data(jdf)
-#' # Plot vector field
+#'
+#' # Compute data for 2021-06-30 03:00:00 UTC
 #' time_instant <- as.POSIXct("2021-06-30 03:00:00", tz = "UTC")
 #' jdf_lat_lon <- jdf %>%
 #'     dplyr::filter(time == time_instant) %>%
 #'     unite(col = "coordinates", lat, lon, sep = ",", remove = FALSE)
+#'
+#' # Obtain latitudes and longitudes
+#' lat_values <- rev(sort(unique(jdf_lat_lon$lat)))
+#' lon_values <- sort(unique(jdf_lat_lon$lon))
+#'
+#' # Sample size
+#' n <- nrow(jdf_lat_lon)
+#'
+#' # Matrix stands for the map area
 #' jdf_by_time_latlon <- array(NA, dim = c(length(unique(jdf_lat_lon$lon)),
 #'                                         length(unique(jdf_lat_lon$lat))))
-#' lat_values <- rev(sort(unique(jdf_lat_lon$lat)))
-#' lon_values <- sort(jdf_lat_lon$lon)
 #'
-#' n <- nrow(jdf_lat_lon)
+#' # Fill the entries with the values of theta
 #' for (i in seq_len(n)) {
 #'     index_lat <- which(round(lat_values, digits = 5) ==
 #'                        round(jdf_lat_lon[i, ]$lat, digits = 5))
 #'     index_lon <- which(round(lon_values, digits = 4) ==
 #'                        round(jdf_lat_lon[i, ]$lon, digits = 4))
-#'     jdf_by_time_latlon[index_lon, index_lat] <- val$theta
+#'     jdf_by_time_latlon[index_lon, index_lat] <- jdf_lat_lon[i, ]$theta
 #' }
+#'
 #' # Plot vector field
 #' loc <- "Juan de Fuca"
 #' speed <- jdf_lat_lon$speed
