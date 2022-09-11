@@ -11,7 +11,7 @@ to_perp(x, rho_list, cos_sim_psh = NULL)
 where \code{n} is the number of observations, \code{d} is the dimension of
 each sphere, and \code{r} is the number of spheres.}
 
-\item{rho_list}{rho list of size \code{n} for each \code{i}-th observation
+\item{rho_list}{rho list of size \code{n} for each \eqn{i}-th observation
 that stands for the concentration parameter.}
 
 \item{cos_sim_psh}{a vector of size \code{n/2} with the cosine

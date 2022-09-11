@@ -11,6 +11,7 @@
 #' clusterFactory(2)
 #' clusterFactory(2, "log.txt")
 #' file.remove("log.txt")
+#' @keywords internal
 clusterFactory <- function(num_cores, outfile = "") {
   cl <- NULL
   if (tolower(.Platform$OS.type) != "windows") {
@@ -38,6 +39,7 @@ clusterFactory <- function(num_cores, outfile = "") {
 #' x <- sphunif::r_unif_sph(n, 3)
 #' cos_sim_vec <- drop(sphunif::Psi_mat(x, scalar_prod = TRUE))
 #' vec2matrix(cos_sim_vec, n, diag_value = 1)
+#' @keywords internal
 vec2matrix <- function(vec, n, diag_value) {
   # Create the matrix of dimension n x n
   mat <- matrix(0, nrow = n, ncol = n)
@@ -56,13 +58,14 @@ vec2matrix <- function(vec, n, diag_value) {
 #' for the equivalent in the upper triangular matrix without diagonal
 #'
 #' @inheritParams d_sph_cauchy
-#' @param n the sample size of the symmetric matrix (n x n)
+#' @param n the sample size of the symmetric matrix of size \code{c(n, n)}.
 #' @export
 #' @examples
 #' mat <- rbind(c(0, 1, 2), c(0, 0, 1), c(0, 0, 0))
 #' vec <- c(1, 2, 1)
 #' index <- index_upper_trian(1, 2, 3)
 #' all.equal(vec[index], mat[1, 2])
+#' @keywords internal
 index_upper_trian <- function(i, j, n) {
   if (i < 1 || i >= n) {
 
@@ -95,6 +98,7 @@ index_upper_trian <- function(i, j, n) {
 #' x <- sphunif::r_unif_sph(n, 3, r)
 #' cos_sim_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
 #' cos_sim_i(cos_sim_psh, 4, r, n)
+#' @keywords internal
 cos_sim_i <- function(cos_sim_psh, i, r, n) {
   sapply(seq_len(r), function(k) {
     sapply(seq_len(n), function(j) {
@@ -122,7 +126,7 @@ cos_sim_i <- function(cos_sim_psh, i, r, n) {
 }
 
 
-#' @title Cosine similarity for the poly-sphere
+#' @title Cosine similarity for the polysphere
 #'
 #' @description Calculates the cosine similarity for each sphere of
 #' the 3 dimensional array.
@@ -134,6 +138,7 @@ cos_sim_i <- function(cos_sim_psh, i, r, n) {
 #' @examples
 #' x <- sphunif::r_unif_sph(100, 3, 3)
 #' cosine_polysph(x)
+#' @keywords internal
 cosine_polysph <- function(x) {
   r <- dim(x)[3]
   n <- nrow(x)
@@ -148,7 +153,7 @@ cosine_polysph <- function(x) {
 #' @description Calculate the symmetric probabilities of a given conditional
 #' polyspherical Cauchy probability matrix.
 #'
-#' @param P matrix of probabilities \eqn{(P_{i|j})_{ij}} with size
+#' @param P matrix of probabilities \eqn{(p_{i|j})_{ij}} with size
 #' \code{c(n, n)} where \code{n} is the number of observations of the original
 #' array \code{x}.
 #' @return The sum of \code{P} and \code{t(P)} divided by twice the sample size.
@@ -156,6 +161,7 @@ cosine_polysph <- function(x) {
 #' @examples
 #' symmetric_probs(matrix(runif(3 * 3), nrow = 3, ncol = 3))
 #' symmetric_probs(diag(3))
+#' @keywords internal
 symmetric_probs <- function(P) {
   n <- nrow(P)
   P <- (P + t(P)) / (2 * n)
@@ -169,7 +175,7 @@ symmetric_probs <- function(P) {
 #'
 #' @inheritParams high_dimension
 #' @param k the \code{k}-th sphere from \eqn{(\mathcal{S}^p)^r}.
-#' @param val value to set to each array's diagonal of the poly-sphere \code{x}.
+#' @param val value to set to each array's diagonal of the polysphere \code{x}.
 #' @return The \code{k}-th matrix of \code{x} with the diagonal set to
 #' \code{val}.
 #' @export
@@ -177,6 +183,7 @@ symmetric_probs <- function(P) {
 #' x <- sphunif::r_unif_sph(100, 3, 3)
 #' diag_3d(x, 1, 0)
 #' diag_3d(x, 3, 0)
+#' @keywords internal
 diag_3d <- function(x, k, val) {
   if (k < 1 || k > dim(x)[3]) {
     stop("The 3rd dimensional index k not valid, must be >= 1 and <= r")
@@ -203,19 +210,20 @@ radial_projection <- function(y) {
 
 #' @title Generate optimum evenly separated points
 #'
-#' @description Generated optimal evenly separated points onto the sphere
-#' \eqn{\mathcal{S}^d}.
+#' @description Generated optimal evenly separated points on
+#' \eqn{\mathcal{S}^1} or \eqn{\mathcal{S}^2}.
 #'
-#' @param n positive integer that defines the size of the sample to generate.
+#' @param n positive integer with the size of the grid to generate.
 #' @param d size of the low-dimension which defines the sphere
-#' \eqn{\mathcal{S}^d}.
-#' @return Evenly optimal separated points onto the low-dimension sphere
+#' \eqn{\mathcal{S}^d}, must be 1 or 2.
+#' @return For \eqn{\mathcal{S}^1}, evenly optimal separated points.
+#' For \eqn{\mathcal{S}^2}, Fibonacci lattice is applied to generate points.
 #' \eqn{\mathcal{S}^d}.
 #' @export
 #' @examples
-#' gen_opt_sphere(100, 1)
-#' gen_opt_sphere(250, 2)
-gen_opt_sphere <- function(n, d) {
+#' grid_sphere(100, 1)
+#' grid_sphere(250, 2)
+grid_sphere <- function(n, d) {
   Y <- NULL
   if (n < 1) {
     stop("n not valid, must be a positive integer")
@@ -238,13 +246,14 @@ gen_opt_sphere <- function(n, d) {
 #' @description Generated optimal evenly separated points onto the sphere
 #' \eqn{\mathcal{S}^2}.
 #'
-#' @inheritParams gen_opt_sphere
+#' @inheritParams grid_sphere
 #' @return Evenly optimal separated points onto the low-dimension sphere
 #' \eqn{\mathcal{S}^2}.
 #' @export
 #' @examples
 #' fibonacci_lattice(100)
 #' fibonacci_lattice(250)
+#' @keywords internal
 fibonacci_lattice <- function(n) {
   i <- seq(0, n - 1) + 0.5
   phi <- acos(1 - 2 * i / n)

@@ -7,7 +7,7 @@
 fibonacci_lattice(n)
 }
 \arguments{
-\item{n}{positive integer that defines the size of the sample to generate.}
+\item{n}{positive integer with the size of the grid to generate.}
 }
 \value{
 Evenly optimal separated points onto the low-dimension sphere
@@ -21,3 +21,4 @@ Generated optimal evenly separated points onto the sphere
 fibonacci_lattice(100)
 fibonacci_lattice(250)
 }
+\keyword{internal}

@@ -17,9 +17,9 @@ each sphere, and \code{r} is the number of spheres.}
 
 \item{rho}{concentration parameter must be in [0, 1).}
 
-\item{k}{corresponds to the k-th sphere index.}
+\item{k}{corresponds to the \eqn{k}-th sphere index.}
 
-\item{p}{corresponds to S^p, associated to R^(p+1).}
+\item{p}{dimension of the sphere, \eqn{\mathcal{S}^p}.}
 }
 \value{
 Spherical Cauchy density value given the parameters.

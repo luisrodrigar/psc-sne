@@ -15,7 +15,7 @@ r_path_s2r(n, r, t = 0, c = 1, Theta = t(rotasym::r_unif_sphere(n = r, p
 \arguments{
 \item{n}{sample size.}
 
-\item{r}{number of spheres in the polysphere \eqn{(S^d)^r}.}
+\item{r}{number of spheres in the polysphere \eqn{(\mathcal{S}^d)^r}.}
 
 \item{alpha}{a vector of size \code{r} valued in \eqn{[-\pi,\pi)} with the
 initial angles for the linear trend. Chosen at random by default.}
@@ -35,19 +35,20 @@ Defaults to \code{0} (equator).}
 parameter, changing the spiral wrappings. Defaults to \code{1}.}
 
 \item{Theta}{a matrix of size \code{c(3, r)} giving the north poles for
-\eqn{S^2}. Useful for rotating the sample. Chosen at random by default.}
+\eqn{\mathcal{S}^2}. Useful for rotating the sample. Chosen at random by
+default.}
 
 \item{spiral}{consider a spiral (or, more precisely, a
 \href{https://en.wikipedia.org/wiki/Clélie}{Clélie curve}) instead of
 a small circle? Defaults to \code{FALSE}.}
 }
 \value{
-An array of size \code{c(n, d, r)} with samples on \eqn{(S^d)^r}. If
+An array of size \code{c(n, d, r)} with samples on \eqn{(\mathcal{S}^d)^r}. If
 \code{angles = TRUE} for \code{r_path_s1r}, then a matrix of size
 \code{c(n ,r)} with angles is returned.
 }
 \description{
-Functions for sampling data on \eqn{(S^d)^r} for \eqn{d=1,2}
+Functions for sampling data on \eqn{(\mathcal{S}^d)^r} for \eqn{d=1,2}
 using one-dimensional modes of variation.
 }
 \examples{

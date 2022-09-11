@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{cosine_polysph}
 \alias{cosine_polysph}
-\title{Cosine similarity for the poly-sphere}
+\title{Cosine similarity for the polysphere}
 \usage{
 cosine_polysph(x)
 }
@@ -23,3 +23,4 @@ the 3 dimensional array.
 x <- sphunif::r_unif_sph(100, 3, 3)
 cosine_polysph(x)
 }
+\keyword{internal}
