@@ -8,8 +8,12 @@ output: pdf_document
 ```{r setup, include = FALSE}
 knitr::opts_knit$set(echo = TRUE, root.dir = rprojroot::find_rstudio_root_file())
 library(pscsne)
-knitr::opts_chunk$set(echo = TRUE)
-rgl::setupKnitr()
+def_chunk_hook <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def_chunk_hook(x, options)
+  ifelse(options$size != "normalsize",
+         paste0("\n \\", options$size, "\n\n", x, "\n\n \\normalsize"), x)
+})
 ```
 
 The objective in this case study is to recover clusters identified in `smallrna$clusters` using only the information on `smallrna$angles`, a $7$-dimensional matrix of angles (i.e., data on $(\mathbb{S}^1)^7)$). The clusters have been constructed using the information in `smallrna$torsion`. If a dimension-reduction technique is able to successfully identify clusters, then it will be doing a good job in terms of identifying the underlying structure of the data. Section 5.2 in Zoubouloglou et al. (2021) describes the history of the "Small RNA" dataset and its construction.
@@ -19,13 +23,16 @@ Let's begin by importing the data.
 ```{r load, cache = TRUE, fig.asp = 1}
 # Load package
 library(pscsne)
-stopifnot(packageVersion("pscsne") >= "0.0.1.900003")
+stopifnot(packageVersion("pscsne") >= "0.0.1.900005")
 
 # Load dataset
 data("smallrna")
 
 # Visualize original data
-pairs(smallrna$angles, col = smallrna$clusters + 1, cex = 0.5)
+pairs(smallrna$angles, col = smallrna$clusters + 1, cex = 0.5,
+      labels = c(expression(alpha), expression(beta), expression(gamma),
+                 expression(delta), expression(epsilon), expression(zeta),
+                 expression(chi)))
 ```
 
 We can now run psc-SNE. First, we transform the data and obtain the $\rho$'s giving the prescribed perplexity.
@@ -40,12 +47,13 @@ rho_psc_list <- rho_optim_bst(x = smallrna_X, perp_fixed = 30)
 
 We run psc-SNE for $d = 1$ with its default $\eta$.
 
-```{r pscsne-1, cache = TRUE}
+```{r pscsne-1, cache = TRUE, size = "scriptsize", fig.align = 'center', fig.asp = 1}
 # Default
 fit_1 <- psc_sne(X = smallrna_X, d = 1, rho_psc_list = rho_psc_list,
                  eta = 200, maxit = 1e3, tol = 1e-6, show_prog = 10,
                  colors = smallrna$clusters)
-
+```
+```{r}
 # Does not converge
 fit_1$convergence
 par(mfrow = c(1, 3))
@@ -56,12 +64,13 @@ plot(log10(fit_1$diagnostics$mom), type = "l")
 
 The employed $\eta$ seems to be too large. Let's reduce it.
 
-```{r pscsne-2, cache = TRUE}
+```{r pscsne-2, cache = TRUE, size = "scriptsize", fig.align = 'center', fig.asp = 1}
 # Lower eta
 fit_2 <- psc_sne(X = smallrna_X, d = 1, rho_psc_list = rho_psc_list,
                  eta = 10, maxit = 1e3, tol = 1e-6, show_prog = 10,
                  colors = smallrna$clusters)
-
+```
+```{r}
 # Converges
 fit_2$convergence
 par(mfrow = c(1, 3))
@@ -74,7 +83,7 @@ Convergence is attained in the second run, yet it is weird that the objective fu
 
 Let's see the recovery of the clusters.
 
-```{r kms-1, cache = TRUE}
+```{r kms-1, cache = TRUE, fig.asp = 1/2}
 # Kernel mean shift clustering
 n <- nrow(fit_2$best_Y)
 d <- ncol(fit_2$best_Y) - 1
@@ -94,7 +103,7 @@ plot(fit_2$best_Y, col = smallrna$clusters)
 
 The original clusters are not fully recovered, in the sense that more clusters are obtained. However, the three-cluster structure is present, as the new clusters appear dividing the three main ones. This can be checked by cutting the hierarchical clustering tree behind kernel mean shift clustering exactly at three groups. Or, in other words, by merging the 8 groups into 3.
 
-```{r kms-2, cache = TRUE}
+```{r kms-2, cache = TRUE, fig.asp = 1/2}
 # Recovered clusters with three clusters vs. real clusters
 par(mfrow = c(1, 2))
 labels <- cutree(kms$tree, k = 3)
