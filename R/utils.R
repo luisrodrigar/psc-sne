@@ -234,33 +234,16 @@ grid_sphere <- function(n, d) {
     Y <- DirStats::to_cir(seq(0, 2 * pi, l = n + 1)[-(n + 1)])
   } else if (d == 2) {
     # Generate data for the sphere S^2
-    Y <- fibonacci_lattice(n)
+    i <- seq(0, n - 1) + 0.5
+    phi <- acos(1 - 2 * i / n)
+    goldenRatio <- (1 + 5**0.5) / 2
+    theta <- 2 * pi * i / goldenRatio
+    x <- cos(theta) * sin(phi)
+    y <- sin(theta) * sin(phi)
+    z <- cos(phi)
+    Y <- cbind(x, y, z)
   } else {
     stop("d not valid, only 1 or 2 are allowed")
   }
   return(Y)
-}
-
-#' @title Fibonacci lattice algorithm to generate evenly separated points
-#'
-#' @description Generated optimal evenly separated points onto the sphere
-#' \eqn{\mathcal{S}^2}.
-#'
-#' @inheritParams grid_sphere
-#' @return Evenly optimal separated points onto the low-dimension sphere
-#' \eqn{\mathcal{S}^2}.
-#' @export
-#' @examples
-#' fibonacci_lattice(100)
-#' fibonacci_lattice(250)
-#' @keywords internal
-fibonacci_lattice <- function(n) {
-  i <- seq(0, n - 1) + 0.5
-  phi <- acos(1 - 2 * i / n)
-  goldenRatio <- (1 + 5**0.5) / 2
-  theta <- 2 * pi * i / goldenRatio
-  x <- cos(theta) * sin(phi)
-  y <- sin(theta) * sin(phi)
-  z <- cos(phi)
-  return(cbind(x, y, z))
 }
