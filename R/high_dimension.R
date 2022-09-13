@@ -69,7 +69,6 @@ high_dimension <- function(x, rho_list, cos_sim_psh = NULL,
 #' x <- sphunif::r_unif_sph(100, 3, 3)
 #' high_dimension_i(x, 1, 0.5)
 #' high_dimension_i(x, 100, 0.5, sphunif::Psi_mat(x, scalar_prod = TRUE))
-#' @keywords internal
 high_dimension_i <- function(x, i, rho, cos_sim_psh = NULL) {
 
   # sample size
