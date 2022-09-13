@@ -46,6 +46,6 @@ cos_sim <- vec2matrix(
                                    scalar_prod = TRUE)),
     n = nrow(X),
     diag_value = 1)
-Q <- low_dimension_Q(Y, 0.5)
+Q <- low_dimension(Y, 0.5)
 kl_divergence_grad(Y, 3, 0.5, 2, P, cos_sim, Q)
 }
