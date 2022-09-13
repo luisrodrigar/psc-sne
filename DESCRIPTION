@@ -11,8 +11,6 @@ Authors@R: c(
      )
 Description: Implementation of polyspherical Cauchy Stochastic Neighbor Embedding, psc-SNE, a nonlinear dimensionality reduction technique for polyspherical data (e.g., circular, spherical or toroidal data). The main function is psc_sne().
 License: GPL-3
-LazyData: true
-LazyDataCompression: xz
 Encoding: UTF-8
 Depends:
     R (>= 3.5.0)
