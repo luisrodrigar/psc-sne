@@ -4,7 +4,8 @@
 \alias{rho_optim_bst}
 \title{Binary search rho optimization for each observation}
 \usage{
-rho_optim_bst(x, perp_fixed, num_cores = parallel::detectCores() - 1)
+rho_optim_bst(x, perp_fixed, num_cores = parallel::detectCores() - 1,
+  cos_sim_psh = NULL)
 }
 \arguments{
 \item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
@@ -15,6 +16,12 @@ each sphere, and \code{r} is the number of spheres.}
 
 \item{num_cores}{number of cores to execute the code concurrently. This
 value must be below the total number of the CPU has available.}
+
+\item{cos_sim_psh}{a vector of size \code{n/2} with the cosine
+similarities in high-dimension for the polysphere \eqn{(\mathcal{S}^p)^r}.
+The way that the cosine similarities matrix is treated makes the calculus
+faster since it is flat in a vector object. Optional parameter, defaults to
+\code{NULL}.}
 }
 \value{
 Rho values and conditional probability matrix obtained as a
@@ -28,5 +35,6 @@ a given data in \eqn{(\mathcal{S}^p)^r}. The boundaries are set from 0 to
 \examples{
 x <- sphunif::r_unif_sph(20, 3, 4)
 rho_optim_bst(x, perp_fixed = 15, num_cores = 2)
-rho_optim_bst(x, perp_fixed = 26, num_cores = 2)
+rho_optim_bst(x, perp_fixed = 26, num_cores = 2,
+              sphunif::Psi_mat(x, scalar_prod = TRUE))
 }
