@@ -30,7 +30,7 @@ num_cores_param <- 2
 stopifnot(packageVersion("pscsne") >= "0.0.1.900004")
 ```
 
-Numerical experiments are important to uncover hidden structures in the data to demonstrate that psc-sne does a good job on the task of dimension reduction. Then, this document contains information about the simulation of low-dimensional data and defines different cases in each point.
+Numerical experiments are important to uncover hidden structures in the data to demonstrate that psc-SNE does a good job on the task of dimension reduction. Then, this document contains information about the simulation of low-dimensional data and defines different cases in each point.
 
 First, we start with $p = 2$ and $r = 1$ where $(\mathbb{S}^{p})^r$.
 
@@ -303,8 +303,8 @@ Run `psc_sne()` with colors being the groups of variables for $d = 1$:
 
 ```{r size = "scriptsize", fig.align = 'center'}
 res_pscsne_31 <- psc_sne(X = mix_sc, d = 1, rho_psc_list = rho_30_3, eta = 50,
-                         colors = mix_sc_colors, show_prog = TRUE,
-                         parallel_cores = num_cores_param)
+                         colors = mix_sc_colors, show_prog = TRUE, 
+                         perplexity = 30, parallel_cores = num_cores_param)
 ```
 
 The best iteration results onto the circumference:
@@ -321,7 +321,7 @@ The `psc_sne` algorithm does identify in the reduced dimension on the circumfere
 
 #### Reduction to $d=2$
 
-Let's run the psc-sne algorithm for $d = 2$ and see if results are better:
+Let's run the psc-SNE algorithm for $d = 2$ and see if results are better:
 
 ```{r fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_32 <- psc_sne(mix_sc, d = 2, rho_psc_list = rho_30_3, eta = 50,
@@ -438,7 +438,7 @@ As we can see in the plot above, the three components of the von Mises--Fisher m
 
 #### Reduction to $d=2$
 
-Let's run the psc-sne algorithm for $d = 2$ and see if results are good as well:
+Let's run the psc-SNE algorithm for $d = 2$ and see if results are good as well:
 
 ```{r fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_42 <- psc_sne(mix_3_mvMF_data, d = 2, rho_psc_list = rho_30_4,
@@ -547,7 +547,7 @@ polygon(x = cos(th), y = sin(th))
 As we can see in the plot above, the three components of the mixture are identified although there are a few points that are wrongly associated to the green and black cluster. This can be explained due to the proximity of the points of both clusters in the original data.
 #### Reduction to $d=2$
 
-Let's run the psc-sne algorithm for $d = 2$ and see if results are good as well:
+Let's run the psc-SNE algorithm for $d = 2$ and see if results are good as well:
 
 ```{r fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_52 <- psc_sne(samp_5, d = 2, rho_psc_list = rho_30_5,
@@ -632,7 +632,7 @@ It is possible to see an appropriate arrangement of the path thanks to configuri
 
 #### Reduction to $d=2$
 
-Let's run the psc-sne algorithm for $d = 2$ and see if results are better:
+Let's run the psc-SNE algorithm for $d = 2$ and see if results are better:
 
 ```{r fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_62 <- psc_sne(x_path_1, d = 2, rho_psc_list = rho_30_6,
@@ -757,7 +757,7 @@ As we can see in the plot above, the three components of the von Mises--Fisher m
 
 #### Reduction to $d=2$
 
-Let's run the psc-sne algorithm for $d = 2$ and see if results are good as well:
+Let's run the psc-SNE algorithm for $d = 2$ and see if results are good as well:
 
 ```{r fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 set.seed(42)
@@ -871,7 +871,7 @@ In the previous plot is possible to see that the three components of the mixture
 
 #### Reduction to $d=2$
 
-Let's run the psc-sne algorithm for $d = 2$ and see if results are good as well:
+Let's run the psc-SNE algorithm for $d = 2$ and see if results are good as well:
 
 ```{r fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_82 <- psc_sne(samp_8, d = 2, rho_psc_list = rho_30_8,
@@ -970,7 +970,7 @@ It is possible to see a perfect arrangement of the path. This could be achieved 
 
 #### Reduction to $d=2$
 
-Let's run the psc-sne algorithm for $d = 2$ and see if results are better:
+Let's run the psc-SNE algorithm for $d = 2$ and see if results are better:
 
 ```{r cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'}
 psc_sne_res_92 <- psc_sne(x_path_2, d = 2, rho_psc_list = rho_30_9,
