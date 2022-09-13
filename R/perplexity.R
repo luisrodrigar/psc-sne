@@ -6,7 +6,7 @@
 #' @title Perplexity matrix
 #'
 #' @description Calculate the perplexity of each observations for a given
-#' \eqn{\mathbf{\rho}} parameters list.
+#' \eqn{\boldsymbol{\rho}} parameters list.
 #'
 #' @inheritParams high_dimension
 #' @return Perplexity of each \eqn{i}-th observation for all the remainder
@@ -44,8 +44,7 @@ to_perp <- function(x, rho_list, cos_sim_psh = NULL,
 #' @title Perplexity for the i-th observation
 #'
 #' @description Calculate the perplexity of the i-th observation for a given
-#' \eqn{\mathbf{\rho}} parameters list.
-#'
+#' \eqn{\boldsymbol{\rho}} parameters list.
 #' @inheritParams high_dimension
 #' @inheritParams d_sph_cauchy
 #' @return Perplexity of the \eqn{i}-th observation for all

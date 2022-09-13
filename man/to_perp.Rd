@@ -30,7 +30,7 @@ observations.
 }
 \description{
 Calculate the perplexity of each observations for a given
-\eqn{\mathbf{\rho}} parameters list.
+\eqn{\boldsymbol{\rho}} parameters list.
 }
 \examples{
 x <- sphunif::r_unif_sph(25, 3, 3)
