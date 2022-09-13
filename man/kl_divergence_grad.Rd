@@ -39,7 +39,7 @@ divergence between low- and high-dimensional pairwise probabilities.
 \examples{
 Y <- sphunif::r_unif_sph(40, 3, 1)[ , , 1]
 X <- sphunif::r_unif_sph(40, 3, 3)
-P <- high_dimension(X, rep(0.5, 40))
+P <- high_dimension(X, rep(0.5, 40), num_cores = 2)
 kl_divergence_grad(Y, 3, 0.5, 2, P)
 cos_sim <- vec2matrix(
     vec = drop(sphunif::Psi_mat(array(X, dim = c(nrow(X), ncol(X), 1)),

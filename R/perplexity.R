@@ -2,10 +2,49 @@
 ##      spherical Cauchy Perplexity      ##
 ###########################################
 
-#' @title Perplexity for the i-th observation (vector version)
+
+#' @title Perplexity matrix
+#'
+#' @description Calculate the perplexity of each observations for a given
+#' \eqn{\mathbf{\rho}} parameters list.
+#'
+#' @inheritParams high_dimension
+#' @return Perplexity of each \eqn{i}-th observation for all the remainder
+#' observations.
+#' @export
+#' @examples
+#' x <- sphunif::r_unif_sph(25, 3, 3)
+#' num_cores <- 2
+#' to_perp(x = x, rho_list = rep(0.5, 25), num_cores = num_cores)
+#' to_perp(x = x, rho_list = rep(1 - 1e-4, 25),
+#'         cos_sim_psh = sphunif::Psi_mat(x, scalar_prod = TRUE),
+#'         num_cores = num_cores)
+to_perp <- function(x, rho_list, cos_sim_psh = NULL,
+                    num_cores = parallel::detectCores() - 1) {
+  if (length(dim(x)) != 3) {
+    stop("x must be an array of dimension c(n, p + 1, r), from (S^p)^r")
+  }
+  if (rlang::is_scalar_atomic(rho_list)) {
+    stop("rho_list must be a vector")
+  }
+  # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
+  if (is.null(cos_sim_psh)) {
+    cos_sim_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
+  }
+  # Calculate the high-dimension probabilities
+  P <- high_dimension(x, rho_list, cos_sim_psh, num_cores)
+  # Apply the formula of the entropy (matrix way)
+  entropy <- -rowSums(P * log2(P), na.rm = TRUE)
+  # Return the perplexity list result after applying the perplexity
+  # formula (matrix way)
+  return(2^entropy)
+}
+
+
+#' @title Perplexity for the i-th observation
 #'
 #' @description Calculate the perplexity of the i-th observation for a given
-#' \eqn{\mathbf{\rho}} parameters list. Vector version algorithm.
+#' \eqn{\mathbf{\rho}} parameters list.
 #'
 #' @inheritParams high_dimension
 #' @inheritParams d_sph_cauchy
@@ -24,45 +63,10 @@ to_perp_i <- function(x, i, rho, cos_sim_psh = NULL) {
   # Obtaining the high dimension probability vector for the i-th observation
   P_i <- high_dimension_i(x, i, rho, cos_sim_psh)
   # Apply the formula of the entropy (matrix way)
-  op <- P_i * log2(P_i)
+  entropy_i <- -sum(P_i * log2(P_i), na.rm = TRUE)
   # Return the perplexity list result after applying the
   # perplexity formula (matrix way)
-  return(list(perp = 2^(-sum(op, na.rm = TRUE)), Pjcondi = P_i))
-}
-
-#' @title Perplexity matrix (matrix version)
-#'
-#' @description Calculate the perplexity of each observations for a given
-#' \eqn{\mathbf{\rho}} parameters list. Matrix version algorithm.
-#'
-#' @inheritParams high_dimension
-#' @return Perplexity of each \eqn{i}-th observation for all the remainder
-#' observations.
-#' @export
-#' @examples
-#' x <- sphunif::r_unif_sph(25, 3, 3)
-#' to_perp(x, rep(0.5, 25))
-#' to_perp(x, rep(1 - 1e-4, 25), sphunif::Psi_mat(x, scalar_prod = TRUE))
-to_perp <- function(x, rho_list, cos_sim_psh = NULL) {
-  if (length(dim(x)) != 3) {
-    stop("x must be an array of dimension c(n, p + 1, r), from (S^p)^r")
-  }
-  if (rlang::is_scalar_atomic(rho_list)) {
-    stop("rho_list must be a vector")
-  }
-  # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
-  if (is.null(cos_sim_psh)) {
-    cos_sim_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
-  }
-  # Calculate the high-dimension probabilities
-  P <- high_dimension(x, rho_list, cos_sim_psh)
-  # Apply the formula of the entropy (matrix way)
-  op <- P * log2(P)
-  # Set the diagonal elements to zero
-  diag(op) <- 0
-  # Return the perplexity list result after applying the perplexity
-  # formula (matrix way)
-  return(2^(-rowSums(op)))
+  return(list(perp = 2^entropy_i, Pjcondi = P_i))
 }
 
 

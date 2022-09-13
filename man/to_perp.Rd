@@ -2,9 +2,10 @@
 % Please edit documentation in R/perplexity.R
 \name{to_perp}
 \alias{to_perp}
-\title{Perplexity matrix (matrix version)}
+\title{Perplexity matrix}
 \usage{
-to_perp(x, rho_list, cos_sim_psh = NULL)
+to_perp(x, rho_list, cos_sim_psh = NULL,
+  num_cores = parallel::detectCores() - 1)
 }
 \arguments{
 \item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
@@ -19,6 +20,9 @@ similarities in high-dimension for the polysphere \eqn{(\mathcal{S}^p)^r}.
 The way that the cosine similarities matrix is treated makes the calculus
 faster since it is flat in a vector object. Optional parameter, defaults to
 \code{NULL}.}
+
+\item{num_cores}{number of cores to execute the code concurrently. This
+value must be below the total number of the CPU has available.}
 }
 \value{
 Perplexity of each \eqn{i}-th observation for all the remainder
@@ -26,10 +30,13 @@ observations.
 }
 \description{
 Calculate the perplexity of each observations for a given
-\eqn{\mathbf{\rho}} parameters list. Matrix version algorithm.
+\eqn{\mathbf{\rho}} parameters list.
 }
 \examples{
 x <- sphunif::r_unif_sph(25, 3, 3)
-to_perp(x, rep(0.5, 25))
-to_perp(x, rep(1 - 1e-4, 25), sphunif::Psi_mat(x, scalar_prod = TRUE))
+num_cores <- 2
+to_perp(x = x, rho_list = rep(0.5, 25), num_cores = num_cores)
+to_perp(x = x, rho_list = rep(1 - 1e-4, 25),
+        cos_sim_psh = sphunif::Psi_mat(x, scalar_prod = TRUE),
+        num_cores = num_cores)
 }

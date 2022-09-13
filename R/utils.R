@@ -79,7 +79,7 @@ index_upper_trian <- function(i, j, n) {
 
   }
 
-  return(i + floor(((j - 2) * (j - 1)) / 2))
+  return((j * (j - 3) / 2 + i) + 1)
 }
 
 #' @title Cosine similarities vector for the i-th observation

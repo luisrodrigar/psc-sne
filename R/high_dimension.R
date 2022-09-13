@@ -1,5 +1,5 @@
 ###############################################
-##        Polyspherical Cauchy HD           ##
+##          Polyspherical Cauchy HD          ##
 ## High-dimension neighborhood probabilities ##
 ###############################################
 
@@ -20,54 +20,36 @@
 #' \code{NULL}.
 #' @return An array of size \code{c(n, n)} with the high-dimension conditional
 #' probabilities of \code{x}.
+#' @inheritParams rho_optim_bst
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(100, 3, 3)
-#' high_dimension(x, rep(0.5, 100))
-#' high_dimension(x, rep(0.5, 100), sphunif::Psi_mat(x, scalar_prod = TRUE))
-high_dimension <- function(x, rho_list, cos_sim_psh = NULL) {
+#' high_dimension(x, rep(0.5, 100), num_cores = 2)
+#' high_dimension(x, rep(0.5, 100), sphunif::Psi_mat(x, scalar_prod = TRUE),
+#'                num_cores = 2)
+high_dimension <- function(x, rho_list, cos_sim_psh = NULL,
+                           num_cores = parallel::detectCores() - 1) {
   if (!rlang::is_vector(rho_list)) {
     stop("rho_list must be a vector")
   }
   if (length(rho_list) != nrow(x)) {
     stop("rho_list size has to be equal to nrow(x)")
   }
-  # Number of observations
+  # sample size
   n <- nrow(x)
-  # Number of columns
-  p <- ncol(x) - 1
 
   # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
   if (is.null(cos_sim_psh)) {
     cos_sim_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
   }
 
-  # Calculate -2 * rho_list * (Y[i,,] %*% Y[j,,]) by each row of the 3d-array
-  P <- sweep(cos_sim_psh,
-             MARGIN = 1, STATS = (-2 * rho_list), FUN = "*",
-             check.margin = FALSE
-  )
-  # Calculate P + (rho_list^2) by each row of the 3d-array
-  P <- sweep(P,
-             MARGIN = 1, STATS = (rho_list^2), FUN = "+",
-             check.margin = FALSE
-  )
-  # Calculate 1 / (1 + P)^p
-  P <- 1 / (1 + P)^p
+  Pis <- parallel::parLapply(clusterFactory(num_cores), seq_len(n),
+                             function(i) {
+                               high_dimension_i(x = x, i = i, rho = rho_list[i],
+                                                cos_sim_psh = cos_sim_psh)
+  })
 
-  # Product operator by matrices of the 3d-array
-  P_i_r <- apply(P, MARGIN = 1, prod)
-  # Reconstruct from vector to symmetric matrix
-  P_i_r <- vec2matrix(vec = P_i_r, n = n, diag_value = 0)
-
-  # Summation operator by rows
-  Pi <- rowSums(P_i_r)
-  # Calculate (P_ij)_{ij} / (P_i)_{i}
-  P_ij <- sweep(
-    x = P_i_r, MARGIN = c(1, 2), STATS = Pi, FUN = "/",
-    check.margin = FALSE
-  )
-  return(P_ij)
+  return(do.call(rbind, Pis))
 }
 
 
@@ -121,35 +103,3 @@ high_dimension_i <- function(x, i, rho, cos_sim_psh = NULL) {
 
 }
 
-#' @title Polyspherical Cauchy conditional probability matrix (scalar version)
-#'
-#' @description Calculates the high-dimension conditional probabilities of a
-#' polyspherical Cauchy distribution. Scalar version algorithm.
-#'
-#' @inheritParams high_dimension
-#' @return An array of size \code{c(n, n)} with the high-dimension conditional
-#' probabilities of \code{x}.
-#' @export
-#' @examples
-#' x <- sphunif::r_unif_sph(100, 3, 3)
-#' high_dimension_p(x, rep(0.5, 100))
-#' @keywords internal
-high_dimension_p <- function(x, rho_list) {
-  if (!rlang::is_vector(rho_list)) {
-    stop("rho_list must be a vector")
-  }
-  if (length(rho_list) != nrow(x)) {
-    stop("rho_list size has to be equal to nrow(x)")
-  }
-  # Marginal conditional probability of the i-th observation
-  d_total_psph <- d_total_psph_cauchy(x, rho_list)
-  # Function that calculates the probability of the j-th observation
-  # given the i-th one
-  jcondi <- function(i) {
-    sapply(seq_len(nrow(x)), function(j) {
-      jcondi_psph(x, i, j, rho_list, d_total_psph[i])
-    })
-  }
-  # Apply the previous function for each observation
-  return(t(sapply(seq_len(nrow(x)), jcondi)))
-}
