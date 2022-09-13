@@ -18,6 +18,7 @@
 #' x <- sphunif::r_unif_sph(25, 3, 3)
 #' to_perplexity_P(x, 1, 0.5)
 #' to_perplexity_P(x, 4, 1 - 1e-4)
+#' @export
 to_perplexity_P <- function(x, i, rho) {
   if (i < 1 || i > nrow(x)) {
     stop("i not valid, must be in [1, nrow(x)]")
