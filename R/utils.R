@@ -236,7 +236,7 @@ grid_sphere <- function(n, d) {
     # Generate data for the sphere S^2
     i <- seq(0, n - 1) + 0.5
     phi <- acos(1 - 2 * i / n)
-    goldenRatio <- (1 + 5**0.5) / 2
+    goldenRatio <- (1 + sqrt(5)) / 2
     theta <- 2 * pi * i / goldenRatio
     x <- cos(theta) * sin(phi)
     y <- sin(theta) * sin(phi)

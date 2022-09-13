@@ -35,7 +35,7 @@ high_dimension <- function(x, rho_list, cos_sim_psh = NULL,
   if (length(rho_list) != nrow(x)) {
     stop("rho_list size has to be equal to nrow(x)")
   }
-  # sample size
+  # Sample size
   n <- nrow(x)
 
   # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
