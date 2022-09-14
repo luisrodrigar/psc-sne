@@ -4,7 +4,8 @@
 \alias{high_dimension}
 \title{Polyspherical Cauchy conditional probability matrix}
 \usage{
-high_dimension(x, rho_list, cos_sim_psh = NULL)
+high_dimension(x, rho_list, cos_sim_psh = NULL,
+  num_cores = parallel::detectCores() - 1)
 }
 \arguments{
 \item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
@@ -19,6 +20,9 @@ similarities in high-dimension for the polysphere \eqn{(\mathcal{S}^p)^r}.
 The way that the cosine similarities matrix is treated makes the calculus
 faster since it is flat in a vector object. Optional parameter, defaults to
 \code{NULL}.}
+
+\item{num_cores}{number of cores to execute the code concurrently. This
+value must be below the total number of the CPU has available.}
 }
 \value{
 An array of size \code{c(n, n)} with the high-dimension conditional
@@ -30,6 +34,7 @@ polyspherical Cauchy distribution.
 }
 \examples{
 x <- sphunif::r_unif_sph(100, 3, 3)
-high_dimension(x, rep(0.5, 100))
-high_dimension(x, rep(0.5, 100), sphunif::Psi_mat(x, scalar_prod = TRUE))
+high_dimension(x, rep(0.5, 100), num_cores = 2)
+high_dimension(x, rep(0.5, 100), sphunif::Psi_mat(x, scalar_prod = TRUE),
+               num_cores = 2)
 }

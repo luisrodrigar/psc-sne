@@ -4,7 +4,7 @@
 #' @description Calculates analytically the gradient of the Kullback--Leibler
 #' divergence between low- and high-dimensional pairwise probabilities.
 #'
-#' @inheritParams low_dimension_Q
+#' @inheritParams low_dimension
 #' @inheritParams d_sph_cauchy
 #' @param d target dimension to reduce the data.
 #' @param P matrix of size \code{c(n, n)} with the high-dimensional
@@ -21,14 +21,14 @@
 #' @examples
 #' Y <- sphunif::r_unif_sph(40, 3, 1)[ , , 1]
 #' X <- sphunif::r_unif_sph(40, 3, 3)
-#' P <- high_dimension(X, rep(0.5, 40))
+#' P <- high_dimension(X, rep(0.5, 40), num_cores = 2)
 #' kl_divergence_grad(Y, 3, 0.5, 2, P)
 #' cos_sim <- vec2matrix(
 #'     vec = drop(sphunif::Psi_mat(array(X, dim = c(nrow(X), ncol(X), 1)),
 #'                                    scalar_prod = TRUE)),
 #'     n = nrow(X),
 #'     diag_value = 1)
-#' Q <- low_dimension_Q(Y, 0.5)
+#' Q <- low_dimension(Y, 0.5)
 #' kl_divergence_grad(Y, 3, 0.5, 2, P, cos_sim, Q)
 #' @export
 kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
@@ -49,7 +49,7 @@ kl_divergence_grad <- function(Y, i, rho, d, P, cos_sim = NULL, Q = NULL) {
   # Calculate the low dimension probabilities based on the data Z
   if (is.null(Q)) {
 
-    Q <- low_dimension_Q(Z, rho)
+    Q <- low_dimension(Z, rho)
 
   }
 
@@ -261,7 +261,8 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   } else {
 
     # Calculating the probabilities based on the rho values
-    P_cond <- high_dimension(x = X, rho_list = rho_psc_list)
+    P_cond <- high_dimension(x = X, rho_list = rho_psc_list,
+                             num_cores = parallel_cores)
 
   }
 
@@ -359,7 +360,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
   best_i <- NULL
 
   # Generate low-dimension probabilities for the data generated
-  Q_i <- low_dimension_Q(Y[, , 2], rho)
+  Q_i <- low_dimension(Y[, , 2], rho)
 
   # Initial momentum
   momentum <- initial_momentum
@@ -415,7 +416,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
     Y[, , 2] <- Y_i
 
     # Generate the Q matrix with the low-dimension probabilities
-    Q_i <- low_dimension_Q(Y_i, rho)
+    Q_i <- low_dimension(Y_i, rho)
 
     # Objective function value, absolute and relative errors, gradient norm,
     # and moment norm
@@ -522,7 +523,7 @@ psc_sne <- function(X, d, rho_psc_list = NULL, rho = 0.5, perplexity = 30,
 #' @description Visualize the iteration solution in a plot for the
 #' \eqn{i}-th iteration.
 #'
-#' @inheritParams low_dimension_Q
+#' @inheritParams low_dimension
 #' @param i the \eqn{i}-th iteration.
 #' @param d the dimension to reduce the original data.
 #' @param colors defines the group colors in the plot. Optional parameter,

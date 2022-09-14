@@ -4,7 +4,8 @@
 \alias{rho_optim_i_bst}
 \title{Binary search rho optimization for the \eqn{i}-th observation}
 \usage{
-rho_optim_i_bst(x, i, perp_fixed, tolerance = 0.001, rho = 0.5, max_tries = 20)
+rho_optim_i_bst(x, i, perp_fixed, cos_sim_psh, tolerance = 0.001,
+  rho = 0.5, max_tries = 20)
 }
 \arguments{
 \item{x}{an array of size \code{c(n, d + 1, r)} with the polyspherical data,
@@ -14,6 +15,12 @@ each sphere, and \code{r} is the number of spheres.}
 \item{i}{the \eqn{i}-th observation.}
 
 \item{perp_fixed}{a fixed value used to optimized the rho values.}
+
+\item{cos_sim_psh}{a vector of size \code{n/2} with the cosine
+similarities in high-dimension for the polysphere \eqn{(\mathcal{S}^p)^r}.
+The way that the cosine similarities matrix is treated makes the calculus
+faster since it is flat in a vector object. Optional parameter, defaults to
+\code{NULL}.}
 
 \item{tolerance}{whether the difference between previous and current
 results is below this value (optional, default value \code{1e-3}).}
