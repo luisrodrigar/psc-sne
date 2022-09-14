@@ -2,7 +2,7 @@
 % Please edit documentation in R/perplexity.R
 \name{to_perp_i}
 \alias{to_perp_i}
-\title{Perplexity for the i-th observation (vector version)}
+\title{Perplexity for the i-th observation}
 \usage{
 to_perp_i(x, i, rho, cos_sim_psh = NULL)
 }
@@ -27,11 +27,10 @@ the remainder observations.
 }
 \description{
 Calculate the perplexity of the i-th observation for a given
-\eqn{\mathbf{\rho}} parameters list. Vector version algorithm.
+\eqn{\boldsymbol{\rho}} parameters list.
 }
 \examples{
 x <- sphunif::r_unif_sph(25, 3, 3)
 i <- 1
 to_perp_i(x, i, 0.25)
 }
-\keyword{internal}

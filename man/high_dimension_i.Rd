@@ -36,4 +36,3 @@ x <- sphunif::r_unif_sph(100, 3, 3)
 high_dimension_i(x, 1, 0.5)
 high_dimension_i(x, 100, 0.5, sphunif::Psi_mat(x, scalar_prod = TRUE))
 }
-\keyword{internal}

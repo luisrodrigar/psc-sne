@@ -14,10 +14,10 @@
 #' @export
 #' @examples
 #' Y <- rotasym::r_unif_sphere(100, 2)
-#' low_dimension_Q(Y, 0)
-#' low_dimension_Q(Y, 0.5)
-#' low_dimension_Q(Y, 0.9999)
-low_dimension_Q <- function(Y, rho) {
+#' low_dimension(Y, 0)
+#' low_dimension(Y, 0.5)
+#' low_dimension(Y, 0.9999)
+low_dimension <- function(Y, rho) {
   # Obtaining d, where S^d
   d <- ncol(Y) - 1
   # Obtaining the sample size
