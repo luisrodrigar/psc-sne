@@ -16,6 +16,7 @@ library(abind)
 library(rgl)
 library(mvtnorm)
 num_cores_param <- 2
+stopifnot(packageVersion("pscsne") >= "0.0.1.900004")
 
 ## ----cache = TRUE-------------------------------------------------------------
 MvMF_mix <- function(n, n1, n2, n3, mu_mat, kappa = 50) {
@@ -73,7 +74,8 @@ res_pscsne_11 <- psc_sne(X = mvmf_mix_data, d = 1, rho_psc_list = rho_30_1,
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- res_pscsne_11$best_Y
-plot(Y[, 1], Y[, 2], col = mvmf_mix_colors, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = mvmf_mix_colors, xlim = c(-1, 1), ylim = c(-1, 1),
+     xlab = "", ylab = "", axes = FALSE)
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
@@ -87,7 +89,8 @@ Y <- res_pscsne_12$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = mvmf_mix_colors, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -145,7 +148,7 @@ res_pscsne_21 <- psc_sne(X = mvmf_spiral_mix_data, d = 1,
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- res_pscsne_21$best_Y
 plot(Y[, 1], Y[, 2], col = mvmf_spiral_mix_colors, xlim = c(-1, 1),
-     ylim = c(-1, 1))
+     ylim = c(-1, 1), axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
@@ -159,7 +162,8 @@ Y <- psc_sne_res_22$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = mvmf_spiral_mix_colors, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -204,12 +208,13 @@ rho_30_3 <- rho_optim_bst(x = mix_sc, perp_fixed = 30,
 
 ## ----size = "scriptsize", fig.align = 'center'--------------------------------
 res_pscsne_31 <- psc_sne(X = mix_sc, d = 1, rho_psc_list = rho_30_3, eta = 50,
-                         colors = mix_sc_colors, show_prog = TRUE,
-                         parallel_cores = num_cores_param)
+                         colors = mix_sc_colors, show_prog = TRUE, 
+                         perplexity = 30, parallel_cores = num_cores_param)
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- res_pscsne_31$best_Y
-plot(Y[, 1], Y[, 2], col = mix_sc_colors, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = mix_sc_colors, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
@@ -223,7 +228,8 @@ Y <- psc_sne_res_32$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = mix_sc_colors, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -275,7 +281,7 @@ mix_3_mvMF_torus <- sdetorus::toPiInt(cbind(
 
 plot(mix_3_mvMF_torus, xlim = c(-pi, pi), ylim = c(-pi, pi), axes = FALSE,
      col = rep(mix_3_mvMF_cols, 2), pch = 16,
-     xlab = "x", ylab = "y")
+     xlab = "", ylab = "")
 sdetorus::torusAxis()
 
 ## ----cache = TRUE-------------------------------------------------------------
@@ -289,7 +295,8 @@ res_pscsne_41 <- psc_sne(X = mix_3_mvMF_data, d = 1, rho_psc_list = rho_30_4,
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- res_pscsne_41$best_Y
-plot(Y[, 1], Y[, 2], col = mix_3_mvMF_cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = mix_3_mvMF_cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
@@ -303,7 +310,8 @@ Y <- psc_sne_res_42$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = mix_3_mvMF_cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -364,7 +372,8 @@ res_pscsne_51 <- psc_sne(X = samp_5, d = 1, rho_psc_list = rho_30_5,
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- res_pscsne_51$best_Y
-plot(Y[, 1], Y[, 2], col = samp_5_cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = samp_5_cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
@@ -378,7 +387,8 @@ Y <- psc_sne_res_52$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = samp_5_cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -415,7 +425,8 @@ res_pscsne_61 <- psc_sne(X = x_path_1, d = 1, rho_psc_list = rho_30_6,
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- res_pscsne_61$best_Y
-plot(Y[, 1], Y[, 2], col = x_path_1_cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = x_path_1_cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
@@ -429,7 +440,8 @@ Y <- psc_sne_res_62$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = x_path_1_cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -498,7 +510,8 @@ res_pscsne_71 <- psc_sne(X = mix_3_mvMF_data_7, d = 1, rho_psc_list = rho_30_7,
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- res_pscsne_71$best_Y
-plot(Y[, 1], Y[, 2], col = mix_3_mvMF_cols_7, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = mix_3_mvMF_cols_7, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
@@ -514,7 +527,8 @@ Y <- psc_sne_res_72$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = mix_3_mvMF_cols_7, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -547,12 +561,11 @@ samp_8_cols <- c(rep(1, n1), rep(2, n2), rep(3, n3))
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 pairs(x_8_torus, col = samp_8_cols)
-sdetorus::torusAxis()
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 scatterplot3d::scatterplot3d(x_8_torus, xlim = c(-pi, pi), ylim = c(-pi, pi),
                              zlim = c(-pi, pi), xlab = "", ylab = "", zlab = "",
-                             color = samp_8_cols, pch = 16)
+                             color = samp_8_cols, pch = 16, tick.marks = FALSE)
 
 ## -----------------------------------------------------------------------------
 set.seed(42)
@@ -572,7 +585,8 @@ res_pscsne_81 <- psc_sne(X = samp_8, d = 1, rho_psc_list = rho_30_8,
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- res_pscsne_81$best_Y
-plot(Y[, 1], Y[, 2], col = samp_8_cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = samp_8_cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
@@ -586,7 +600,8 @@ Y <- psc_sne_res_82$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = samp_8_cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -601,13 +616,12 @@ samp_9_cols <- rainbow(n, alpha = 1)
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 pairs(samp_9, xlim = c(-pi, pi), ylim = c(-pi, pi), col = samp_9_cols,
-      pch = 16)
-sdetorus::torusAxis()
+      pch = 16, labels = c("Sphere 1", "Sphere 2", "Sphere 3"))
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 scatterplot3d::scatterplot3d(samp_9, xlim = c(-pi, pi), ylim = c(-pi, pi),
                              zlim = c(-pi, pi), xlab = "", ylab = "", zlab = "",
-                             color = samp_9_cols, pch = 16)
+                             color = samp_9_cols, pch = 16, tick.marks = FALSE)
 
 ## -----------------------------------------------------------------------------
 x_1 <- DirStats::to_cir(samp_9[, 1])
@@ -631,7 +645,8 @@ res_pscsne_91 <- psc_sne(X = x_path_2, d = 1, rho_psc_list = rho_30_9,
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- res_pscsne_91$best_Y
-plot(Y[, 1], Y[, 2], col = samp_9_cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = samp_9_cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
@@ -646,7 +661,8 @@ Y <- psc_sne_res_92$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = samp_9_cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
