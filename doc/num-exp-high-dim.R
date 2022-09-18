@@ -16,7 +16,7 @@ library(abind)
 library(rgl)
 library(mvtnorm)
 num_cores_param <- 2
-stopifnot(packageVersion("pscsne") <= "0.0.1.900004")
+stopifnot(packageVersion("pscsne") >= "0.0.1.900004")
 
 ## ----cache = TRUE-------------------------------------------------------------
 sc_unif_mix <- function(n, p, w_sc, w_unif, kappa = 50) {
@@ -53,19 +53,19 @@ rho_30_1 <- rho_optim_bst(x = sc_unif_mix_data, perp_fixed = 30,
 ## ----cache = TRUE, size = "scriptsize", fig.align = 'center'------------------
 res_pscsne_11 <- psc_sne(X = sc_unif_mix_data, d = 1, rho_psc_list = rho_30_1,
                          show_prog = TRUE, colors = sc_unif_mix_colors,
-                         parallel_cores = num_cores_param)
+                         eta = 100, parallel_cores = num_cores_param)
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- res_pscsne_11$best_Y
 plot(Y[, 1], Y[, 2], col = sc_unif_mix_colors, xlim = c(-1, 1),
-     ylim = c(-1, 1))
+     ylim = c(-1, 1), axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
 ## ----cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'----
 res_pscsne_12 <- psc_sne(X = sc_unif_mix_data, d = 2, rho_psc_list = rho_30_1,
                          show_prog = TRUE, colors = sc_unif_mix_colors,
-                         parallel_cores = num_cores_param, eta = 100)
+                         eta = 100, parallel_cores = num_cores_param)
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 seq_rad <- seq(-pi, pi, by = pi / 30)
@@ -75,7 +75,8 @@ Y <- res_pscsne_12$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = sc_unif_mix_colors, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -84,8 +85,8 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
 
 ## ----cache = TRUE-------------------------------------------------------------
 # Visualize some features
-n <- 200
-g <- 5
+n <- 100
+g <- 10
 p <- 20
 set.seed(42)
 x <- r_block(n = n, g = g, p = p)
@@ -100,7 +101,8 @@ x_sca <- x_sca / sqrt(n - 1)
 # Transpose matrix (features become observations)
 feat_data <- t(x_sca)
 # Colors of the groups
-cols <- rep(1:g, each = p)
+cols <- rainbow(g, alpha = 1)
+cols <- rep(cols, each = p)
 # Set an array of dimension c(g * p, n, 1)
 dim(feat_data) <- c(dim(feat_data), 1)
 # Change the order of the data
@@ -120,7 +122,8 @@ res_pscsne_21 <- psc_sne(X = feat_data, d = 1, rho_psc_list = rho_list,
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- res_pscsne_21$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
@@ -134,7 +137,8 @@ Y <- psc_sne_res_22$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -144,7 +148,7 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
 ## ----cache = TRUE-------------------------------------------------------------
 # Visualize some features
 n <- 100
-g <- 5
+g <- 10
 p <- 20
 rho_values_neg <- rep(c(-0.9, 0.9), times = g)[1:g]
 set.seed(42)
@@ -160,7 +164,8 @@ x_sca <- x_sca / sqrt(n - 1)
 # Transpose matrix (features become observations)
 feat_data_2 <- t(x_sca)
 # Colors of the groups
-cols <- rep(1:g, each = p)
+cols <- rainbow(g, alpha = 1)
+cols <- rep(cols, each = p)
 # Set an array of dimension c(g * p, n, 1)
 dim(feat_data_2) <- c(dim(feat_data_2), 1)
 # Change the order of the data
@@ -180,7 +185,8 @@ res_pscsne_21_neg <- psc_sne(X = feat_data_2, d = 1, rho_psc_list = rho_list_2,
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- res_pscsne_21_neg$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
@@ -194,7 +200,8 @@ Y <- psc_sne_res_22_neg$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -205,17 +212,15 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
 r1 <- 5
 r2 <- 95
 p <- 1
-n <- 100
+n <- 200
 kappa <- 3
 set.seed(42)
 gen_data <- rbinom(n = n, size = n, prob = 0.5)
 x_vMF_5 <- sapply(seq_len(r1), function(k1) {
   data_vMF <- lapply(seq_len(n), function(i) {
     if (gen_data[i] <= n / 2) {
-      set.seed(42)
       rotasym::r_vMF(n = 1, mu = c(0, 1), kappa = kappa)
     } else {
-      set.seed(42)
       rotasym::r_vMF(n = 1, mu = c(0, -1), kappa = kappa)
     }
   })
@@ -232,18 +237,19 @@ rho_30_s1_100 <- rho_optim_bst(x = x_s1_100, perp_fixed = 30,
 ## ----cache = TRUE, size = "scriptsize", fig.align = 'center'------------------
 cols <- ifelse(gen_data <= n / 2, 2, 3)
 psc_sne_res_31 <- psc_sne(X = x_s1_100, d = 1, rho_psc_list = rho_30_s1_100,
-                          colors = cols, show_prog = TRUE, eta = 25,
+                          colors = cols, show_prog = TRUE, eta = 110,
                           parallel_cores = num_cores_param)
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- psc_sne_res_31$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
 ## ----cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'----
 psc_sne_res_32 <- psc_sne(X = x_s1_100, d = 2, rho_psc_list = rho_30_s1_100,
-                          colors = cols, show_prog = TRUE, eta = 25,
+                          colors = cols, show_prog = TRUE, eta = 50,
                           parallel_cores = num_cores_param)
 
 ## ----fig.asp = 1--------------------------------------------------------------
@@ -251,7 +257,8 @@ Y <- psc_sne_res_32$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -259,7 +266,7 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
              type = "l", lty = 3)
 
 ## ----cache = TRUE-------------------------------------------------------------
-n <- 100
+n <- 200
 r <- 100
 set.seed(42)
 x_s1_100_path <- r_path_s1r(n = n, r = r)
@@ -282,7 +289,8 @@ psc_sne_res_41 <- psc_sne(X = x_s1_100_path, d = 1,
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- psc_sne_res_41$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
@@ -297,7 +305,8 @@ Y <- psc_sne_res_42$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -305,7 +314,7 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
              type = "l", lty = 3)
 
 ## ----cache = TRUE-------------------------------------------------------------
-n <- 100
+n <- 200
 r1 <- 1
 r2 <- 2
 r3 <- 2
@@ -345,21 +354,23 @@ psc_sne_res_51 <- psc_sne(X = x_s2_100, d = 1, rho_psc_list = rho_30_s2_100,
 
 ## ----fig.asp = 1, fig.align = 'center'----------------------------------------
 Y <- psc_sne_res_51$best_Y
-plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1))
+plot(Y[, 1], Y[, 2], col = cols, xlim = c(-1, 1), ylim = c(-1, 1),
+     axes = FALSE, xlab = "", ylab = "")
 th <- seq(0, 2 * pi, length.out = 100)
 polygon(x = cos(th), y = sin(th))
 
 ## ----cache = TRUE, fig.height = 8, fig.width = 8, size = "scriptsize", fig.align = 'center'----
 psc_sne_res_52 <- psc_sne(X = x_s2_100, d = 2, rho_psc_list = rho_30_s2_100,
-                          colors = cols, show_prog = TRUE, eta = 25,
-                          parallel_cores = num_cores_param)
+                          colors = cols, show_prog = TRUE, eta = 5,
+                          parallel_cores = num_cores_param, maxit = 2000)
 
 ## ----fig.asp = 1--------------------------------------------------------------
 Y <- psc_sne_res_52$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)
@@ -377,7 +388,8 @@ Y <- psc_sne_res_52$best_Y
 sd3 <- scatterplot3d::scatterplot3d(
   Y, xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
   color = cols, xlab = "", ylab = "", zlab = "", axis = FALSE,
-  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)]
+  pch = c("+", "-")[ifelse(sign(Y[, 2]) == 1, 1, 2)], grid = FALSE,
+  mar = c(0, 0, 0, 0)
 )
 sd3$points3d(DirStats::to_sph(th = meridian[, 1], ph = meridian[, 2]),
              type = "l", lty = 3)

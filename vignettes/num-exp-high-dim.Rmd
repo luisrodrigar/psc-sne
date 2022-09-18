@@ -312,7 +312,7 @@ sd3$points3d(DirStats::to_sph(th = equator[, 1], ph = equator[, 2]),
 
 ## \boldmath $(\mathbb{S}^{1})^{100}$ \unboldmath
 
-### Generating samples that are uniform and independent in all \mathbb{S}^1's except in the first five, where two groups are defined by two antipodal vMF distributions at north/south
+### Generating samples that are uniform and independent in all \boldmath $\mathbb{S}^1$'s \unboldmath except in the first five, where two groups are defined by two antipodal vMF distributions at north/south
 
 A medium concentration (not massive, so that one has to rely on the combined information of the first ones).
 
