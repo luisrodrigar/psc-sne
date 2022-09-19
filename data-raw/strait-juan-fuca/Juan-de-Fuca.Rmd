@@ -106,7 +106,10 @@ Let's load the data objects generated in the previous chunk.
 
 ```{r load-rhos}
 # Loading the psc-sne input object
-load(paste(here("data-raw", "strait-juan-fuca"), "pscsne.rda", sep = "/"))
+myURL = "https://www.dropbox.com/s/e6jfklj0rw20se9/pscsne.rda?raw=1"
+myConnection = url(myURL)
+load(myConnection)
+close(myConnection)
 ```
 
 ### Reduction to $d=1$
