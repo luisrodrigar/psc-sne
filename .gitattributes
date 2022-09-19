@@ -1,5 +1,5 @@
 . !text !filter !merge !diff
-. filter=lfs diff=lfs merge=lfs -text
+. filter= diff= merge= -text
 data/smallrna.rda !text !filter !merge !diff
 data-raw/strait-juan-fuca/pscsne.rda !text !filter !merge !diff
 data-raw/strait-juan-fuca/Juan-de-Fuca.pdf !text !filter !merge !diff
