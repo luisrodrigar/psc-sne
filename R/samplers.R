@@ -2,8 +2,8 @@
 
 #' @title Samplers of one-dimensional modes of variation for polyspherical data
 #'
-#' @description Functions for sampling data on \eqn{(\mathcal{S}^d)^r} for \eqn{d=1,2}
-#' using one-dimensional modes of variation.
+#' @description Functions for sampling data on \eqn{(\mathcal{S}^d)^r} for
+#' \eqn{d=1,2} using one-dimensional modes of variation.
 #'
 #' @param n sample size.
 #' @param r number of spheres in the polysphere \eqn{(\mathcal{S}^d)^r}.
@@ -21,12 +21,14 @@
 #' @param Theta a matrix of size \code{c(3, r)} giving the north poles for
 #' \eqn{\mathcal{S}^2}. Useful for rotating the sample. Chosen at random by
 #' default.
+#' @param kappa concentration von Mises--Fisher parameter for longitudes in
+#' small circles. Defaults to \code{0} (uniform).
 #' @param spiral consider a spiral (or, more precisely, a
 #' \href{https://en.wikipedia.org/wiki/Clélie}{Clélie curve}) instead of
 #' a small circle? Defaults to \code{FALSE}.
 #' @return
-#' An array of size \code{c(n, d, r)} with samples on \eqn{(\mathcal{S}^d)^r}. If
-#' \code{angles = TRUE} for \code{r_path_s1r}, then a matrix of size
+#' An array of size \code{c(n, d, r)} with samples on \eqn{(\mathcal{S}^d)^r}.
+#' If \code{angles = TRUE} for \code{r_path_s1r}, then a matrix of size
 #' \code{c(n ,r)} with angles is returned.
 #' @examples
 #' # Straight trends on (S^1)^2
@@ -49,7 +51,7 @@
 #'
 #' # Small-circle trends on (S^2)^2
 #' n <- 200
-#' samp_3 <- r_path_s2r(n = n, r = 2, sigma = 0.1)
+#' samp_3 <- r_path_s2r(n = n, r = 2, sigma = 0.1, kappa = 5)
 #' old_par <- par(mfrow = c(1, 2))
 #' scatterplot3d::scatterplot3d(
 #'   samp_3[, , 1], xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),
@@ -109,7 +111,7 @@ r_path_s1r <- function(n, r, alpha = runif(r, -pi, pi),
 #' @export
 r_path_s2r <- function(n, r, t = 0, c = 1,
                        Theta = t(rotasym::r_unif_sphere(n = r, p = 3)),
-                       sigma = 0.25, spiral = FALSE) {
+                       kappa = 0, sigma = 0.25, spiral = FALSE) {
 
   samp <- array(dim = c(n, 3, r))
   if (spiral) {
@@ -133,7 +135,8 @@ r_path_s2r <- function(n, r, t = 0, c = 1,
   } else {
 
     # Sample common and unrotated longitudes
-    th <- sort(runif(n, min = -pi, max = pi))
+    U <- rotasym::r_vMF(n = n, mu = c(1, 0), kappa = kappa)
+    th <- sort(sdetorus::toPiInt(DirStats::to_rad(U)))
     U <- DirStats::to_cir(th = th)
 
     # Loop on the S^2's
