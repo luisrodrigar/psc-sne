@@ -151,3 +151,193 @@ kms_dir <- function(data, x = data, h = NULL, N = 500, eps = 1e-3, tol = 1e-1,
               tree = tree, h = h))
 
 }
+
+#' @title Estimation fo the eta parameter
+#'
+#' @description Auxiliar function to run kernel mean shift clustering with scalar values.
+#' Calculate the estimation of the parameter eta.
+#'
+#' @param x a matrix of size \code{c(nx, d + 1)} with the initial points.
+#' @param h bandwith parameter
+#' @param data a matrix of size \code{c(n, d + 1)} with the sample.
+#'
+#' @return estimation of the eta parameter.
+eta_hat <- function(x, h, data) {
+  h^2 * ks::kdde(
+    x = data, h = h, eval.points = x, deriv.order = 1,
+    supp = 50, binned = FALSE
+  )$estimate /
+    ks::kde(
+      x = data, h = h, eval.points = x, supp = 50,
+      binned = FALSE
+    )$estimate
+}
+
+#' @title Compute the euler value
+#'
+#' @description Auxiliar function to run kernel mean shift clustering with scalar values.
+#' Calculate the estimation of the euler value.
+#'
+#' @param x a matrix of size \code{c(nx, d + 1)} with the initial points.
+#' @param N. Defaults to \code{1e6}.
+#' @param verbose. Defaults to \code{FALSE}.
+#' @param epsilon. Defaults to \code{1e-5}.
+#' @param eta_hat_efic eta parameter value.
+#'
+#' @return euler value for the given parameters.
+euler <- function(x, N = 1e6, verbose = FALSE, epsilon = 1e-5, eta_hat_efic) {
+  for (i in 1:N) {
+    x_new <- sdetorus::toPiInt(x + eta_hat_efic(x = sdetorus::toPiInt(x)))
+    if (verbose) print(x_new)
+    if (abs(sdetorus::toPiInt(x_new - x)) < epsilon) {
+      if (verbose) cat("Stopped at", i, "\n")
+      break
+    }
+    x <- x_new
+  }
+  return(x)
+}
+
+#' @title Kernel mean shift clustering for linear data
+#'
+#' @description Computes the kernel mean shift clustering for scalar values.
+#'
+#' @param x a matrix of size \code{c(nx, d + 1)} with the initial points.
+#' @param original_clusters. Vectors with the label associated to each observation.
+#' @param h. Defaults to \code{ks::hpi(x, deriv.order = 1)}.
+#'
+#' @return A list with the following entries:
+#' \itemize{
+#'   \item \code{cluster}: vector giving the cluster labels.
+#'   \item \code{unique_modes}: estimated modes for each cluster (sorted).
+#'   \item \code{h}: used bandwidth.
+#'   \item \code{position_antimodes}: indexes with the location of the antimodes.
+#'   \item \code{labels_rle_values}: values of the label's rle
+#'   \item \code{x_kms}: eval points
+#' }
+#' @export
+kms_linear <- function(x, original_clusters, h = ks::hpi(x, deriv.order = 1)) {
+  # Hack to have periodicity
+  samp <- c(x - 2 * pi, x, x + 2 * pi)
+
+  # Speedup hack for kernel mean shift clustering
+  x_spline <- seq(-1.35 * pi, 1.35 * pi, by = 0.005)
+  y_spline <- sapply(x_spline, function(xx) {
+    eta_hat(xx, data = samp, h = h)
+  })
+  eta_hat_spline <- splinefun(x = x_spline, y = y_spline)
+
+  # Run kernel mean shift clustering
+  x_kms <- seq(-1.25 * pi, 1.25 * pi, by = 0.001)
+  kms <- numeric(length(x_kms))
+  N <- length(x_kms)
+  pb <- txtProgressBar(style = 3)
+  for (i in 1:N) {
+    kms[i] <- euler(x = x_kms[i], eta_hat_efic = eta_hat_spline)
+    setTxtProgressBar(pb, i / N)
+  }
+  cat("\n")
+  kms <- sdetorus::toPiInt(kms)
+
+  # Obtain modes for data, and cluster them
+  unique_modes <- sort(unique(round(kms, 3)), decreasing = TRUE)
+  unique_modes <- replace(unique_modes, c(2, 3), unique_modes[c(3, 2)])
+
+  arrival_modes <- sapply(x, euler, eta_hat_efic = eta_hat_spline)
+  labels_modes <- match(
+    x = round(arrival_modes, 3),
+    table = unique_modes
+  )
+
+  # Cluster kms
+  labels_kms <- match(x = round(kms, 3), table = unique_modes)
+
+  # Check matching with $membership
+  tab <- table(
+    "assigned" = labels_modes,
+    "true" = original_clusters
+  )
+  print(tab)
+  print(sprintf("Number of misclassified observations = %d", sum(tab) - sum(diag(tab))))
+  print(sprintf("Classification rate = %f", sum(diag(tab)) / sum(tab)))
+
+  # Obtain relevant points
+  labels_rle <- rle(labels_kms)
+  positions_antimodes <- c(1, cumsum(labels_rle$lengths))
+
+  # Return end points
+  return(list(cluster = labels_kms, unique_modes = unique_modes,
+              h = h, positions_antimodes = positions_antimodes,
+              labels_rle_values = labels_rle$values, x_kms = x_kms))
+}
+
+#' @title Plot the density chart of the linear data variable
+#'
+#' @description Produces a density plot for the given parameters.
+#'
+#' @param x a matrix of size \code{c(nx, d + 1)} with the initial points.
+#' @param original_clusters. Vectors with the label associated to each observation.
+#' @param h. Defaults to \code{ks::hpi(x, deriv.order = 1)}.
+#' @export
+plot_kde <- function(x, original_clusters, h = ks::hpi(x, deriv.order = 1)) {
+  # Hack to have periodicity
+  samp <- c(x - 2 * pi, x, x + 2 * pi)
+
+  # Compute the kernel mean shift
+  kms_data <- kms_linear(x, original_clusters)
+  unique_modes <- kms_data$unique_modes
+  positions_antimodes <- kms_data$positions_antimodes
+  labels_rle_values <- kms_data$labels_rle_values
+  h <- kms_data$h
+  x_kms <- kms_data$x_kms
+
+  # Plot curve and axes
+  plot(ks::kde(samp, h = h, gridsize = 1e3),
+       xlim = c(-pi, pi),
+       axes = FALSE, xlab = "", ylab = "",
+       ylim = c(0, 0.1)
+  )
+  sdetorus::torusAxis(1)
+  axis(2)
+  abline(h = 0, lty = 3)
+
+  # Colors for the plot
+  col <- rainbow(5)
+
+  # Plot modes
+  for (i in seq_along(unique_modes)) {
+    segments(
+      x0 = unique_modes[i], y0 = 0, x1 = unique_modes[i],
+      y1 = ks::kde(
+        x = samp, h = h, eval.points = unique_modes[i],
+        binned = FALSE
+      )$estimate,
+      col = col[i], lwd = 2
+    )
+  }
+
+  # Plot domains of attraction
+  kde <- ks::kde(x = samp, h = h, eval.points = x_kms, binned = FALSE)
+  for (k in seq_along(labels_rle_values)) {
+    begin <- positions_antimodes[k]
+    end <- positions_antimodes[k + 1]
+    polygon(
+      x = c(
+        kde$eval.points[begin],
+        kde$eval.points[begin:end],
+        kde$eval.points[end]
+      ),
+      y = c(0, kde$estimate[begin:end], 0),
+      col = rainbow(5, alpha = 0.15)[labels_rle_values[k]],
+      border = NA
+    )
+  }
+
+  lines(kde$eval.points, kde$estimate)
+  abline(v = x_kms[positions_antimodes], lty = 3)
+
+  # Plot rug
+  for (i in unique(original_clusters)) {
+    rug(samp[rep(original_clusters, 3) == i], col = col[i], ticksize = 0.03)
+  }
+}
