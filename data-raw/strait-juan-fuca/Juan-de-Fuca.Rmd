@@ -235,6 +235,21 @@ polygon(x = cos(th), y = sin(th))
 
 Once we have got these results, we can conclude that this could be a potential solution since it is identifying two principal directions (west and east) and other two (south and north) that are less frequent.
 
+```{r}
+n <- nrow(Y_1_eq)
+d <- 1
+fit_mix <- DirStats::bic_vmf_mix(data = Y_1_eq, kappa_max = 1e3)
+h <- DirStats::bw_dir_emi(data = Y_1_eq, fit_mix = fit_mix)$h_opt *
+      n^(1 / (d + 4)) * n^(-1 / (d + 6))
+data_radians <- DirStats::to_rad(Y_1_eq)
+
+kms_data <- pscsne::kms_linear(x = data_radians, h = h)
+kms_data_default_h <- pscsne::kms_linear(x = data_radians)
+
+pscsne::plot_kde(x = data_radians, NULL, kms_data)
+pscsne::plot_kde(x = data_radians, NULL, kms_data_default_h)
+```
+
 We do the same for the reduced data on the sphere $d=2$:
 
 ```{r kms-2d-1, cache = TRUE}

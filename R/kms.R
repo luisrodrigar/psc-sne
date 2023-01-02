@@ -204,7 +204,9 @@ euler <- function(x, N = 1e6, verbose = FALSE, epsilon = 1e-5, eta_hat_efic) {
 #'
 #' @param x a matrix of size \code{c(nx, d + 1)} with the initial points.
 #' @param original_clusters. Vectors with the label associated to each observation.
-#' @param h. Defaults to \code{ks::hpi(x, deriv.order = 1)}.
+#' Defaults to \code{NULL}.
+#' @param h. Defaults to \code{NULL}. If it is not filled in, it is set
+#' automatically to \code{ks::hpi(x, deriv.order = 1)}.
 #'
 #' @return A list with the following entries:
 #' \itemize{
@@ -216,9 +218,13 @@ euler <- function(x, N = 1e6, verbose = FALSE, epsilon = 1e-5, eta_hat_efic) {
 #'   \item \code{x_kms}: eval points
 #' }
 #' @export
-kms_linear <- function(x, original_clusters, h = ks::hpi(x, deriv.order = 1)) {
+kms_linear <- function(x, original_clusters = NULL, h = NULL) {
   # Hack to have periodicity
   samp <- c(x - 2 * pi, x, x + 2 * pi)
+
+  if (is.null(h)) {
+    h <- ks::hpi(x, deriv.order = 1)
+  }
 
   # Speedup hack for kernel mean shift clustering
   x_spline <- seq(-1.35 * pi, 1.35 * pi, by = 0.005)
@@ -241,7 +247,9 @@ kms_linear <- function(x, original_clusters, h = ks::hpi(x, deriv.order = 1)) {
 
   # Obtain modes for data, and cluster them
   unique_modes <- sort(unique(round(kms, 3)), decreasing = TRUE)
-  unique_modes <- replace(unique_modes, c(2, 3), unique_modes[c(3, 2)])
+  if (!is.null(original_clusters)) {
+    unique_modes <- replace(unique_modes, c(2, 3), unique_modes[c(3, 2)])
+  }
 
   arrival_modes <- sapply(x, euler, eta_hat_efic = eta_hat_spline)
   labels_modes <- match(
@@ -252,14 +260,16 @@ kms_linear <- function(x, original_clusters, h = ks::hpi(x, deriv.order = 1)) {
   # Cluster kms
   labels_kms <- match(x = round(kms, 3), table = unique_modes)
 
-  # Check matching with $membership
-  tab <- table(
-    "assigned" = labels_modes,
-    "true" = original_clusters
-  )
-  print(tab)
-  print(sprintf("Number of misclassified observations = %d", sum(tab) - sum(diag(tab))))
-  print(sprintf("Classification rate = %f", sum(diag(tab)) / sum(tab)))
+  if (!is.null(original_clusters)) {
+    # Check matching with original_clusters
+    tab <- table(
+      "assigned" = labels_modes,
+      "true" = original_clusters
+    )
+    print(tab)
+    print(sprintf("Number of misclassified observations = %d", sum(tab) - sum(diag(tab))))
+    print(sprintf("Classification rate = %f", sum(diag(tab)) / sum(tab)))
+  }
 
   # Obtain relevant points
   labels_rle <- rle(labels_kms)
@@ -277,15 +287,21 @@ kms_linear <- function(x, original_clusters, h = ks::hpi(x, deriv.order = 1)) {
 #'
 #' @param x a matrix of size \code{c(nx, d + 1)} with the initial points.
 #' @param original_clusters. Vectors with the label associated to each observation.
-#' @param h. Defaults to \code{ks::hpi(x, deriv.order = 1)}.
+#' Defaults to \code{NULL}.
+#' @param h. Defaults to \code{NULL}. If it is not filled in, the kernel mean shift is
+#' calculated with h equal to \code{ks::hpi(x, deriv.order = 1)}.
 #' @export
-plot_kde <- function(x, original_clusters, h = ks::hpi(x, deriv.order = 1)) {
+plot_kde <- function(x, original_clusters = NULL, kms_data = NULL, h = NULL) {
   # Hack to have periodicity
   samp <- c(x - 2 * pi, x, x + 2 * pi)
 
-  # Compute the kernel mean shift
-  kms_data <- kms_linear(x, original_clusters)
+  if (is.null(kms_data)) {
+    # Compute the kernel mean shift
+    kms_data <- kms_linear(x, original_clusters, h)
+  }
+
   unique_modes <- kms_data$unique_modes
+  total_modes <- length(unique_modes)
   positions_antimodes <- kms_data$positions_antimodes
   labels_rle_values <- kms_data$labels_rle_values
   h <- kms_data$h
@@ -302,7 +318,7 @@ plot_kde <- function(x, original_clusters, h = ks::hpi(x, deriv.order = 1)) {
   abline(h = 0, lty = 3)
 
   # Colors for the plot
-  col <- rainbow(5)
+  col <- rainbow(total_modes + 2)
 
   # Plot modes
   for (i in seq_along(unique_modes)) {
@@ -328,7 +344,7 @@ plot_kde <- function(x, original_clusters, h = ks::hpi(x, deriv.order = 1)) {
         kde$eval.points[end]
       ),
       y = c(0, kde$estimate[begin:end], 0),
-      col = rainbow(5, alpha = 0.15)[labels_rle_values[k]],
+      col = rainbow(total_modes + 2, alpha = 0.15)[labels_rle_values[k]],
       border = NA
     )
   }
@@ -336,8 +352,10 @@ plot_kde <- function(x, original_clusters, h = ks::hpi(x, deriv.order = 1)) {
   lines(kde$eval.points, kde$estimate)
   abline(v = x_kms[positions_antimodes], lty = 3)
 
-  # Plot rug
-  for (i in unique(original_clusters)) {
-    rug(samp[rep(original_clusters, 3) == i], col = col[i], ticksize = 0.03)
+  if (!is.null(original_clusters)) {
+    # Plot rug
+    for (i in unique(original_clusters)) {
+      rug(samp[rep(original_clusters, 3) == i], col = col[i], ticksize = 0.03)
+    }
   }
 }

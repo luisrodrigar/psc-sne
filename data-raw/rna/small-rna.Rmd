@@ -28,8 +28,10 @@ stopifnot(packageVersion("pscsne") >= "0.0.1.900005")
 # Load dataset
 data("smallrna")
 
+original_clusters = smallrna$clusters
+
 # Visualize original data
-pairs(smallrna$angles, col = smallrna$clusters + 1, cex = 0.5,
+pairs(smallrna$angles, col = original_clusters + 1, cex = 0.5,
       labels = c(expression(alpha), expression(beta), expression(gamma),
                  expression(delta), expression(epsilon), expression(zeta),
                  expression(chi)))
@@ -51,7 +53,7 @@ We run psc-SNE for $d = 1$ with its default $\eta$.
 # Default
 fit_1 <- psc_sne(X = smallrna_X, d = 1, rho_psc_list = rho_psc_list,
                  eta = 200, maxit = 1e3, tol = 1e-6, show_prog = 10,
-                 colors = smallrna$clusters)
+                 colors = original_clusters)
 ```
 ```{r}
 # Does not converge
@@ -68,7 +70,7 @@ The employed $\eta$ seems to be too large. Let's reduce it.
 # Lower eta
 fit_2 <- psc_sne(X = smallrna_X, d = 1, rho_psc_list = rho_psc_list,
                  eta = 10, maxit = 1e3, tol = 1e-6, show_prog = 10,
-                 colors = smallrna$clusters)
+                 colors = original_clusters)
 ```
 ```{r}
 # Converges
@@ -98,7 +100,7 @@ length(unique(kms$cluster))
 # Fully-automatically recovered clusters vs. real clusters
 par(mfrow = c(1, 2))
 plot(fit_2$best_Y, col = kms$cluster)
-plot(fit_2$best_Y, col = smallrna$clusters)
+plot(fit_2$best_Y, col = original_clusters)
 ```
 
 The original clusters are not fully recovered, in the sense that more clusters are obtained. However, the three-cluster structure is present, as the new clusters appear dividing the three main ones. This can be checked by cutting the hierarchical clustering tree behind kernel mean shift clustering exactly at three groups. Or, in other words, by merging the 8 groups into 3.
@@ -108,13 +110,13 @@ The original clusters are not fully recovered, in the sense that more clusters a
 par(mfrow = c(1, 2))
 labels <- cutree(kms$tree, k = 3)
 plot(fit_2$best_Y, col = labels)
-plot(fit_2$best_Y, col = smallrna$clusters)
+plot(fit_2$best_Y, col = original_clusters)
 
 # Correct classification rate: 90%
-mean(labels == smallrna$clusters)
+mean(labels == original_clusters)
 
 # 19 incorrectly classified observations
-sum(labels != smallrna$clusters)
+sum(labels != original_clusters)
 ```
 
 The classification accuracy is on-par with Zoubouloglou et al. (2021), which misclassifies 16 points and has a classiﬁcation rate of 0.916.
@@ -127,9 +129,11 @@ x <- DirStats::to_rad(fit_2$best_Y)
 
 # Obtain optimal plug-in bandwidth for density derivative estimation,
 # disregarding periodicity
-h <- ks::hpi(x, deriv.order = 1)
 
-pscsne::plot_kde(x, smallrna$clusters, h)
+# h <- ks::hpi(x, deriv.order = 1)
+# kms_data <- pscsne::kms_linear(x, original_clusters, h)
+
+pscsne::plot_kde(x, original_clusters)
 ```
 
 The results are similar to those one obtained above: classification rate of 89.47% and 20 observations wrongly classified. 

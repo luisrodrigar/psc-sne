@@ -4,14 +4,16 @@
 \alias{kms_linear}
 \title{Kernel mean shift clustering for linear data}
 \usage{
-kms_linear(x, original_clusters, h = ks::hpi(x, deriv.order = 1))
+kms_linear(x, original_clusters = NULL, h = NULL)
 }
 \arguments{
 \item{x}{a matrix of size \code{c(nx, d + 1)} with the initial points.}
 
-\item{original_clusters.}{Vectors with the label associated to each observation.}
+\item{original_clusters.}{Vectors with the label associated to each observation.
+Defaults to \code{NULL}.}
 
-\item{h.}{Defaults to \code{ks::hpi(x, deriv.order = 1)}.}
+\item{h.}{Defaults to \code{NULL}. If it is not filled in, it is set
+automatically to \code{ks::hpi(x, deriv.order = 1)}.}
 }
 \value{
 A list with the following entries:

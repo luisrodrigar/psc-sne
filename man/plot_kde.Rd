@@ -4,14 +4,16 @@
 \alias{plot_kde}
 \title{Plot the density chart of the linear data variable}
 \usage{
-plot_kde(x, original_clusters, h = ks::hpi(x, deriv.order = 1))
+plot_kde(x, original_clusters = NULL, kms_data = NULL, h = NULL)
 }
 \arguments{
 \item{x}{a matrix of size \code{c(nx, d + 1)} with the initial points.}
 
-\item{original_clusters.}{Vectors with the label associated to each observation.}
+\item{original_clusters.}{Vectors with the label associated to each observation.
+Defaults to \code{NULL}.}
 
-\item{h.}{Defaults to \code{ks::hpi(x, deriv.order = 1)}.}
+\item{h.}{Defaults to \code{NULL}. If it is not filled in, the kernel mean shift is
+calculated with h equal to \code{ks::hpi(x, deriv.order = 1)}.}
 }
 \description{
 Produces a density plot for the given parameters.
