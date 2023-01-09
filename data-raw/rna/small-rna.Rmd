@@ -125,19 +125,16 @@ There is another way to cluster the scores provided by the psc-SNE. These values
 
 ```{r fig.asp=1, fig.align='center'}
 
-# Obtain optimal plug-in bandwidth for density derivative estimation,
-# disregarding periodicity
-h <- ks::hpi(DirStats::to_rad(fit_2$best_Y), deriv.order = 1)
+h <- pscsne::bw_kms(fit_2$best_Y, type = "hpi_linear_s1")
 pscsne::plot_kde(fit_2$best_Y, h, init_clusters = original_clusters, step = 0.01,
                  ylim = c(0, 0.10))
 
-d = 1
-n <- nrow(fit_2$best_Y)
-fit_mix <- DirStats::bic_vmf_mix(data = fit_2$best_Y, kappa_max = 1e3)
-# Upscaled EMI bandwidth for derivative
-h <- DirStats::bw_dir_emi(data = fit_2$best_Y, fit_mix = fit_mix)$h_opt *
-     n^(1 / (d + 4)) * n^(-1 / (d + 6))
-pscsne::plot_kde(fit_2$best_Y, h, init_clusters = original_clusters,
+```
+
+```{r}
+
+h_rot_up <- bw_kms(fit_2$best_Y, type = "rot_up")
+pscsne::plot_kde(x = fit_2$best_Y, h = h_rot_up, init_clusters = original_clusters,
                  step = 0.01, ylim = c(0, 0.22), is_cut = FALSE)
 ```
 

@@ -165,6 +165,34 @@ kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
 
 }
 
+#' @title Compute the bandwidth
+#'
+#' @description Calculate the bandwidth associated for the given parameters.
+#'
+#' @param x. A matrix of size \code{c(nx, d + 1)} with the initial points.
+#' @param type. The specific way of calculating the bandwidth: hpi linear or rot up.
+#' Defaults to \code{"rot_up"}.
+#' @export
+bw_kms <- function(x, type = c("hpi_linear_s1", "rot_up")[2]) {
+  stopifnot(type == "hpi_linear_s1" || type == "rot_up")
+  n <- nrow(x)
+  d <- ncol(x) - 1
+  if (type == "hpi_linear_s1") {
+
+    # Obtain optimal plug-in bandwidth for density derivative estimation,
+    # disregarding periodicity
+    return(ks::hpi(DirStats::to_rad(x), deriv.order = 1))
+
+  } else {
+
+    # Upscaled EMI bandwidth for derivative
+    fit_mix <- DirStats::bic_vmf_mix(data = x, kappa_max = 1e3)
+    return(DirStats::bw_dir_emi(data = x, fit_mix = fit_mix)$h_opt *
+             n^(1 / (d + 4)) * n^(-1 / (d + 6)))
+
+  }
+}
+
 
 #' @title Plot the density chart of the linear data variable
 #'
@@ -214,8 +242,14 @@ plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
   modes <- modes[modes >= x_min & modes <= x_max]
 
   unique_modes <- sort(modes)
-  unique_modes <- unique_modes[unique_modes >= - pi & unique_modes <= pi]
+  unique_modes <- unique_modes[unique_modes >= -pi & unique_modes <= pi]
   total_modes <- length(unique_modes)
+
+  # Calculate the labels for the interval [-pi, pi] (not the space within the margin)
+  labels_interval <- kms_data$cluster[eval.points.rad >= -pi & eval.points.rad <= pi]
+  labels_int_rle_values <- rle(labels_interval)
+
+  # Getting the antimodes for all the space, counting the margin
   positions_antimodes <- kms_data$antimodes
   labels_rle_values <- kms_data$labels_rle
 
@@ -245,7 +279,7 @@ plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
         x = samp_rad, h = h, eval.points = unique_modes[i],
         binned = FALSE
       )$estimate,
-      col = col[labels_rle_values$values[i]], lwd = 1
+      col = col[labels_int_rle_values$values[i]], lwd = 1
     )
 
   }

@@ -215,20 +215,19 @@ Resultant points onto the sphere ($d=2$) suggest there is a well-defined belt th
 First, the kernel mean shift is applied for data on to the circumference.
 
 ```{r kms-1d-1, cache = TRUE}
-n <- nrow(Y_1_eq)
-d <- 1
-fit_mix <- DirStats::bic_vmf_mix(data = Y_1_eq, kappa_max = 1e3)
-h_rot_up <- DirStats::bw_dir_emi(data = Y_1_eq, fit_mix = fit_mix)$h_opt *
-      n^(1 / (d + 4)) * n^(-1 / (d + 6))
 
+h_rot_up <- pscsne::bw_kms(Y_1_eq, "rot_up")
 res_kms_dir_Y_1 <- kms_dir(data = Y_1_eq, h = h_rot_up)
+
 ```
 
 The total number of clusters identified for $d=1$:
 
 ```{r kms-1d-3}
+
 colors_1d <- res_kms_dir_Y_1$cluster
 sprintf("Number of clusters (d = 1) %d", max(colors_1d))
+
 ```
 
 The visualization of the clusters associated visualized in the circumference:
@@ -241,15 +240,24 @@ polygon(x = cos(th), y = sin(th))
 
 Once we have got these results, we can conclude that this could be a potential solution since it is identifying two principal directions (west and east) and other two (south and north) that are less frequent.
 
-Let's visualize the kernel density estimation plot based on the results provided by the kernel mean shift. In this case, a tolerance of 2.5 is defined in order to cut the hierarchical tree.
+Let's visualize the kernel density estimation plot based on the results provided by the kernel mean shift. In this case, a tolerance of 2.5 is defined in order to cut the hierarchical tree. The execution are base on two different ways of computing the bandwidth:
 
-```{r}
+- `h <- ks::hpi(DirStats::to_rad(Y_1_eq), deriv.order = 1)`
 
-hpi_linear_s1 <- ks::hpi(DirStats::to_rad(Y_1_eq), deriv.order = 1)
-pscsne::plot_kde(x = Y_1_eq, h = hpi_linear_s1, tol = 2.5, ylim = c(0, 0.1), step = 0.01)
+```{r kms-1d-1-1, cache = TRUE}
 
+h_hpi <- pscsne::bw_kms(Y_1_eq, "hpi_linear_s1")
+pscsne::plot_kde(x = Y_1_eq, h = h_hpi, tol = 2.5, ylim = c(0, 0.1), step = 0.01)
 
-pscsne::plot_kde(x = Y_1_eq, h_rot_up, tol = 2.5, ylim = c(0, 0.1), step = 0.01)
+```
+
+- `h <- DirStats::bw_dir_emi(data = Y_1_eq, fit_mix = fit_mix)$h_opt * n^(1 / (d + 4)) * n^(-1 / (d + 6))`
+
+```{r kms-1d-1-2, cache = TRUE}
+
+h_rot_up <- pscsne::bw_kms(Y_1_eq, "rot_up")
+pscsne::plot_kde(x = Y_1_eq, h = h_rot_up, tol = 2.5, ylim = c(0, 0.1), step = 0.01)
+
 ```
 
 As it is illustrated above, both charts shows that there are two mainly regimes: sea waters that goes to the east and sea waters that goes to the west.
@@ -257,7 +265,7 @@ As it is illustrated above, both charts shows that there are two mainly regimes:
 We do the same for the reduced data on the sphere $d=2$:
 
 ```{r kms-2d-1, cache = TRUE}
-res_kms_dir_Y_2 <- kms_dir(data = Y_2_unif)
+res_kms_dir_Y_2 <- kms_dir(data = Y_2_unif, h = h_rot_up)
 ```
 
 The total number of clusters identified for $d = 2$:
@@ -496,7 +504,7 @@ proto_obs <- function(X, Y, modes) {
 }
 
 # Get regimes for d = 1, 2
-proto_1 <- proto_obs(X = X_jdf, Y = Y_1_eq, modes = kms_data$cluster)
+proto_1 <- proto_obs(X = X_jdf, Y = Y_1_eq, modes = res_kms_dir_Y_1$modes)
 proto_2 <- proto_obs(X = X_jdf, Y = Y_2_unif, modes = res_kms_dir_Y_2$modes)
 
 k_proto_1 <- proto_1$protos_ind
