@@ -218,7 +218,6 @@ plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
   total_modes <- length(unique_modes)
   positions_antimodes <- kms_data$antimodes
   labels_rle_values <- kms_data$labels_rle
-  freq_orig <- as.data.frame(table(original_clusters)) %>% arrange(desc(Freq))
 
 
   # Colors for the plot, different alpha (more or less opaque)

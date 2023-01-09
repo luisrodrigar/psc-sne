@@ -215,7 +215,13 @@ Resultant points onto the sphere ($d=2$) suggest there is a well-defined belt th
 First, the kernel mean shift is applied for data on to the circumference.
 
 ```{r kms-1d-1, cache = TRUE}
-res_kms_dir_Y_1 <
+n <- nrow(Y_1_eq)
+d <- 1
+fit_mix <- DirStats::bic_vmf_mix(data = Y_1_eq, kappa_max = 1e3)
+h_rot_up <- DirStats::bw_dir_emi(data = Y_1_eq, fit_mix = fit_mix)$h_opt *
+      n^(1 / (d + 4)) * n^(-1 / (d + 6))
+
+res_kms_dir_Y_1 <- kms_dir(data = Y_1_eq, h = h_rot_up)
 ```
 
 The total number of clusters identified for $d=1$:
@@ -239,15 +245,11 @@ Let's visualize the kernel density estimation plot based on the results provided
 
 ```{r}
 
-h <- ks::hpi(DirStats::to_rad(Y_1_eq), deriv.order = 1)
-pscsne::plot_kde(x = Y_1_eq, h, tol = 2.5, ylim = c(0, 0.1), step = 0.01)
+hpi_linear_s1 <- ks::hpi(DirStats::to_rad(Y_1_eq), deriv.order = 1)
+pscsne::plot_kde(x = Y_1_eq, h = hpi_linear_s1, tol = 2.5, ylim = c(0, 0.1), step = 0.01)
 
-n <- nrow(Y_1_eq)
-d <- 1
-fit_mix <- DirStats::bic_vmf_mix(data = Y_1_eq, kappa_max = 1e3)
-h <- DirStats::bw_dir_emi(data = Y_1_eq, fit_mix = fit_mix)$h_opt *
-      n^(1 / (d + 4)) * n^(-1 / (d + 6))
-pscsne::plot_kde(x = Y_1_eq, h, tol = 2.5, ylim = c(0, 0.1), step = 0.01)
+
+pscsne::plot_kde(x = Y_1_eq, h_rot_up, tol = 2.5, ylim = c(0, 0.1), step = 0.01)
 ```
 
 As it is illustrated above, both charts shows that there are two mainly regimes: sea waters that goes to the east and sea waters that goes to the west.
