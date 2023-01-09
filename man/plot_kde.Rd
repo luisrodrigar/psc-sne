@@ -4,16 +4,26 @@
 \alias{plot_kde}
 \title{Plot the density chart of the linear data variable}
 \usage{
-plot_kde(x, original_clusters = NULL, kms_data = NULL, h = NULL)
+plot_kde(x, h, tol = 0.1, init_clusters = NULL, step = 0.01,
+  ylim = c(0, 0.25), is_cut = TRUE)
 }
 \arguments{
-\item{x}{a matrix of size \code{c(nx, d + 1)} with the initial points.}
+\item{tol}{tolerance for equality of modes. Defaults to \code{1e-1}.}
 
-\item{original_clusters.}{Vectors with the label associated to each observation.
-Defaults to \code{NULL}.}
+\item{x.}{A matrix of size \code{c(nx, d + 1)} with the initial points.}
 
 \item{h.}{Defaults to \code{NULL}. If it is not filled in, the kernel mean shift is
 calculated with h equal to \code{ks::hpi(x, deriv.order = 1)}.}
+
+\item{init_clusters.}{Array with the label associated to each observation.
+Defaults to \code{NULL}.}
+
+\item{step.}{Separation between evaluation points. Defaults to \code{0.01}.}
+
+\item{ylim.}{Limit to the y coordinate of the plot. Defaults to \code{c(0, 0.25)}.}
+
+\item{is_cut.}{Boolean value that informs wether the tree can be cut or not.
+Defaults to \code{TRUE}.}
 }
 \description{
 Produces a density plot for the given parameters.

@@ -215,7 +215,7 @@ Resultant points onto the sphere ($d=2$) suggest there is a well-defined belt th
 First, the kernel mean shift is applied for data on to the circumference.
 
 ```{r kms-1d-1, cache = TRUE}
-res_kms_dir_Y_1 <- kms_dir(data = Y_1_eq)
+res_kms_dir_Y_1 <
 ```
 
 The total number of clusters identified for $d=1$:
@@ -235,20 +235,22 @@ polygon(x = cos(th), y = sin(th))
 
 Once we have got these results, we can conclude that this could be a potential solution since it is identifying two principal directions (west and east) and other two (south and north) that are less frequent.
 
+Let's visualize the kernel density estimation plot based on the results provided by the kernel mean shift. In this case, a tolerance of 2.5 is defined in order to cut the hierarchical tree.
+
 ```{r}
+
+h <- ks::hpi(DirStats::to_rad(Y_1_eq), deriv.order = 1)
+pscsne::plot_kde(x = Y_1_eq, h, tol = 2.5, ylim = c(0, 0.1), step = 0.01)
+
 n <- nrow(Y_1_eq)
 d <- 1
 fit_mix <- DirStats::bic_vmf_mix(data = Y_1_eq, kappa_max = 1e3)
 h <- DirStats::bw_dir_emi(data = Y_1_eq, fit_mix = fit_mix)$h_opt *
       n^(1 / (d + 4)) * n^(-1 / (d + 6))
-data_radians <- DirStats::to_rad(Y_1_eq)
-
-kms_data <- pscsne::kms_linear(x = data_radians, h = h)
-kms_data_default_h <- pscsne::kms_linear(x = data_radians)
-
-pscsne::plot_kde(x = data_radians, NULL, kms_data)
-pscsne::plot_kde(x = data_radians, NULL, kms_data_default_h)
+pscsne::plot_kde(x = Y_1_eq, h, tol = 2.5, ylim = c(0, 0.1), step = 0.01)
 ```
+
+As it is illustrated above, both charts shows that there are two mainly regimes: sea waters that goes to the east and sea waters that goes to the west.
 
 We do the same for the reduced data on the sphere $d=2$:
 
@@ -492,7 +494,7 @@ proto_obs <- function(X, Y, modes) {
 }
 
 # Get regimes for d = 1, 2
-proto_1 <- proto_obs(X = X_jdf, Y = Y_1_eq, modes = res_kms_dir_Y_1$modes)
+proto_1 <- proto_obs(X = X_jdf, Y = Y_1_eq, modes = kms_data$cluster)
 proto_2 <- proto_obs(X = X_jdf, Y = Y_2_unif, modes = res_kms_dir_Y_2$modes)
 
 k_proto_1 <- proto_1$protos_ind
