@@ -77,7 +77,7 @@ kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
   stopifnot(!is.null(h))
 
   # Move ahead on kms
-  step_ahead <- function(y, i) {
+  step_ahead <- function(y) {
 
     # Projected gradient
     dkde <- polykde::grad_hess_kde_polysph(x = rbind(y  / sqrt(sum(y^2))),
@@ -114,7 +114,7 @@ kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
 
       # Euler advance
       old_y <- y[i, ]
-      new_y <- step_ahead(y = old_y, i = i)
+      new_y <- step_ahead(y = old_y)
 
       # Convergence?
       if (acos(sum(old_y * new_y)) < eps) {
