@@ -15,8 +15,9 @@
 #' @param show_prog display progress? Defaults to \code{TRUE}.
 #' @param init_clusters. Array with the label associated to each observation.
 #' Defaults to \code{NULL}.
-#' @param is_cut. Boolean value that informs whether the tree can be cut or not.
+#' @param is_cut. Boolean value that informs wether the tree can be cut or not.
 #' Defaults to \code{TRUE}.
+#' @param is_numDeriv. Boolean value that choose the gradient computation method.
 #' @return A list with the following entries:
 #' \itemize{
 #'   \item \code{end_points}: end points of the Euler algorithm. A matrix of
@@ -67,7 +68,7 @@
 #' @export
 kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
                     keep_paths = FALSE, show_prog = TRUE, init_clusters = NULL,
-                    is_cut = TRUE) {
+                    is_cut = TRUE, is_numDeriv = FALSE) {
 
   # Check dimensions
   nx <- nrow(x)
@@ -80,10 +81,21 @@ kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
   step_ahead <- function(y) {
 
     # Projected gradient
-    dkde <- polykde::grad_hess_kde_polysph(x = rbind(y  / sqrt(sum(y^2))),
-                                           X = data, d = d, h = h)$grad
-    kde <- DirStats::kde_dir(x = y, data = data, h = h)
-    eta <- dkde / kde
+    if (is_numDeriv) {
+
+      dkde <- numDeriv::grad(func = function(z) {
+        DirStats::kde_dir(x = z / sqrt(sum(z^2)), data = data, h = h)
+      }, x = y) # TODO: replace with analytical computation
+      kde <- DirStats::kde_dir(x = y, data = data, h = h)
+      eta <- dkde / kde
+
+    } else {
+
+      eta <- polykde::grad_hess_kde_polysph(x = rbind(y  / sqrt(sum(y^2))),
+                                               X = data, d = d, h = h,
+                                               norm_grad_hess = TRUE)$grad
+
+    }
 
     # Advance and normalize
     z <- y + h^2 * eta
@@ -261,7 +273,7 @@ plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
 
 
   # Plot curve and axes
-  plot(ks::kde(samp_rad, h = h, gridsize = 1e3),
+  plot(DirStats::kde_dir(x = samp_x, data = samp_x, h = h),
        xlim = c(-pi, pi),
        axes = FALSE, xlab = "", ylab = "",
        ylim = ylim

@@ -256,7 +256,7 @@ pscsne::plot_kde(x = Y_1_eq, h = h_hpi, tol = 2.5, ylim = c(0, 0.1), step = 0.01
 ```{r kms-1d-1-2, cache = TRUE}
 
 h_rot_up <- pscsne::bw_kms(Y_1_eq, "rot_up")
-pscsne::plot_kde(x = Y_1_eq, h = h_rot_up, tol = 2.5, ylim = c(0, 0.1), step = 0.01)
+pscsne::plot_kde(x = Y_1_eq, h = h_rot_up, ylim = c(0, 0.1), step = 0.01)
 
 ```
 
