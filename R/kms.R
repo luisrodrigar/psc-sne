@@ -15,7 +15,7 @@
 #' @param show_prog display progress? Defaults to \code{TRUE}.
 #' @param init_clusters. Array with the label associated to each observation.
 #' Defaults to \code{NULL}.
-#' @param is_cut. Boolean value that informs wether the tree can be cut or not.
+#' @param is_cut. Boolean value that informs whether the tree can be cut or not.
 #' Defaults to \code{TRUE}.
 #' @return A list with the following entries:
 #' \itemize{
@@ -77,12 +77,11 @@ kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
   stopifnot(!is.null(h))
 
   # Move ahead on kms
-  step_ahead <- function(y) {
+  step_ahead <- function(y, i) {
 
     # Projected gradient
-    dkde <- numDeriv::grad(func = function(z) {
-      DirStats::kde_dir(x = z / sqrt(sum(z^2)), data = data, h = h)
-    }, x = y) # TODO: replace with analytical computation
+    dkde <- polykde::grad_hess_kde_polysph(x = rbind(y  / sqrt(sum(y^2))),
+                                           X = data, d = d, h = h)$grad
     kde <- DirStats::kde_dir(x = y, data = data, h = h)
     eta <- dkde / kde
 
@@ -115,7 +114,7 @@ kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
 
       # Euler advance
       old_y <- y[i, ]
-      new_y <- step_ahead(y = old_y)
+      new_y <- step_ahead(y = old_y, i = i)
 
       # Convergence?
       if (acos(sum(old_y * new_y)) < eps) {
@@ -133,6 +132,8 @@ kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
       }
 
     }
+
+
 
     # Progress?
     if (show_prog) setTxtProgressBar(pb, i / nx)

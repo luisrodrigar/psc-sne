@@ -29,7 +29,7 @@ the Euler algorithm. Defaults to \code{data}.}
 \item{init_clusters.}{Array with the label associated to each observation.
 Defaults to \code{NULL}.}
 
-\item{is_cut.}{Boolean value that informs wether the tree can be cut or not.
+\item{is_cut.}{Boolean value that informs whether the tree can be cut or not.
 Defaults to \code{TRUE}.}
 }
 \value{

@@ -22,7 +22,8 @@ Imports:
     rlang,
     sphunif,
     sdetorus,
-    utils
+    utils,
+    polykde
 Suggests:
     abind,
     dplyr,
