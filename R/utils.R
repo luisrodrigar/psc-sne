@@ -52,7 +52,7 @@ vec2matrix <- function(vec, n, diag_value) {
   return(mat)
 }
 
-#' @title Vector index of an upper triangular matrix withou diagonal
+#' @title Vector index of an upper triangular matrix without diagonal
 #'
 #' @description Obtain the index of an element within a vector
 #' for the equivalent in the upper triangular matrix without diagonal
