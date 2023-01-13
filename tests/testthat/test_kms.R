@@ -12,7 +12,15 @@ test_that("Same value is returned with numDeriv and polykde::grad_hess_kde_polys
   expect_equal(res_numDeriv, res_polykde, tolerance = 1e-6)
 })
 
-test_that("From a mixture of two vMF two groups are identified", {
+test_that("From a mixture of two vMF with different mean and large concentration two groups are identified", {
   res <- kms_dir(r_mvmf, h = h)
   expect_equal(nrow(res$modes), 2)
+})
+
+test_that("From a mixture of two vMF with same mean and small concentration one group is identified", {
+  set.seed(123)
+  r_mvmf_small <- movMF::rmovMF(10, c(5, 10) * rbind(c(1, 0), c(1,0)), c(0.6, 0.4))
+  h_small <- pscsne::bw_kms(r_mvmf_small)
+  res <- kms_dir(r_mvmf_small, h = h_small)
+  expect_equal(nrow(res$modes), 1)
 })
