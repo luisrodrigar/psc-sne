@@ -5,7 +5,7 @@
 \title{Plot the density chart of the linear data variable}
 \usage{
 plot_kde(x, h, tol = 0.1, init_clusters = NULL, step = 0.01,
-  ylim = c(0, 0.25), is_cut = TRUE)
+  ylim = c(0, 0.35), is_cut = TRUE)
 }
 \arguments{
 \item{tol}{tolerance for equality of modes. Defaults to \code{1e-1}.}
@@ -20,10 +20,13 @@ Defaults to \code{NULL}.}
 
 \item{step.}{Separation between evaluation points. Defaults to \code{0.01}.}
 
-\item{ylim.}{Limit to the y coordinate of the plot. Defaults to \code{c(0, 0.25)}.}
+\item{ylim.}{Limit to the y coordinate of the plot. Defaults to \code{c(0, 0.35)}.}
 
-\item{is_cut.}{Boolean value that informs wether the tree can be cut or not.
-Defaults to \code{TRUE}.}
+\item{is_cut.}{Boolean value that informs whether the tree can be cut or not.}
+}
+\value{
+Same object that the function \code{kms_dir} returns.
+Defaults to \code{TRUE}.
 }
 \description{
 Produces a density plot for the given parameters.

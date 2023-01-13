@@ -6,7 +6,7 @@
 \usage{
 kms_dir(data, x = data, h, N = 500, eps = 0.001, tol = 0.1,
   keep_paths = FALSE, show_prog = TRUE, init_clusters = NULL,
-  is_cut = TRUE)
+  is_cut = TRUE, is_numDeriv = FALSE)
 }
 \arguments{
 \item{data}{a matrix of size \code{c(n, d + 1)} with the sample.}
@@ -29,8 +29,10 @@ the Euler algorithm. Defaults to \code{data}.}
 \item{init_clusters.}{Array with the label associated to each observation.
 Defaults to \code{NULL}.}
 
-\item{is_cut.}{Boolean value that informs whether the tree can be cut or not.
+\item{is_cut.}{Boolean value that informs wether the tree can be cut or not.
 Defaults to \code{TRUE}.}
+
+\item{is_numDeriv.}{Boolean value that choose the gradient computation method.}
 }
 \value{
 A list with the following entries:

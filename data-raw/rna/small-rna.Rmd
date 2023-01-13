@@ -126,8 +126,7 @@ There is another way to cluster the scores provided by the psc-SNE. These values
 ```{r fig.asp=1, fig.align='center'}
 
 h <- pscsne::bw_kms(fit_2$best_Y, type = "hpi_linear_s1")
-pscsne::plot_kde(fit_2$best_Y, h, init_clusters = original_clusters, step = 0.01,
-                 ylim = c(0, 0.10))
+pscsne::plot_kde(fit_2$best_Y, h, init_clusters = original_clusters, step = 0.01)
 
 ```
 
@@ -135,7 +134,7 @@ pscsne::plot_kde(fit_2$best_Y, h, init_clusters = original_clusters, step = 0.01
 
 h_rot_up <- bw_kms(fit_2$best_Y, type = "rot_up")
 pscsne::plot_kde(x = fit_2$best_Y, h = h_rot_up, init_clusters = original_clusters,
-                 step = 0.01, ylim = c(0, 0.22), is_cut = FALSE)
+                 step = 0.01, ylim = c(0, 0.62), is_cut = FALSE)
 ```
 
 The results are similar to those one obtained above: classification rate of 89.47% and 20 observations wrongly classified. 

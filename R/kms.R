@@ -218,12 +218,13 @@ bw_kms <- function(x, type = c("hpi_linear_s1", "rot_up")[2]) {
 #' Defaults to \code{NULL}.
 #' @param tol tolerance for equality of modes. Defaults to \code{1e-1}.
 #' @param step. Separation between evaluation points. Defaults to \code{0.01}.
-#' @param ylim. Limit to the y coordinate of the plot. Defaults to \code{c(0, 0.25)}.
-#' @param is_cut. Boolean value that informs wether the tree can be cut or not.
+#' @param ylim. Limit to the y coordinate of the plot. Defaults to \code{c(0, 0.35)}.
+#' @param is_cut. Boolean value that informs whether the tree can be cut or not.
+#' @return Same object that the function \code{kms_dir} returns.
 #' Defaults to \code{TRUE}.
 #' @export
 plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
-                     ylim = c(0, 0.25), is_cut = TRUE) {
+                     ylim = c(0, 0.35), is_cut = TRUE) {
   stopifnot(!is.null(x))
   stopifnot(!is.null(h))
 
@@ -273,10 +274,10 @@ plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
 
 
   # Plot curve and axes
-  plot(DirStats::kde_dir(x = samp_x, data = samp_x, h = h),
+  plot(x = eval.points.rad, y = DirStats::kde_dir(x = eval.points, data = x, h = h),
        xlim = c(-pi, pi),
        axes = FALSE, xlab = "", ylab = "",
-       ylim = ylim
+       ylim = ylim, type = "l"
   )
   sdetorus::torusAxis(1)
   axis(2)
@@ -288,35 +289,34 @@ plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
 
     segments(
       x0 = unique_modes[i], y0 = 0, x1 = unique_modes[i],
-      y1 = ks::kde(
-        x = samp_rad, h = h, eval.points = unique_modes[i],
-        binned = FALSE
-      )$estimate,
+      y1 = DirStats::kde_dir(
+        data = x, h = h, x = DirStats::to_cir(unique_modes[i])
+      ),
       col = col[labels_int_rle_values$values[i]], lwd = 1
     )
 
   }
 
   # Plot domains of attraction
-  kde <- ks::kde(x = samp_rad, h = h, eval.points = eval.points.rad, binned = FALSE)
+  kde <- DirStats::kde_dir(x = eval.points, data = x, h = h)
   for (k in seq_along(labels_rle_values$values)) {
 
     begin <- positions_antimodes[k]
     end <- positions_antimodes[k + 1]
     polygon(
       x = c(
-        kde$eval.points[begin],
-        kde$eval.points[begin:end],
-        kde$eval.points[end]
+        eval.points.rad[begin],
+        eval.points.rad[begin:end],
+        eval.points.rad[end]
       ),
-      y = c(0, kde$estimate[begin:end], 0),
+      y = c(0, kde[begin:end], 0),
       col = col_alpha[labels_rle_values$values[k]],
       border = NA
     )
 
   }
 
-  lines(kde$eval.points, kde$estimate)
+  lines(eval.points.rad, kde)
   abline(v = eval.points.rad[positions_antimodes], lty = 3)
 
   pi_interval_index <- samp_rad >= - (margin - 0.17) * pi & samp_rad <= (margin - 0.17) * pi
@@ -338,4 +338,5 @@ plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
     rug(samp_rad_interv, ticksize = 0.03)
 
   }
+  return(kms_data)
 }
