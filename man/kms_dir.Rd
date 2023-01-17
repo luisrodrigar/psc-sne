@@ -29,7 +29,7 @@ the Euler algorithm. Defaults to \code{data}.}
 \item{num_init_clusters.}{Number of clusters previously identified.
 Defaults to \code{NULL}.}
 
-\item{is_cut.}{Boolean value that informs wether the tree can be cut or not.
+\item{is_cut.}{Boolean value that informs whether the tree can be cut or not.
 Defaults to \code{TRUE}.}
 
 \item{is_numDeriv.}{Boolean value that choose the gradient computation method.}

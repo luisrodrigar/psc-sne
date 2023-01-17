@@ -15,7 +15,7 @@
 #' @param show_prog display progress? Defaults to \code{TRUE}.
 #' @param num_init_clusters. Number of clusters previously identified.
 #' Defaults to \code{NULL}.
-#' @param is_cut. Boolean value that informs wether the tree can be cut or not.
+#' @param is_cut. Boolean value that informs whether the tree can be cut or not.
 #' Defaults to \code{TRUE}.
 #' @param is_numDeriv. Boolean value that choose the gradient computation method.
 #' @return A list with the following entries:
