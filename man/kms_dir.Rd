@@ -5,7 +5,7 @@
 \title{Kernel mean shift clustering for directional data}
 \usage{
 kms_dir(data, x = data, h, N = 500, eps = 0.001, tol = 0.1,
-  keep_paths = FALSE, show_prog = TRUE, init_clusters = NULL,
+  keep_paths = FALSE, show_prog = TRUE, num_init_clusters = NULL,
   is_cut = TRUE, is_numDeriv = FALSE)
 }
 \arguments{
@@ -26,7 +26,7 @@ the Euler algorithm. Defaults to \code{data}.}
 
 \item{show_prog}{display progress? Defaults to \code{TRUE}.}
 
-\item{init_clusters.}{Array with the label associated to each observation.
+\item{num_init_clusters.}{Number of clusters previously identified.
 Defaults to \code{NULL}.}
 
 \item{is_cut.}{Boolean value that informs wether the tree can be cut or not.

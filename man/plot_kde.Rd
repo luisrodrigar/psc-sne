@@ -31,3 +31,11 @@ Defaults to \code{TRUE}.
 \description{
 Produces a density plot for the given parameters.
 }
+\examples{
+set.seed(123)
+r_mvmf_three <- movMF::rmovMF(n,
+                              c(100, 150, 200) * rbind(c(1, 0), c(DirStats::to_cir(pi/2)), c(DirStats::to_cir(pi/4))),
+                              c(0.33, 0.33, 0.34))
+h_three <- pscsne::bw_kms(r_mvmf_three)
+pscsne::plot_kde(r_mvmf_three, h_three, ylim = c(0, 1.45))
+}

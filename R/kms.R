@@ -13,7 +13,7 @@
 #' @param tol tolerance for equality of modes. Defaults to \code{1e-1}.
 #' @param keep_paths keep the ascending paths? Defaults to \code{FALSE}.
 #' @param show_prog display progress? Defaults to \code{TRUE}.
-#' @param init_clusters. Array with the label associated to each observation.
+#' @param num_init_clusters. Number of clusters previously identified.
 #' Defaults to \code{NULL}.
 #' @param is_cut. Boolean value that informs wether the tree can be cut or not.
 #' Defaults to \code{TRUE}.
@@ -67,8 +67,9 @@
 #' kms
 #' @export
 kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
-                    keep_paths = FALSE, show_prog = TRUE, init_clusters = NULL,
-                    is_cut = TRUE, is_numDeriv = FALSE) {
+                    keep_paths = FALSE, show_prog = TRUE,
+                    num_init_clusters = NULL, is_cut = TRUE,
+                    is_numDeriv = FALSE) {
 
   # Check dimensions
   nx <- nrow(x)
@@ -157,9 +158,9 @@ kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
   labels <- cutree(tree, h = tol)
 
   # Cut by the number of unique clusters
-  if (!is.null(init_clusters) && is_cut){
+  if (!is.null(num_init_clusters) && is_cut){
 
-    labels <- cutree(tree, k = length(unique(init_clusters)))
+    labels <- cutree(tree, k = num_init_clusters)
 
   }
 
@@ -185,6 +186,11 @@ kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
 #' @param x. A matrix of size \code{c(nx, d + 1)} with the initial points.
 #' @param type. The specific way of calculating the bandwidth: hpi linear or rot up.
 #' Defaults to \code{"rot_up"}.
+#' @examples
+#' set.seed(123)
+#' r_mvmf <- movMF::rmovMF(n, c(5, 10) * rbind(c(1, 0), c(1,0)), c(0.6, 0.4))
+#' h_hpi_linear <- pscsne::bw_kms(r_mvmf, type = "hpi_linear_s1")
+#' h_rot_up <- pscsne::bw_kms(r_mvmf, type = "rot_up")
 #' @export
 bw_kms <- function(x, type = c("hpi_linear_s1", "rot_up")[2]) {
   stopifnot(type == "hpi_linear_s1" || type == "rot_up")
@@ -222,6 +228,13 @@ bw_kms <- function(x, type = c("hpi_linear_s1", "rot_up")[2]) {
 #' @param is_cut. Boolean value that informs whether the tree can be cut or not.
 #' @return Same object that the function \code{kms_dir} returns.
 #' Defaults to \code{TRUE}.
+#' @examples
+#' set.seed(123)
+#' r_mvmf_three <- movMF::rmovMF(n,
+#'                               c(100, 150, 200) * rbind(c(1, 0), c(DirStats::to_cir(pi/2)), c(DirStats::to_cir(pi/4))),
+#'                               c(0.33, 0.33, 0.34))
+#' h_three <- pscsne::bw_kms(r_mvmf_three)
+#' pscsne::plot_kde(r_mvmf_three, h_three, ylim = c(0, 1.45))
 #' @export
 plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
                      ylim = c(0, 0.35), is_cut = TRUE) {
@@ -238,7 +251,7 @@ plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
   samp_x <- DirStats::to_cir(samp_rad)
 
   # Generate the evaluation points
-  margin <- 1.25
+  margin <- 1.10
   x_min <- -margin * pi
   x_max <- margin * pi
   eval.points.rad <- seq(x_min, x_max, by = step)
@@ -246,22 +259,26 @@ plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
   # Convert them into Cartesian coordinates
   eval.points <- DirStats::to_cir(eval.points.rad)
 
+  # Get the total number of clusters previously identified
+  num_init_clusters <- NULL
+  if (!is.null(init_clusters)) {
+
+    num_init_clusters <- length(unique(init_clusters))
+
+  }
+
   # Compute the kernel mean shift
   kms_data <- kms_dir(data = samp_x, x = eval.points, h = h,
-                      init_clusters = init_clusters, tol = tol, is_cut = is_cut)
+                      num_init_clusters = num_init_clusters,
+                      tol = tol, is_cut = is_cut)
 
   # Set only the modes between [-margin*pi, margin*pi]
   modes <- DirStats::to_rad(kms_data$modes)
   modes <- c(modes -2 * pi, modes, modes + 2 * pi)
-  modes <- modes[modes >= x_min & modes <= x_max]
+  modes <- modes[modes >= - (margin - 0.02) * pi & modes <= (margin - 0.02) * pi]
 
   unique_modes <- sort(modes)
-  unique_modes <- unique_modes[unique_modes >= -pi & unique_modes <= pi]
   total_modes <- length(unique_modes)
-
-  # Calculate the labels for the interval [-pi, pi] (not the space within the margin)
-  labels_interval <- kms_data$cluster[eval.points.rad >= -pi & eval.points.rad <= pi]
-  labels_int_rle_values <- rle(labels_interval)
 
   # Getting the antimodes for all the space, counting the margin
   positions_antimodes <- kms_data$antimodes
@@ -292,7 +309,7 @@ plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
       y1 = DirStats::kde_dir(
         data = x, h = h, x = DirStats::to_cir(unique_modes[i])
       ),
-      col = col[labels_int_rle_values$values[i]], lwd = 1
+      col = col[kms_data$cluster[which(round(eval.points.rad, digits = 2) == round(unique_modes[i], digits = 2))]], lwd = 1
     )
 
   }
@@ -319,7 +336,7 @@ plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
   lines(eval.points.rad, kde)
   abline(v = eval.points.rad[positions_antimodes], lty = 3)
 
-  pi_interval_index <- samp_rad >= - (margin - 0.17) * pi & samp_rad <= (margin - 0.17) * pi
+  pi_interval_index <- samp_rad >= - (margin - 0.02) * pi & samp_rad <= (margin - 0.02) * pi
   samp_rad_interv <- samp_rad[pi_interval_index]
   orig_clusters <- rep(init_clusters, 3)[pi_interval_index]
 
