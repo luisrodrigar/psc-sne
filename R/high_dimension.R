@@ -33,46 +33,41 @@ high_dimension_mat <- function(x, rho_list, cos_psh = NULL) {
   # Number of spheres
   r <- dim(x)[3]
 
-  # Convert rho list into rho matrix and then into an upper triangular matrix vector
-  rho_mat <- matrix(rho_list, nrow = n, ncol = n)
-  rho_vec <- rho_mat[upper.tri(rho_mat)]
-
   # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
   if (is.null(cos_psh)) {
     cos_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
   }
 
-  log_P <- -p * log(1 + rho_vec^2 - 2 * cos_psh * rho_vec)
-  num <- vec2matrix(vec = exp(rowSums(log_P)), n = n, diag_value = 0)
-  den <- rowSums(num)
-  return(num / den)
 
-  # Calculate -2 * rho_vec * (Y[i,,] %*% Y[j,,]) by each row of the 3d-array
-  # P <- sweep(cos_psh,
-  #           MARGIN = 1, STATS = (-2 * rho_vec), FUN = "*",
-  #           check.margin = FALSE
-  # )
-  # Calculate P + (rho_vec^2) by each row of the 3d-array
-  # P <- sweep(P,
-  #           MARGIN = 1, STATS = (rho_vec^2), FUN = "+",
-  #           check.margin = FALSE
-  # )
+  cos_psh_3d <- sapply(X = seq_len(r),
+                       FUN = function(k) vec2matrix(cos_psh[, k], n = n, diag_value = 0),
+                       simplify = 'array')
+
+  # Calculate -2 * rho_list * (Y[i,,] %*% Y[j,,]) by each row of the 3d-array
+  P <- sweep(cos_psh_3d,
+            MARGIN = 1, STATS = (-2 * rho_list), FUN = "*")
+  # Calculate P + (rho_list^2) by each row of the 3d-array
+  P <- sweep(P,
+            MARGIN = 1, STATS = (rho_list^2), FUN = "+")
   # Calculate 1 / (1 + P)^p
-  # P <- 1 / (1 + P)^p
+  P <- (1 + P)^(-p)
+
+  # Set the diagonal value to 0
+  for (k in seq_len(r)) {
+
+    P[, , k] = diag_3d(P, k, 0)
+
+  }
 
   # Product operator by matrices of the 3d-array
-  # P_i_r <- apply(P, MARGIN = 1, prod)
-  # Reconstruct from vector to symmetric matrix
-  # P_i_r <- vec2matrix(P_i_r, n, diag_value = 0)
-
+  P_i_r <- apply(P, MARGIN = c(1,2), prod)
   # Summation operator by rows
-  # Pi <- rowSums(P_i_r)
+  Pi <- rowSums(P_i_r)
   # Calculate (P_ij)_{ij} / (P_i)_{i}
-  # P_ij <- sweep(
-  #   x = P_i_r, MARGIN = c(1, 2), STATS = Pi, FUN = "/",
-  #  check.margin = FALSE
-  # )
-  # return(P_ij)
+  P_ij <- sweep(
+    x = P_i_r, MARGIN = c(1, 2), STATS = Pi, FUN = "/")
+
+  return(P_ij)
 }
 
 
