@@ -14,8 +14,8 @@
 #' @export
 #' @examples
 #' x <- sphunif::r_unif_sph(100, 3, 3)
-#' high_dimension(x, rep(0.5, 100))
-#' high_dimension(x, rep(0.5, 100), cosine_polysph(x))
+#' high_dimension_mat(x, rep(0.5, 100))
+#' high_dimension_mat(x, rep(0.5, 100), cosine_polysph(x))
 high_dimension_mat <- function(x, rho_list, cos_psh = NULL) {
   if (!rlang::is_vector(rho_list)) {
     stop("rho_list must be a vector")
