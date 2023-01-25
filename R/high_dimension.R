@@ -13,10 +13,12 @@
 #' @return An array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
 #' @export
 #' @examples
-#' x <- sphunif::r_unif_sph(100, 3, 3)
-#' high_dimension_mat(x, rep(0.5, 100))
-#' high_dimension_mat(x, rep(0.5, 100), cosine_polysph(x))
-high_dimension_mat <- function(x, rho_list, cos_psh = NULL) {
+#' n <- 100
+#' rho_list <- rep(seq(1, 10), each = n / 10)
+#' x <- sphunif::r_unif_sph(n, 3, 3)
+#' high_dimension_mat(x, rho_list)
+#' high_dimension_mat(x, rho_list, cosine_polysph(x))
+high_dim_mat <- function(x, rho_list, cos_psh = NULL) {
   if (!rlang::is_vector(rho_list)) {
     stop("rho_list must be a vector")
   }
@@ -43,14 +45,8 @@ high_dimension_mat <- function(x, rho_list, cos_psh = NULL) {
                        FUN = function(k) vec2matrix(cos_psh[, k], n = n, diag_value = 0),
                        simplify = 'array')
 
-  # Calculate -2 * rho_list * (Y[i,,] %*% Y[j,,]) by each row of the 3d-array
-  P <- sweep(cos_psh_3d,
-            MARGIN = 1, STATS = (-2 * rho_list), FUN = "*")
-  # Calculate P + (rho_list^2) by each row of the 3d-array
-  P <- sweep(P,
-            MARGIN = 1, STATS = (rho_list^2), FUN = "+")
-  # Calculate 1 / (1 + P)^p
-  P <- (1 + P)^(-p)
+  # Calculate (1 + -2 * rho_list * (Y[i,,] %*% Y[j,,]) + (rho_list^2))^(-p) by each row of the 3d-array
+  P <- (1 + rho_list^2 + cos_psh_3d * -2 * rho_list)^(-p)
 
   # Set the diagonal value to 0
   for (k in seq_len(r)) {
