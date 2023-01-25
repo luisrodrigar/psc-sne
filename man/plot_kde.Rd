@@ -2,40 +2,38 @@
 % Please edit documentation in R/kms.R
 \name{plot_kde}
 \alias{plot_kde}
-\title{Plot the density chart of the linear data variable}
+\title{Circular kernel mean shift plot}
 \usage{
-plot_kde(x, h, tol = 0.1, init_clusters = NULL, step = 0.01,
-  ylim = c(0, 0.35), is_cut = TRUE)
+plot_kde(x, h, tol = 0.1, init_clusters = NULL, step = 0.01, cut_tree = TRUE)
 }
 \arguments{
-\item{tol}{tolerance for equality of modes. Defaults to \code{1e-1}.}
+\item{x}{a matrix of size \code{c(nx, d + 1)} with the initial points.}
 
-\item{x.}{A matrix of size \code{c(nx, d + 1)} with the initial points.}
-
-\item{h.}{Defaults to \code{NULL}. If it is not filled in, the kernel mean shift is
+\item{h}{defaults to \code{NULL}. If not provided, the kernel mean shift is
 calculated with h equal to \code{ks::hpi(x, deriv.order = 1)}.}
 
-\item{init_clusters.}{Array with the label associated to each observation.
+\item{tol}{tolerance for equality of modes. Defaults to \code{1e-1}.}
+
+\item{init_clusters}{an array with the label associated to each observation.
 Defaults to \code{NULL}.}
 
-\item{step.}{Separation between evaluation points. Defaults to \code{0.01}.}
+\item{step}{separation between evaluation points. Defaults to \code{0.01}.}
 
-\item{ylim.}{Limit to the y coordinate of the plot. Defaults to \code{c(0, 0.35)}.}
-
-\item{is_cut.}{Boolean value that informs whether the tree can be cut or not.}
+\item{cut_tree}{boolean value that informs whether the tree can be cut or not.}
 }
 \value{
 Same object that the function \code{kms_dir} returns.
 Defaults to \code{TRUE}.
 }
 \description{
-Produces a density plot for the given parameters.
+Produces a circular kernel mean shift plot for the given parameters.
 }
 \examples{
+
 set.seed(123)
 r_mvmf_three <- movMF::rmovMF(n,
                               c(100, 150, 200) * rbind(c(1, 0), c(DirStats::to_cir(pi/2)), c(DirStats::to_cir(pi/4))),
                               c(0.33, 0.33, 0.34))
 h_three <- pscsne::bw_kms(r_mvmf_three)
-pscsne::plot_kde(r_mvmf_three, h_three, ylim = c(0, 1.45))
+pscsne::plot_kde(r_mvmf_three, h_three)
 }

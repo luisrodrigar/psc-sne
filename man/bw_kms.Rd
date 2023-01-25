@@ -2,20 +2,22 @@
 % Please edit documentation in R/kms.R
 \name{bw_kms}
 \alias{bw_kms}
-\title{Compute the bandwidth}
+\title{Compute a bandwidth for kernel density derivative estimation}
 \usage{
 bw_kms(x, type = c("hpi_linear_s1", "rot_up")[2])
 }
 \arguments{
-\item{x.}{A matrix of size \code{c(nx, d + 1)} with the initial points.}
+\item{x}{a matrix of size \code{c(nx, d + 1)} with the initial points.}
 
-\item{type.}{The specific way of calculating the bandwidth: hpi linear or rot up.
-Defaults to \code{"rot_up"}.}
+\item{type}{the specific way of calculating the bandwidth:
+\code{"hpi_linear_s1"} or \code{"rot_up"} (default).}
 }
 \description{
-Calculate the bandwidth associated for the given parameters.
+Calculate a bandwidth for kernel density derivative estimation
+associated for the given parameters.
 }
 \examples{
+
 set.seed(123)
 r_mvmf <- movMF::rmovMF(n, c(5, 10) * rbind(c(1, 0), c(1,0)), c(0.6, 0.4))
 h_hpi_linear <- pscsne::bw_kms(r_mvmf, type = "hpi_linear_s1")

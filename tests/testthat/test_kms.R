@@ -1,5 +1,5 @@
-n <- 50
 
+n <- 50
 mu <- rbind(c(1,0), c(0,1))
 kappa <- c(100, 75)
 set.seed(123)
@@ -19,8 +19,8 @@ r_mvmf_three <- movMF::rmovMF(n,
 h_three <- pscsne::bw_kms(r_mvmf_three)
 
 test_that("Same value is returned with numDeriv and polykde::grad_hess_kde_polysph", {
-  res_numDeriv <- kms_dir(r_mvmf, h = h, is_numDeriv = FALSE)
-  res_polykde <- kms_dir(r_mvmf, h = h, is_numDeriv = TRUE)
+  res_numDeriv <- kms_dir(r_mvmf, h = h, use_numderiv = FALSE)
+  res_polykde <- kms_dir(r_mvmf, h = h, use_numderiv = TRUE)
   # Since numDeriv uses an approximation, the tolerance is defined to 1e-6
   expect_equal(res_numDeriv, res_polykde, tolerance = 1e-6)
 })
