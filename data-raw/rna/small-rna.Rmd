@@ -27,11 +27,11 @@ stopifnot(packageVersion("pscsne") >= "0.0.1.900005")
 
 # Load dataset
 data("smallrna")
-
-original_clusters = smallrna$clusters
+original_clusters <- smallrna$clusters
 
 # Visualize original data
-pairs(smallrna$angles, col = original_clusters + 1, cex = 0.5,
+pairs(smallrna$angles, col = rainbow(3)[original_clusters], 
+      cex = 0.5, pch = 16,
       labels = c(expression(alpha), expression(beta), expression(gamma),
                  expression(delta), expression(epsilon), expression(zeta),
                  expression(chi)))

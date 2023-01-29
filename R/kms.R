@@ -193,6 +193,7 @@ kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
 #' h_rot_up <- pscsne::bw_kms(r_mvmf, type = "rot_up")
 #' @export
 bw_kms <- function(x, type = c("hpi_linear_s1", "rot_up")[2]) {
+
   stopifnot(type == "hpi_linear_s1" || type == "rot_up")
   n <- nrow(x)
   d <- ncol(x) - 1
@@ -238,6 +239,7 @@ bw_kms <- function(x, type = c("hpi_linear_s1", "rot_up")[2]) {
 #' @export
 plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
                      cut_tree = TRUE) {
+
   stopifnot(!is.null(x))
   stopifnot(!is.null(h))
 
@@ -285,8 +287,8 @@ plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
   labels_rle_values <- kms_data$labels_rle
 
   # Colors for the plot, different alpha (more or less opaque)
-  col <- rainbow(total_modes + 2, alpha = 1)
-  col_alpha <- rainbow(total_modes + 2, alpha = 0.15)
+  col <- rainbow(total_modes, alpha = 1)
+  col_alpha <- rainbow(total_modes, alpha = 0.15)
 
   # Kernel density estimation with the evaluation points, the sample and the bandwidth
   kde <- DirStats::kde_dir(x = eval.points, data = x, h = h)
