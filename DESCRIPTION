@@ -22,7 +22,8 @@ Imports:
     rlang,
     sphunif,
     sdetorus,
-    utils
+    utils,
+    polykde
 Suggests:
     abind,
     dplyr,
@@ -39,7 +40,7 @@ Suggests:
     tidyr
 URL: https://github.com/luisrodrigar/psc-sne
 BugReports: https://github.com/luisrodrigar/psc-sne
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
 Roxygen: list(old_usage = TRUE)
 VignetteBuilder: knitr
 Config/testthat/edition: 3

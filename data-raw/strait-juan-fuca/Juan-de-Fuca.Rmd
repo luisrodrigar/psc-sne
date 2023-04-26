@@ -215,7 +215,8 @@ Resultant points onto the sphere ($d=2$) suggest there is a well-defined belt th
 First, the kernel mean shift is applied for data on to the circumference.
 
 ```{r kms-1d-1, cache = TRUE}
-res_kms_dir_Y_1 <- kms_dir(data = Y_1_eq)
+h_rot_up <- pscsne::bw_kms(Y_1_eq, "rot_up")
+res_kms_dir_Y_1 <- kms_dir(data = Y_1_eq, h = h_rot_up)
 ```
 
 The total number of clusters identified for $d=1$:
@@ -235,10 +236,28 @@ polygon(x = cos(th), y = sin(th))
 
 Once we have got these results, we can conclude that this could be a potential solution since it is identifying two principal directions (west and east) and other two (south and north) that are less frequent.
 
+Let's visualize the kernel density estimation plot based on the results provided by the kernel mean shift. In this case, a tolerance of 2.5 is defined in order to cut the hierarchical tree. The execution are based on two different ways of computing the bandwidth:
+
+- `pscsne::bw_kms(..., "hpi_linear_s1")`
+
+```{r kms-1d-1-1, cache = TRUE}
+h_hpi <- pscsne::bw_kms(Y_1_eq, "hpi_linear_s1")
+pscsne::plot_kde(x = Y_1_eq, h = h_hpi, tol = 2.5, step = 0.01)
+```
+
+- `pscsne::bw_kms(..., "rot_up")`
+
+```{r kms-1d-1-2, cache = TRUE}
+h_rot_up <- pscsne::bw_kms(Y_1_eq, "rot_up")
+pscsne::plot_kde(x = Y_1_eq, h = h_rot_up, step = 0.01)
+```
+
+As it is illustrated above, both charts shows that there are two mainly regimes: sea waters that goes to the east and sea waters that goes to the west.
+
 We do the same for the reduced data on the sphere $d=2$:
 
 ```{r kms-2d-1, cache = TRUE}
-res_kms_dir_Y_2 <- kms_dir(data = Y_2_unif)
+res_kms_dir_Y_2 <- kms_dir(data = Y_2_unif, h = h_rot_up)
 ```
 
 The total number of clusters identified for $d = 2$:
