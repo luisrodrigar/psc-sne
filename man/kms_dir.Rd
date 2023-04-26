@@ -63,7 +63,8 @@ samp <- rbind(
   rotasym::r_vMF(n = 50, mu = c(0, 0, -1), kappa = 5),
   rotasym::r_vMF(n = 50, mu = c(1, 0, 0), kappa = 5)
 )
-kms <- kms_dir(data = samp, keep_paths = TRUE)
+h <- bw_kms(samp)
+kms <- kms_dir(data = samp, keep_paths = TRUE, h = h)
 sd3 <- scatterplot3d::scatterplot3d(samp, xlim = c(-1, 1),
                                     ylim = c(-1, 1), zlim = c(-1, 1),
                                     color = kms$cluster + 1, pch = 16,
@@ -78,7 +79,7 @@ samp <- rbind(
   rotasym::r_vMF(n = 50, mu = c(-sqrt(2), -sqrt(2)) / 2, kappa = 5),
   rotasym::r_vMF(n = 50, mu = c(sqrt(2), -sqrt(2)) / 2, kappa = 5)
 )
-kms <- kms_dir(data = samp, keep_paths = TRUE)
+kms <- kms_dir(data = samp, keep_paths = TRUE, h = h)
 plot(samp, col = kms$cluster + 1, pch = 16, xlim = c(-1.5, 1.5),
      ylim = c(-1.5, 1.5))
 for (i in seq_len(nrow(samp))) {

@@ -30,11 +30,11 @@ Defaults to \code{TRUE}.
 Produces a circular kernel mean shift plot for the given parameters.
 }
 \examples{
-
 set.seed(123)
-r_mvmf_three <- movMF::rmovMF(n,
-                              c(100, 150, 200) * rbind(c(1, 0), c(DirStats::to_cir(pi/2)), c(DirStats::to_cir(pi/4))),
-                              c(0.33, 0.33, 0.34))
+n <- 100
+mu <- c(100, 150, 200) * rbind(c(1, 0), c(DirStats::to_cir(pi/2)),
+                               (DirStats::to_cir(pi/4)))
+r_mvmf_three <- movMF::rmovMF(n, mu, c(0.33, 0.33, 0.34))
 h_three <- pscsne::bw_kms(r_mvmf_three)
 pscsne::plot_kde(r_mvmf_three, h_three)
 }

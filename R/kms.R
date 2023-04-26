@@ -41,7 +41,8 @@
 #'   rotasym::r_vMF(n = 50, mu = c(0, 0, -1), kappa = 5),
 #'   rotasym::r_vMF(n = 50, mu = c(1, 0, 0), kappa = 5)
 #' )
-#' kms <- kms_dir(data = samp, keep_paths = TRUE)
+#' h <- bw_kms(samp)
+#' kms <- kms_dir(data = samp, keep_paths = TRUE, h = h)
 #' sd3 <- scatterplot3d::scatterplot3d(samp, xlim = c(-1, 1),
 #'                                     ylim = c(-1, 1), zlim = c(-1, 1),
 #'                                     color = kms$cluster + 1, pch = 16,
@@ -56,7 +57,7 @@
 #'   rotasym::r_vMF(n = 50, mu = c(-sqrt(2), -sqrt(2)) / 2, kappa = 5),
 #'   rotasym::r_vMF(n = 50, mu = c(sqrt(2), -sqrt(2)) / 2, kappa = 5)
 #' )
-#' kms <- kms_dir(data = samp, keep_paths = TRUE)
+#' kms <- kms_dir(data = samp, keep_paths = TRUE, h = h)
 #' plot(samp, col = kms$cluster + 1, pch = 16, xlim = c(-1.5, 1.5),
 #'      ylim = c(-1.5, 1.5))
 #' for (i in seq_len(nrow(samp))) {
@@ -188,6 +189,7 @@ kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
 #' \code{"hpi_linear_s1"} or \code{"rot_up"} (default).
 #' @examples
 #' set.seed(123)
+#' n <- 100
 #' r_mvmf <- movMF::rmovMF(n, c(5, 10) * rbind(c(1, 0), c(1,0)), c(0.6, 0.4))
 #' h_hpi_linear <- pscsne::bw_kms(r_mvmf, type = "hpi_linear_s1")
 #' h_rot_up <- pscsne::bw_kms(r_mvmf, type = "rot_up")
@@ -230,9 +232,10 @@ bw_kms <- function(x, type = c("hpi_linear_s1", "rot_up")[2]) {
 #' Defaults to \code{TRUE}.
 #' @examples
 #' set.seed(123)
-#' r_mvmf_three <- movMF::rmovMF(n,
-#'                               c(100, 150, 200) * rbind(c(1, 0), c(DirStats::to_cir(pi/2)), c(DirStats::to_cir(pi/4))),
-#'                               c(0.33, 0.33, 0.34))
+#' n <- 100
+#' mu <- c(100, 150, 200) * rbind(c(1, 0), c(DirStats::to_cir(pi/2)),
+#'                                (DirStats::to_cir(pi/4)))
+#' r_mvmf_three <- movMF::rmovMF(n, mu, c(0.33, 0.33, 0.34))
 #' h_three <- pscsne::bw_kms(r_mvmf_three)
 #' pscsne::plot_kde(r_mvmf_three, h_three)
 #' @export

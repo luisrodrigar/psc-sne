@@ -10,7 +10,7 @@ r_path_s1r(n, r, alpha = runif(r, -pi, pi), k = sample(-2:2, size = r,
   replace = TRUE), sigma = 0.25, angles = FALSE)
 
 r_path_s2r(n, r, t = 0, c = 1, Theta = t(rotasym::r_unif_sphere(n = r, p
-  = 3)), sigma = 0.25, spiral = FALSE)
+  = 3)), kappa = 0, sigma = 0.25, spiral = FALSE)
 }
 \arguments{
 \item{n}{sample size.}
@@ -38,18 +38,21 @@ parameter, changing the spiral wrappings. Defaults to \code{1}.}
 \eqn{\mathcal{S}^2}. Useful for rotating the sample. Chosen at random by
 default.}
 
+\item{kappa}{concentration von Mises--Fisher parameter for longitudes in
+small circles. Defaults to \code{0} (uniform).}
+
 \item{spiral}{consider a spiral (or, more precisely, a
 \href{https://en.wikipedia.org/wiki/Clélie}{Clélie curve}) instead of
 a small circle? Defaults to \code{FALSE}.}
 }
 \value{
-An array of size \code{c(n, d, r)} with samples on \eqn{(\mathcal{S}^d)^r}. If
-\code{angles = TRUE} for \code{r_path_s1r}, then a matrix of size
+An array of size \code{c(n, d, r)} with samples on \eqn{(\mathcal{S}^d)^r}.
+If \code{angles = TRUE} for \code{r_path_s1r}, then a matrix of size
 \code{c(n ,r)} with angles is returned.
 }
 \description{
-Functions for sampling data on \eqn{(\mathcal{S}^d)^r} for \eqn{d=1,2}
-using one-dimensional modes of variation.
+Functions for sampling data on \eqn{(\mathcal{S}^d)^r} for
+\eqn{d=1,2} using one-dimensional modes of variation.
 }
 \examples{
 # Straight trends on (S^1)^2
@@ -72,7 +75,7 @@ scatterplot3d::scatterplot3d(
 
 # Small-circle trends on (S^2)^2
 n <- 200
-samp_3 <- r_path_s2r(n = n, r = 2, sigma = 0.1)
+samp_3 <- r_path_s2r(n = n, r = 2, sigma = 0.1, kappa = 5)
 old_par <- par(mfrow = c(1, 2))
 scatterplot3d::scatterplot3d(
   samp_3[, , 1], xlim = c(-1, 1), ylim = c(-1, 1), zlim = c(-1, 1),

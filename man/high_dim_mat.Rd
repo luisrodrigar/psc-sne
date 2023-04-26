@@ -20,9 +20,9 @@ An array of size \code{c(n, n)} with the high-dimension conditional probabilitie
 Calculates the high-dimension conditional probabilities of a polyspherical Cauchy distribution. Matrix version algorithm.
 }
 \examples{
-n <- 100
-rho_list <- rep(seq(1, 10), each = n / 10)
+n <- 7
+rho_list <- 1:n
 x <- sphunif::r_unif_sph(n, 3, 3)
-high_dimension_mat(x, rho_list)
-high_dimension_mat(x, rho_list, cosine_polysph(x))
+high_dim_mat(x, rho_list)
+# high_dim_mat(x, rho_list, cosine_polysph(x)) # DOES NOT WORK
 }

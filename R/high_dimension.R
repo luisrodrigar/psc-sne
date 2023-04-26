@@ -13,11 +13,11 @@
 #' @return An array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
 #' @export
 #' @examples
-#' n <- 100
-#' rho_list <- rep(seq(1, 10), each = n / 10)
+#' n <- 7
+#' rho_list <- 1:n
 #' x <- sphunif::r_unif_sph(n, 3, 3)
-#' high_dimension_mat(x, rho_list)
-#' high_dimension_mat(x, rho_list, cosine_polysph(x))
+#' high_dim_mat(x, rho_list)
+#' # high_dim_mat(x, rho_list, cosine_polysph(x)) # DOES NOT WORK
 high_dim_mat <- function(x, rho_list, cos_psh = NULL) {
 
   if (!rlang::is_vector(rho_list)) {
@@ -27,7 +27,7 @@ high_dim_mat <- function(x, rho_list, cos_psh = NULL) {
     stop("rho_list size has to be equal to nrow(x)")
   }
   if (!is.null(cos_psh) && length(dim(cos_psh)) != 3) {
-    stop("cos_sim_psh must be an array of size c(n, p + 1, r), from (S^p)^r")
+    stop("cos_psh must be an array of size c(n, p + 1, r), from (S^p)^r")
   }
   # Number of observations
   n <- nrow(x)
@@ -38,16 +38,20 @@ high_dim_mat <- function(x, rho_list, cos_psh = NULL) {
 
   # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
   if (is.null(cos_psh)) {
+
     cos_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
+    cos_psh_3d <- sapply(X = seq_len(r),
+                         FUN = function(k) vec2matrix(cos_psh[, k], n = n, diag_value = 0),
+                         simplify = "array")
+
+  } else {
+
+    cos_psh_3d <- cos_psh
+
   }
 
-
-  cos_psh_3d <- sapply(X = seq_len(r),
-                       FUN = function(k) vec2matrix(cos_psh[, k], n = n, diag_value = 0),
-                       simplify = 'array')
-
   # Calculate (1 + -2 * rho_list * (Y[i,,] %*% Y[j,,]) + (rho_list^2))^(-p) by each row of the 3d-array
-  P <- (1 + rho_list^2 + cos_psh_3d * -2 * rho_list)^(-p)
+  P <- (1 + rho_list^2 - 2 * cos_psh_3d * rho_list)^(-p)
 
   # Set the diagonal value to 0
   for (k in seq_len(r)) {
@@ -57,7 +61,7 @@ high_dim_mat <- function(x, rho_list, cos_psh = NULL) {
   }
 
   # Product operator by matrices of the 3d-array
-  P_i_r <- apply(P, MARGIN = c(1,2), prod)
+  P_i_r <- apply(P, MARGIN = c(1, 2), prod)
   # Summation operator by rows
   Pi <- rowSums(P_i_r)
   # Calculate (P_ij)_{ij} / (P_i)_{i}
@@ -65,6 +69,7 @@ high_dim_mat <- function(x, rho_list, cos_psh = NULL) {
     x = P_i_r, MARGIN = c(1, 2), STATS = Pi, FUN = "/")
 
   return(P_ij)
+
 }
 
 

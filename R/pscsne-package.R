@@ -9,6 +9,6 @@
 #'
 #' @docType package
 #' @name pscsne-package
-#' @import graphics stats utils
+#' @import graphics stats utils grDevices
 #' @aliases pscsne pscsne-package
 NULL

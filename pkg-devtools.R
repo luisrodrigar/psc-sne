@@ -60,7 +60,7 @@ system(paste(shQuote(file.path(R.home("bin"), "R")),
 # build_manual(path = ".")
 
 # Build
-build(".", vignettes = FALSE)
+build(".", vignettes = TRUE)
 
 # Install locally
 install(".", args = c("--no-multiarch", "--no-test-load"),

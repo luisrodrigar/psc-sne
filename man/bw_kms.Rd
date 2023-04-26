@@ -17,8 +17,8 @@ Calculate a bandwidth for kernel density derivative estimation
 associated for the given parameters.
 }
 \examples{
-
 set.seed(123)
+n <- 100
 r_mvmf <- movMF::rmovMF(n, c(5, 10) * rbind(c(1, 0), c(1,0)), c(0.6, 0.4))
 h_hpi_linear <- pscsne::bw_kms(r_mvmf, type = "hpi_linear_s1")
 h_rot_up <- pscsne::bw_kms(r_mvmf, type = "rot_up")

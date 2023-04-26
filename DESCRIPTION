@@ -1,8 +1,8 @@
 Package: pscsne
 Type: Package
 Title: Polyspherical Cauchy SNE
-Version: 0.0.1.900005
-Date: 2022-09-07
+Version: 0.0.1.900006
+Date: 2023-04-26
 Authors@R: c(
      person(given = "Eduardo", family = "García-Portugués",
             role = c("aut", "cre"), email = "edgarcia@est-econ.uc3m.es",
@@ -28,7 +28,9 @@ Suggests:
     abind,
     dplyr,
     knitr,
+    ks,
     markdown,
+    movMF,
     mvtnorm,
     numDeriv,
     OceanView,
@@ -37,7 +39,8 @@ Suggests:
     rotasym,
     scatterplot3d,
     testthat,
-    tidyr
+    tidyr,
+    viridis
 URL: https://github.com/luisrodrigar/psc-sne
 BugReports: https://github.com/luisrodrigar/psc-sne
 RoxygenNote: 7.2.3

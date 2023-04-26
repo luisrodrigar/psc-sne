@@ -13,9 +13,9 @@ r_mvmf_small <- movMF::rmovMF(n,
 h_small <- pscsne::bw_kms(r_mvmf_small)
 
 set.seed(123)
-r_mvmf_three <- movMF::rmovMF(n,
-                              c(100, 150, 200) * rbind(c(1, 0), c(DirStats::to_cir(pi/2)), c(DirStats::to_cir(pi/4))),
-                              c(0.33, 0.33, 0.34))
+mu <- c(100, 150, 200) * rbind(c(1, 0), c(DirStats::to_cir(pi/2)),
+                               (DirStats::to_cir(pi/4)))
+r_mvmf_three <- movMF::rmovMF(n, mu, c(0.33, 0.33, 0.34))
 h_three <- pscsne::bw_kms(r_mvmf_three)
 
 test_that("Same value is returned with numDeriv and polykde::grad_hess_kde_polysph", {
