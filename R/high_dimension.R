@@ -19,6 +19,7 @@
 #' high_dimension_mat(x, rho_list)
 #' high_dimension_mat(x, rho_list, cosine_polysph(x))
 high_dim_mat <- function(x, rho_list, cos_psh = NULL) {
+
   if (!rlang::is_vector(rho_list)) {
     stop("rho_list must be a vector")
   }

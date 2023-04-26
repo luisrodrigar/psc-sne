@@ -2,7 +2,7 @@
 n <- 100
 x <- sphunif::r_unif_sph(n, 3, 3)
 rho_list <- rep(0.5, n)
-rho_list_diff <- rep(seq(1, 10), each = 10)
+rho_list_diff <- rep(1:10, each = 10)
 
 test_that("High dimensional probabilities computed in matrix and scalar versions; common rho_list", {
   res_mat <- pscsne::high_dim_mat(x, rho_list)
