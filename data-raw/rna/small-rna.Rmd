@@ -121,7 +121,7 @@ sum(labels != original_clusters)
 
 The classification accuracy is on-par with Zoubouloglou et al. (2021), which misclassifies 16 points and has a classiﬁcation rate of 0.916.
 
-There is another way to cluster the scores provided by the psc-SNE. These values, x and y, can be transalted to $\theta$ encoded in radians, and later they can be used with the kernel mean shift clustering for linear data to obtain these groups and plot them in a density graph. 
+There is another way to cluster the scores provided by the psc-SNE. These values, x and y, can be translated to $\theta$ encoded in radians, and later they can be used with the kernel mean shift clustering for linear data to obtain these groups and plot them in a density graph. 
 
 ```{r fig.asp=1, fig.align='center'}
 h <- pscsne::bw_kms(fit_2$best_Y, type = "hpi_linear_s1")

@@ -1,6 +1,6 @@
 
 n <- 50
-mu <- rbind(c(1,0), c(0,1))
+mu <- rbind(c(1,0), c(0, 1))
 kappa <- c(100, 75)
 set.seed(123)
 r_mvmf <- movMF::rmovMF(n, kappa * mu, c(0.6, 0.4))
@@ -8,7 +8,7 @@ h <- pscsne::bw_kms(r_mvmf)
 
 set.seed(123)
 r_mvmf_small <- movMF::rmovMF(n,
-                              c(5, 10) * rbind(c(1, 0), c(1,0)),
+                              c(5, 10) * rbind(c(1, 0), c(1, 0)),
                               c(0.6, 0.4))
 h_small <- pscsne::bw_kms(r_mvmf_small)
 

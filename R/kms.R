@@ -177,6 +177,7 @@ kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
 
 }
 
+
 #' @title Compute a bandwidth for kernel density derivative estimation
 #'
 #' @description Calculate a bandwidth for kernel density derivative estimation
@@ -186,7 +187,6 @@ kms_dir <- function(data, x = data, h, N = 500, eps = 1e-3, tol = 1e-1,
 #' @param type the specific way of calculating the bandwidth:
 #' \code{"hpi_linear_s1"} or \code{"rot_up"} (default).
 #' @examples
-#'
 #' set.seed(123)
 #' r_mvmf <- movMF::rmovMF(n, c(5, 10) * rbind(c(1, 0), c(1,0)), c(0.6, 0.4))
 #' h_hpi_linear <- pscsne::bw_kms(r_mvmf, type = "hpi_linear_s1")
@@ -229,7 +229,6 @@ bw_kms <- function(x, type = c("hpi_linear_s1", "rot_up")[2]) {
 #' @return Same object that the function \code{kms_dir} returns.
 #' Defaults to \code{TRUE}.
 #' @examples
-#'
 #' set.seed(123)
 #' r_mvmf_three <- movMF::rmovMF(n,
 #'                               c(100, 150, 200) * rbind(c(1, 0), c(DirStats::to_cir(pi/2)), c(DirStats::to_cir(pi/4))),
@@ -249,7 +248,7 @@ plot_kde <- function(x, h, tol = 1e-1, init_clusters = NULL, step = 0.01,
   # Hack to have periodicity
   samp_rad <- c(rad - 2 * pi, rad, rad + 2 * pi)
 
-  # Convert to cartesian coordinates (circumference)
+  # Convert to Cartesian coordinates (circumference)
   samp_x <- DirStats::to_cir(rad)
 
   # Generate the evaluation points
