@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{index_upper_trian}
 \alias{index_upper_trian}
-\title{Vector index of an upper triangular matrix withou diagonal}
+\title{Vector index of an upper triangular matrix without diagonal}
 \usage{
 index_upper_trian(i, j, n)
 }

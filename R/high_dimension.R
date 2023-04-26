@@ -3,6 +3,71 @@
 ## High-dimension neighborhood probabilities ##
 ###############################################
 
+#' @title Polyspherical Cauchy conditional probability matrix (matrix version)
+#'
+#' @description Calculates the high-dimension conditional probabilities of a polyspherical Cauchy distribution. Matrix version algorithm.
+#'
+#' @param x an array of size \code{c(n, d + 1, r)} with the polyspherical data, where \code{n} is the number of observations, \code{d} is the dimension of each sphere, and \code{r} is the number of spheres.
+#' @param rho_list rho list of size \code{n} for each \code{i}-th observation that stands for the concentration parameter.
+#' @param cos_psh cosine similarities array of dimension \code{c(n, n, r)} for the polysphere.
+#' @return An array of size \code{c(n, n)} with the high-dimension conditional probabilities of \code{x}.
+#' @export
+#' @examples
+#' n <- 100
+#' rho_list <- rep(seq(1, 10), each = n / 10)
+#' x <- sphunif::r_unif_sph(n, 3, 3)
+#' high_dimension_mat(x, rho_list)
+#' high_dimension_mat(x, rho_list, cosine_polysph(x))
+high_dim_mat <- function(x, rho_list, cos_psh = NULL) {
+
+  if (!rlang::is_vector(rho_list)) {
+    stop("rho_list must be a vector")
+  }
+  if (length(rho_list) != nrow(x)) {
+    stop("rho_list size has to be equal to nrow(x)")
+  }
+  if (!is.null(cos_psh) && length(dim(cos_psh)) != 3) {
+    stop("cos_sim_psh must be an array of size c(n, p + 1, r), from (S^p)^r")
+  }
+  # Number of observations
+  n <- nrow(x)
+  # Number of columns
+  p <- ncol(x) - 1
+  # Number of spheres
+  r <- dim(x)[3]
+
+  # Calculate the cosine similarities of 'x' if 'cos_sim_psh' param is null
+  if (is.null(cos_psh)) {
+    cos_psh <- sphunif::Psi_mat(x, scalar_prod = TRUE)
+  }
+
+
+  cos_psh_3d <- sapply(X = seq_len(r),
+                       FUN = function(k) vec2matrix(cos_psh[, k], n = n, diag_value = 0),
+                       simplify = 'array')
+
+  # Calculate (1 + -2 * rho_list * (Y[i,,] %*% Y[j,,]) + (rho_list^2))^(-p) by each row of the 3d-array
+  P <- (1 + rho_list^2 + cos_psh_3d * -2 * rho_list)^(-p)
+
+  # Set the diagonal value to 0
+  for (k in seq_len(r)) {
+
+    P[, , k] = diag_3d(P, k, 0)
+
+  }
+
+  # Product operator by matrices of the 3d-array
+  P_i_r <- apply(P, MARGIN = c(1,2), prod)
+  # Summation operator by rows
+  Pi <- rowSums(P_i_r)
+  # Calculate (P_ij)_{ij} / (P_i)_{i}
+  P_ij <- sweep(
+    x = P_i_r, MARGIN = c(1, 2), STATS = Pi, FUN = "/")
+
+  return(P_ij)
+}
+
+
 #' @title Polyspherical Cauchy conditional probability matrix
 #'
 #' @description Calculates the high-dimension conditional probabilities of a
