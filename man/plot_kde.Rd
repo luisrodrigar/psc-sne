@@ -4,7 +4,8 @@
 \alias{plot_kde}
 \title{Circular kernel mean shift plot}
 \usage{
-plot_kde(x, h, tol = 0.1, init_clusters = NULL, step = 0.01, cut_tree = TRUE)
+plot_kde(x, h, tol = 0.1, init_clusters = NULL, step = 0.01,
+  cut_tree = TRUE)
 }
 \arguments{
 \item{x}{a matrix of size \code{c(nx, d + 1)} with the initial points.}
